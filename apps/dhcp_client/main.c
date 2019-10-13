@@ -26,17 +26,20 @@
  * This file is part of the Monolinux C library project.
  */
 
-#include <stdio.h>
 #include "ml/ml.h"
 
 int main()
 {
+    int res;
     struct ml_dhcp_client_t client;
 
     ml_init();
     ml_dhcp_client_init(&client, "eth0", ML_LOG_ALL);
-    ml_dhcp_client_start(&client);
-    ml_dhcp_client_join(&client);
+    res = ml_dhcp_client_start(&client);
 
-    return (1);
+    if (res == 0) {
+        ml_dhcp_client_join(&client);
+    }
+
+    return (res);
 }
