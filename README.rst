@@ -79,20 +79,6 @@ been modified.
 
    <more output>
 
-File tree
-=========
-
-This is the file tree of the Monolinux C library repository.
-
-.. code-block:: text
-
-   monolinux-c-library/         - this repository
-   ├── bin/                     - executables
-   ├── LICENSE                  - license
-   ├── make/                    - build system
-   ├── ml/                      - the Monolinux C library
-   └── setup.sh                 - development environment setup script
-
 .. |buildstatus| image:: https://travis-ci.org/eerimoq/monolinux-c-library.svg
 .. _buildstatus: https://travis-ci.org/eerimoq/monolinux-c-library
 

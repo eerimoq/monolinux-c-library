@@ -6,8 +6,8 @@ CFLAGS += -Wall -Wextra -std=gnu11
 CFLAGS += -g -Og
 CFLAGS += -DUNIT_TEST
 COVERAGE_FILTERS +=
-INC += $(ML_ROOT)/ml/tst/utils
-SRC += $(ML_ROOT)/ml/tst/utils/narwhal.c
+INC += $(ML_ROOT)/tst/utils
+SRC += $(ML_ROOT)/tst/utils/narwhal.c
 
 .PHONY: all run build coverage
 

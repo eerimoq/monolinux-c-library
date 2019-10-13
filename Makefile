@@ -1,10 +1,3 @@
-.PHONY: test clean
+CLEAN_PATHS = apps/dhcp_client/build
 
-test:
-	$(MAKE) -C ml test
-
-run:
-	$(MAKE) -C ml run
-
-clean:
-	$(MAKE) -C ml clean
+include $(ML_ROOT)/make/package.mk
