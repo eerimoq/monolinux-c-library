@@ -172,6 +172,10 @@ struct ml_dhcp_client_t {
     struct ml_log_object_t log_object;
 };
 
+struct ml_timer_handler_t {
+    pthread_t pthread;
+};
+
 struct ml_timer_timeout_message_t {
     bool stopped;
     struct ml_timer_t *timer_p;
@@ -180,8 +184,9 @@ struct ml_timer_timeout_message_t {
 };
 
 struct ml_timer_t {
+    struct ml_timer_handler_t *handler_p;
     int timeout_ms;
-    struct ml_uid_t *timeout_p;
+    struct ml_uid_t *message_p;
     struct ml_queue_t *queue_p;
     int flags;
     struct {
@@ -490,7 +495,7 @@ uint16_t ml_inet_checksum(const void *buf_p, size_t size);
  */
 void ml_timer_init(struct ml_timer_t *self_p,
                    int timeout_ms,
-                   struct ml_uid_t *timeout_p,
+                   struct ml_uid_t *message_p,
                    struct ml_queue_t *queue_p,
                    int flags);
 
@@ -503,6 +508,21 @@ void ml_timer_start(struct ml_timer_t *self_p);
  * Stop given timer.
  */
 void ml_timer_stop(struct ml_timer_t *self_p);
+
+void ml_timer_handler_init(struct ml_timer_handler_t *self_p);
+
+void ml_timer_handler_destroy(struct ml_timer_handler_t *self_p);
+
+void ml_timer_handler_timer_init(struct ml_timer_handler_t *self_p,
+                                 struct ml_timer_t *timer_p,
+                                 int timeout_ms,
+                                 struct ml_uid_t *message_p,
+                                 struct ml_queue_t *queue_p,
+                                 int flags);
+
+void ml_timer_handler_timer_start(struct ml_timer_t *timer_p);
+
+void ml_timer_handler_timer_stop(struct ml_timer_t *timer_p);
 
 /* Exits on failure. Use with care. */
 

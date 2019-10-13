@@ -40,6 +40,7 @@
 struct module_t {
     struct ml_bus_t bus;
     struct ml_worker_pool_t worker_pool;
+    struct ml_timer_handler_t timer_handler;
 };
 
 static struct module_t module;
@@ -107,6 +108,7 @@ void ml_init(void)
     ml_message_init();
     ml_bus_init(&module.bus);
     ml_worker_pool_init(&module.worker_pool, 4, 32);
+    ml_timer_handler_init(&module.timer_handler);
 }
 
 const char *ml_uid_str(struct ml_uid_t *uid_p)
@@ -391,4 +393,28 @@ void *xrealloc(void *buf_p, size_t size)
     }
 
     return (buf_p);
+}
+
+void ml_timer_init(struct ml_timer_t *self_p,
+                   int timeout_ms,
+                   struct ml_uid_t *message_p,
+                   struct ml_queue_t *queue_p,
+                   int flags)
+{
+    ml_timer_handler_timer_init(&module.timer_handler,
+                                self_p,
+                                timeout_ms,
+                                message_p,
+                                queue_p,
+                                flags);
+}
+
+void ml_timer_start(struct ml_timer_t *self_p)
+{
+    ml_timer_handler_timer_start(self_p);
+}
+
+void ml_timer_stop(struct ml_timer_t *self_p)
+{
+    ml_timer_handler_timer_stop(self_p);
 }

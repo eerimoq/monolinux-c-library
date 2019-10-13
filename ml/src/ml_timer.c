@@ -30,10 +30,6 @@
 #include "ml/ml.h"
 #include "internal.h"
 
-struct module_t {
-    pthread_t ticker_pthread;
-};
-
 /* static void expired_list_insert(struct ml_timer_t *self_p, */
 /*                                 struct ml_timer_timeout_message_t *message_p) */
 /* { */
@@ -69,7 +65,7 @@ struct module_t {
 /*     ml_queue_put(timer_p->queue_p, message_p); */
 /* } */
 
-/* static void *ticker_main(void *arg_p) */
+/* static void *handler_main(void *arg_p) */
 /* { */
 /*     int fd; */
 /*     struct itimerspec timeout; */
@@ -94,25 +90,37 @@ struct module_t {
 /*     return (NULL); */
 /* } */
 
-void ml_timer_init(struct ml_timer_t *self_p,
-                   int timeout_ms,
-                   struct ml_uid_t *timeout_p,
-                   struct ml_queue_t *queue_p,
-                   int flags)
+void ml_timer_handler_init(struct ml_timer_handler_t *self_p)
 {
-    self_p->timeout_ms = timeout_ms;
-    self_p->timeout_p = timeout_p;
-    self_p->queue_p = queue_p;
-    self_p->flags = flags;
+    (void)self_p;
 }
 
-void ml_timer_start(struct ml_timer_t *self_p)
+void ml_timer_handler_destroy(struct ml_timer_handler_t *self_p)
+{
+    (void)self_p;
+}
+
+void ml_timer_handler_timer_init(struct ml_timer_handler_t *self_p,
+                                 struct ml_timer_t *timer_p,
+                                 int timeout_ms,
+                                 struct ml_uid_t *message_p,
+                                 struct ml_queue_t *queue_p,
+                                 int flags)
+{
+    timer_p->handler_p = self_p;
+    timer_p->timeout_ms = timeout_ms;
+    timer_p->message_p = message_p;
+    timer_p->queue_p = queue_p;
+    timer_p->flags = flags;
+}
+
+void ml_timer_handler_timer_start(struct ml_timer_t *self_p)
 {
     (void)self_p;
     //timer_insert(self_p->handler_p, self_p);
 }
 
-void ml_timer_stop(struct ml_timer_t *self_p)
+void ml_timer_handler_timer_stop(struct ml_timer_t *self_p)
 {
     (void)self_p;
     /* struct ml_timer_timeout_message_t *message_p; */
