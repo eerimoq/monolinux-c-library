@@ -1,0 +1,12 @@
+dist: xenial
+
+language: c
+
+before_install:
+  - source setup.sh
+
+script:
+  - make -j $(cat /proc/cpuinfo | grep processor | wc -l) run
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
