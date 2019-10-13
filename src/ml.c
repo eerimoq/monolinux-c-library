@@ -27,6 +27,7 @@
  */
 
 #include <stdlib.h>
+#include <stdarg.h>
 #include <arpa/inet.h>
 #include <mntent.h>
 #include <stdint.h>
@@ -41,6 +42,7 @@ struct module_t {
     struct ml_bus_t bus;
     struct ml_worker_pool_t worker_pool;
     struct ml_timer_handler_t timer_handler;
+    struct ml_log_object_t log_object;
 };
 
 static struct module_t module;
@@ -109,6 +111,7 @@ void ml_init(void)
     ml_bus_init(&module.bus);
     ml_worker_pool_init(&module.worker_pool, 4, 32);
     ml_timer_handler_init(&module.timer_handler);
+    ml_log_object_init(&module.log_object, "default", ML_LOG_UPTO(INFO));
 }
 
 const char *ml_uid_str(struct ml_uid_t *uid_p)
@@ -417,4 +420,13 @@ void ml_timer_start(struct ml_timer_t *self_p)
 void ml_timer_stop(struct ml_timer_t *self_p)
 {
     ml_timer_handler_timer_stop(self_p);
+}
+
+void ml_log_print(int level, const char *fmt_p, ...)
+{
+    va_list vlist;
+
+    va_start(vlist, fmt_p);
+    ml_log_object_vprint(&module.log_object, level, fmt_p, vlist);
+    va_end(vlist);
 }

@@ -298,6 +298,8 @@ void ml_worker_pool_spawn(struct ml_worker_pool_t *self_p,
                           ml_worker_pool_job_entry_t entry,
                           void *arg_p);
 
+void ml_log_print(int level, const char *fmt_p, ...);
+
 /**
  * Initialize given log object with given name and mask.
  */
@@ -316,6 +318,11 @@ void ml_log_object_set_mask(struct ml_log_object_t *self_p,
  */
 bool ml_log_object_is_enabled_for(struct ml_log_object_t *self_p,
                                   int level);
+
+void ml_log_object_vprint(struct ml_log_object_t *self_p,
+                          int level,
+                          const char *fmt_p,
+                          va_list vlist);
 
 /**
  * Check if given log level is set in the log object mask. If so,

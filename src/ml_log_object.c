@@ -99,15 +99,14 @@ bool ml_log_object_is_enabled_for(struct ml_log_object_t *self_p,
     return ((self_p->mask & (1 << level)) != 0);
 }
 
-void ml_log_object_print(struct ml_log_object_t *self_p,
-                      int level,
-                      const char *fmt_p,
-                      ...)
+void ml_log_object_vprint(struct ml_log_object_t *self_p,
+                          int level,
+                          const char *fmt_p,
+                          va_list vlist)
 {
     char buf[16];
     time_t now;
     struct tm tm;
-    va_list ap;
 
     if ((self_p->mask & (1 << level)) == 0) {
         return;
@@ -118,8 +117,18 @@ void ml_log_object_print(struct ml_log_object_t *self_p,
     strftime(&buf[0], sizeof(buf), "%b %e %T", &tm);
 
     printf("%s %s %s ", &buf[0], level_to_string(level), self_p->name_p);
-    va_start(ap, fmt_p);
-    vprintf(fmt_p, ap);
-    va_end(ap);
+    vprintf(fmt_p, vlist);
     putchar('\n');
+}
+
+void ml_log_object_print(struct ml_log_object_t *self_p,
+                      int level,
+                      const char *fmt_p,
+                      ...)
+{
+    va_list vlist;
+
+    va_start(vlist, fmt_p);
+    ml_log_object_vprint(self_p, level, fmt_p, vlist);
+    va_end(vlist);
 }
