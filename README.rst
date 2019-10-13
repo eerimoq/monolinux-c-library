@@ -6,8 +6,22 @@ Monolinux C library
 
 The Monolinux C library.
 
+Installation
+============
+
+.. code-block:: shell
+
+   $ sudo apt install gcovr
+   $ sudo pip3 install pyinotify narmock
+
 Unit testing
 ============
+
+Source the development environment setup script.
+
+.. code-block:: shell
+
+   $ source setup.sh
 
 Execute all unit tests.
 
@@ -58,15 +72,15 @@ This is the file tree of the Monolinux C library repository.
 
 .. code-block:: text
 
-   ml/                          - this repository
+   monolinux-c-library/         - this repository
    ├── bin/                     - executables
    ├── LICENSE                  - license
    ├── make/                    - build system
    ├── ml/                      - the Monolinux C library
    └── setup.sh                 - development environment setup script
 
-.. |buildstatus| image:: https://travis-ci.org/eerimoq/ml.svg
-.. _buildstatus: https://travis-ci.org/eerimoq/ml
+.. |buildstatus| image:: https://travis-ci.org/eerimoq/monolinux-c-library.svg
+.. _buildstatus: https://travis-ci.org/eerimoq/monolinux-c-library
 
-.. |codecov| image:: https://codecov.io/gh/eerimoq/ml/branch/master/graph/badge.svg
-.. _codecov: https://codecov.io/gh/eerimoq/ml
+.. |codecov| image:: https://codecov.io/gh/eerimoq/monolinux-c-library/branch/master/graph/badge.svg
+.. _codecov: https://codecov.io/gh/eerimoq/monolinux-c-library
