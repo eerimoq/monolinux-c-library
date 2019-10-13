@@ -11,6 +11,7 @@ LDFLAGS += -Wl,--wrap=ml_network_interface_index
 LDFLAGS += -Wl,--wrap=ml_network_interface_configure
 LDFLAGS += -Wl,--wrap=ml_network_interface_mac_address
 LDFLAGS += -Wl,--wrap=ml_network_interface_add_route
+LDFLAGS += -Wl,--wrap=ml_timer_handler_init
 INC += ..
 SRC += ../utils/utils.c
 SRC += ../utils/mocks/mock.c

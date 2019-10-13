@@ -172,10 +172,6 @@ struct ml_dhcp_client_t {
     struct ml_log_object_t log_object;
 };
 
-struct ml_timer_handler_t {
-    pthread_t pthread;
-};
-
 struct ml_timer_timeout_message_t {
     bool stopped;
     struct ml_timer_t *timer_p;
@@ -185,14 +181,28 @@ struct ml_timer_timeout_message_t {
 
 struct ml_timer_t {
     struct ml_timer_handler_t *handler_p;
-    int timeout_ms;
+    unsigned int timeout;
+    unsigned int delta;
     struct ml_uid_t *message_p;
     struct ml_queue_t *queue_p;
     int flags;
-    struct {
-        struct ml_timer_timeout_message_t list;
-        pthread_mutex_t mutex;
-    } expired;
+    /* Messages in flight to the user. These should be stopped when
+       ml_timer_handler_timer_stop() is called. */
+    struct ml_timer_timeout_message_t expired_list;
+    struct ml_timer_t *next_p;
+};
+
+struct ml_timer_list_t {
+    struct ml_timer_t *head_p;  /* List of timers sorted by expiry
+                                   time. */
+    struct ml_timer_t tail;     /* Tail element of list. */
+};
+
+struct ml_timer_handler_t {
+    int fd;
+    struct ml_timer_list_t timers;
+    pthread_t pthread;
+    pthread_mutex_t mutex;
 };
 
 /**
@@ -510,8 +520,6 @@ void ml_timer_start(struct ml_timer_t *self_p);
 void ml_timer_stop(struct ml_timer_t *self_p);
 
 void ml_timer_handler_init(struct ml_timer_handler_t *self_p);
-
-void ml_timer_handler_destroy(struct ml_timer_handler_t *self_p);
 
 void ml_timer_handler_timer_init(struct ml_timer_handler_t *self_p,
                                  struct ml_timer_t *timer_p,

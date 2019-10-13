@@ -453,7 +453,7 @@ static void mock_push_ml_dhcp_client_start(void)
     struct itimerspec timeout;
     int interface_index;
     uint8_t mac_address[] = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06 };
-
+    
     interface_index = 5;
     mock_push_ml_network_interface_index("eth0", interface_index, 0);
     mock_push_ml_network_interface_mac_address("eth0", &mac_address[0], 0);
@@ -769,6 +769,11 @@ TEST(request_nack)
     ml_dhcp_client_init(&client, "eth0", ML_LOG_ALL);
     ml_dhcp_client_start(&client);
     ml_dhcp_client_join(&client);
+}
+
+void __wrap_ml_timer_handler_init(struct ml_timer_handler_t *self_p)
+{
+    (void)self_p;
 }
 
 int main()
