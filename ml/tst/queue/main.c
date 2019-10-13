@@ -57,7 +57,7 @@ TEST(multiple_put_get, basic_fixture)
     ml_queue_put(&queue, message_2_p);
 
     /* Get first message. */
-    uid_p = ml_queue_get(&queue, &message_p);
+    uid_p = ml_queue_get(&queue, (void **)&message_p);
     ASSERT_EQ(uid_p, &m1);
     ASSERT_EQ(message_p, message_1_p);
     ml_message_free(message_p);

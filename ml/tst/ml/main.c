@@ -316,7 +316,6 @@ static ML_UID(test_spawn_message_id);
 
 static void test_spawn_entry(void *arg_p)
 {
-    PRINT_FILE_LINE();
     ml_queue_put(&test_spawn_queue, arg_p);
 }
 

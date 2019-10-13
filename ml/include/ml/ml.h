@@ -77,7 +77,7 @@
 #define ML_DEBUG(fmt_p, ...)                              \
     ml_log_object_print(&self_p->log_object, ML_LOG_DEBUG, fmt_p, ##__VA_ARGS__)
 
-#define PRINT_FILE_LINE() printf("%s:%d\n", __FILE__, __LINE__);
+#define ML_TIMER_PERIODIC (1 << 0)
 
 #define membersof(array) (sizeof(array) / sizeof((array)[0]))
 
@@ -168,6 +168,24 @@ struct ml_dhcp_client_t {
     } interface;
     pthread_t pthread;
     struct ml_log_object_t log_object;
+};
+
+struct ml_timer_timeout_message_t {
+    bool stopped;
+    struct ml_timer_t *timer_p;
+    struct ml_timer_timeout_message_t *next_p;
+    struct ml_timer_timeout_message_t *prev_p;
+};
+
+struct ml_timer_t {
+    int timeout_ms;
+    struct ml_uid_t *timeout_p;
+    struct ml_queue_t *queue_p;
+    int flags;
+    struct {
+        struct ml_timer_timeout_message_t list;
+        pthread_mutex_t mutex;
+    } expired;
 };
 
 /**
@@ -464,6 +482,25 @@ uint32_t ml_inet_checksum_acc(uint32_t acc,
 uint16_t ml_inet_checksum_end(uint32_t acc);
 
 uint16_t ml_inet_checksum(const void *buf_p, size_t size);
+
+/**
+ * Initialize given timer.
+ */
+void ml_timer_init(struct ml_timer_t *self_p,
+                   int timeout_ms,
+                   struct ml_uid_t *timeout_p,
+                   struct ml_queue_t *queue_p,
+                   int flags);
+
+/**
+ * Start given timer.
+ */
+void ml_timer_start(struct ml_timer_t *self_p);
+
+/**
+ * Stop given timer.
+ */
+void ml_timer_stop(struct ml_timer_t *self_p);
 
 /* Exits on failure. Use with care. */
 
