@@ -4,7 +4,17 @@
 Monolinux C library
 ===================
 
-The Monolinux C library.
+Features:
+
+- Inter-thread message passing.
+
+- Logging.
+
+- A simple shell.
+
+- Network configuration.
+
+Requires POSIX and currently Linux.
 
 Installation
 ============
