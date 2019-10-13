@@ -16,7 +16,7 @@ Features:
 
 Requires POSIX and currently Linux.
 
-Used byt the `Monolinux`_ project.
+Used by the `Monolinux`_ project.
 
 Installation
 ============
