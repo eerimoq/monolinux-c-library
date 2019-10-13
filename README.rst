@@ -16,6 +16,8 @@ Features:
 
 Requires POSIX and currently Linux.
 
+Used byt the `Monolinux`_ project.
+
 Installation
 ============
 
@@ -94,3 +96,5 @@ This is the file tree of the Monolinux C library repository.
 
 .. |codecov| image:: https://codecov.io/gh/eerimoq/monolinux-c-library/branch/master/graph/badge.svg
 .. _codecov: https://codecov.io/gh/eerimoq/monolinux-c-library
+
+.. _Monolinux: https://github.com/eerimoq/monolinux
