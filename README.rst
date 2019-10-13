@@ -14,6 +14,8 @@ Features:
 
 - Network configuration.
 
+- Timers.
+
 Requires POSIX and currently Linux.
 
 Used by the `Monolinux`_ project.
