@@ -155,6 +155,9 @@ TEST(restart_after_stop, basic_fixture)
 
 TEST(multiple_timers, basic_fixture)
 {
+    int timeouts[10] = {
+        50, 0, 100, 75, 50, 50, 100, 90, 10, 0
+    };
     struct ml_timer_t timers[10];
     struct ml_queue_t queues[10];
     struct ml_uid_t *uid_p;
@@ -164,7 +167,7 @@ TEST(multiple_timers, basic_fixture)
     for (i = 0; i < 10; i++) {
         ml_queue_init(&queues[i], 1);
         ml_timer_init(&timers[i],
-                      50,
+                      timeouts[i],
                       &timeout,
                       &queues[i],
                       0);

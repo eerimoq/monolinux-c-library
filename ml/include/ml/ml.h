@@ -523,7 +523,7 @@ void ml_timer_handler_init(struct ml_timer_handler_t *self_p);
 
 void ml_timer_handler_timer_init(struct ml_timer_handler_t *self_p,
                                  struct ml_timer_t *timer_p,
-                                 int timeout_ms,
+                                 unsigned int timeout_ms,
                                  struct ml_uid_t *message_p,
                                  struct ml_queue_t *queue_p,
                                  int flags);
