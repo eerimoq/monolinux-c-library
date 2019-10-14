@@ -172,13 +172,6 @@ struct ml_dhcp_client_t {
     struct ml_log_object_t log_object;
 };
 
-struct ml_timer_timeout_message_t {
-    bool stopped;
-    struct ml_timer_t *timer_p;
-    struct ml_timer_timeout_message_t *next_p;
-    struct ml_timer_timeout_message_t *prev_p;
-};
-
 struct ml_timer_t {
     struct ml_timer_handler_t *handler_p;
     unsigned int timeout;
@@ -186,9 +179,7 @@ struct ml_timer_t {
     struct ml_uid_t *message_p;
     struct ml_queue_t *queue_p;
     int flags;
-    /* Messages in flight to the user. These should be stopped when
-       ml_timer_handler_timer_stop() is called. */
-    struct ml_timer_timeout_message_t expired_list;
+    bool stopped;
     struct ml_timer_t *next_p;
 };
 
@@ -232,7 +223,42 @@ void ml_broadcast(void *message_p);
 void ml_spawn(ml_worker_pool_job_entry_t entry, void *arg_p);
 
 /**
- * Allocate a message with given id and size.
+ * Logging using the default log object.
+ */
+void ml_log_print(int level, const char *fmt_p, ...);
+
+/**
+ * Initialize given timer in the default timer handler. Puts a message
+ * with given id on given queue on expiry. Give ML_TIMER_PERIODIC in
+ * flags to make the timer periodic.
+ */
+void ml_timer_init(struct ml_timer_t *self_p,
+                   int timeout_ms,
+                   struct ml_uid_t *message_p,
+                   struct ml_queue_t *queue_p,
+                   int flags);
+
+/**
+ * Start given timer in the default timer handler. A started timer
+ * must be stopped before it can be restarted.
+ */
+void ml_timer_start(struct ml_timer_t *self_p);
+
+/**
+ * Stop given timer in the default timer handler. This is a noop if
+ * the timer has already been stopped.
+ */
+void ml_timer_stop(struct ml_timer_t *self_p);
+
+/**
+ * Returns true if the timer is stopped. Returns false if the timer is
+ * running or has expired. Can be used to check if a timeout message
+ * is recieved before or after the timer has been stopped.
+ */
+bool ml_timer_is_stopped(struct ml_timer_t *self_p);
+
+/**
+ * Allocate a message with given id and size. The size may be zero.
  */
 void *ml_message_alloc(struct ml_uid_t *uid_p, size_t size);
 
@@ -297,8 +323,6 @@ void ml_worker_pool_init(struct ml_worker_pool_t *self_p,
 void ml_worker_pool_spawn(struct ml_worker_pool_t *self_p,
                           ml_worker_pool_job_entry_t entry,
                           void *arg_p);
-
-void ml_log_print(int level, const char *fmt_p, ...);
 
 /**
  * Initialize given log object with given name and mask.
@@ -506,25 +530,6 @@ uint32_t ml_inet_checksum_acc(uint32_t acc,
 uint16_t ml_inet_checksum_end(uint32_t acc);
 
 uint16_t ml_inet_checksum(const void *buf_p, size_t size);
-
-/**
- * Initialize given timer.
- */
-void ml_timer_init(struct ml_timer_t *self_p,
-                   int timeout_ms,
-                   struct ml_uid_t *message_p,
-                   struct ml_queue_t *queue_p,
-                   int flags);
-
-/**
- * Start given timer.
- */
-void ml_timer_start(struct ml_timer_t *self_p);
-
-/**
- * Stop given timer.
- */
-void ml_timer_stop(struct ml_timer_t *self_p);
 
 void ml_timer_handler_init(struct ml_timer_handler_t *self_p);
 

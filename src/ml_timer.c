@@ -29,32 +29,9 @@
  * implementation (MIT).
  */
 
-#include <stdint.h>
 #include <unistd.h>
 #include <sys/timerfd.h>
 #include "ml/ml.h"
-#include "internal.h"
-
-static void expired_list_insert(struct ml_timer_t *self_p,
-                                struct ml_timer_timeout_message_t *message_p)
-{
-    message_p->next_p = self_p->expired_list.next_p;
-    message_p->prev_p = &self_p->expired_list;
-    self_p->expired_list.next_p = message_p;
-}
-
-static void expired_list_remove(struct ml_timer_t *self_p,
-                                struct ml_timer_timeout_message_t *message_p)
-{
-    pthread_mutex_lock(&self_p->handler_p->mutex);
-    message_p->prev_p->next_p = message_p->next_p;
-    pthread_mutex_unlock(&self_p->handler_p->mutex);
-}
-
-static void on_free(struct ml_timer_timeout_message_t *message_p)
-{
-    expired_list_remove(message_p->timer_p, message_p);
-}
 
 static void timer_list_insert(struct ml_timer_list_t *self_p,
                               struct ml_timer_t *timer_p)
@@ -125,18 +102,6 @@ static void timer_list_remove(struct ml_timer_list_t *self_p,
     }
 }
 
-static void fire_timer(struct ml_timer_t *self_p)
-{
-    struct ml_timer_timeout_message_t *message_p;
-
-    message_p = ml_message_alloc(self_p->message_p, sizeof(*message_p));
-    ml_message_set_on_free(message_p, (ml_message_on_free_t)on_free);
-    message_p->stopped = false;
-    message_p->timer_p = self_p;
-    expired_list_insert(self_p, message_p);
-    ml_queue_put(self_p->queue_p, message_p);
-}
-
 static void tick(struct ml_timer_handler_t *self_p)
 {
     struct ml_timer_t *timer_p;
@@ -153,7 +118,8 @@ static void tick(struct ml_timer_handler_t *self_p)
         while (list_p->head_p->delta == 0) {
             timer_p = list_p->head_p;
             list_p->head_p = timer_p->next_p;
-            fire_timer(timer_p);
+            ml_queue_put(timer_p->queue_p,
+                         ml_message_alloc(timer_p->message_p, 0));
 
             /* Re-set periodic timers. */
             if (timer_p->flags & ML_TIMER_PERIODIC) {
@@ -228,13 +194,13 @@ void ml_timer_handler_timer_init(struct ml_timer_handler_t *self_p,
     timer_p->message_p = message_p;
     timer_p->queue_p = queue_p;
     timer_p->flags = flags;
-    timer_p->expired_list.next_p = NULL;
-    timer_p->expired_list.prev_p = NULL;
+    timer_p->stopped = false;
 }
 
 void ml_timer_handler_timer_start(struct ml_timer_t *self_p)
 {
     self_p->delta = self_p->timeout;
+    self_p->stopped = false;
 
     /* Must wait at least two ticks to ensure the timer does not
        expire early since it may be started close to the next tick
@@ -248,16 +214,14 @@ void ml_timer_handler_timer_start(struct ml_timer_t *self_p)
 
 void ml_timer_handler_timer_stop(struct ml_timer_t *self_p)
 {
-    struct ml_timer_timeout_message_t *message_p;
+    self_p->stopped = true;
 
     pthread_mutex_lock(&self_p->handler_p->mutex);
-    message_p = self_p->expired_list.next_p;
-
-    while (message_p != NULL) {
-        message_p->stopped = true;
-        message_p = message_p->next_p;
-    }
-
     timer_list_remove(&self_p->handler_p->timers, self_p);
     pthread_mutex_unlock(&self_p->handler_p->mutex);
+}
+
+bool ml_timer_is_stopped(struct ml_timer_t *self_p)
+{
+    return (self_p->stopped);
 }

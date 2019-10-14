@@ -49,7 +49,7 @@ TEST(single_shot, basic_fixture)
     ml_timer_start(&timer);
     uid_p = ml_queue_get(&queue, (void **)&message_p);
     ASSERT_EQ(uid_p, &timeout);
-    ASSERT_EQ(message_p->stopped, false);
+    ASSERT_EQ(ml_timer_is_stopped(&timer), false);
     ml_message_free(message_p);
 }
 
@@ -72,7 +72,7 @@ TEST(periodic, basic_fixture)
     for (i = 0; i < 10; i++) {
         uid_p = ml_queue_get(&queue, (void **)&message_p);
         ASSERT_EQ(uid_p, &timeout);
-        ASSERT_EQ(message_p->stopped, false);
+        ASSERT_EQ(ml_timer_is_stopped(&timer), false);
         ml_message_free(message_p);
     }
 
@@ -99,7 +99,7 @@ TEST(stopped, basic_fixture)
     uid_p = ml_queue_get(&queue, (void **)&message_p);
     ml_timer_stop(&timer);
     ASSERT_EQ(uid_p, &timeout);
-    ASSERT_EQ(message_p->stopped, true);
+    ASSERT_EQ(ml_timer_is_stopped(&timer), true);
     ml_message_free(message_p);
 }
 
@@ -121,14 +121,14 @@ TEST(restart_after_timeout, basic_fixture)
     ml_timer_start(&timer);
     uid_p = ml_queue_get(&queue, (void **)&message_p);
     ASSERT_EQ(uid_p, &timeout);
-    ASSERT_EQ(message_p->stopped, false);
+    ASSERT_EQ(ml_timer_is_stopped(&timer), false);
     ml_message_free(message_p);
 
     /* Second start after timeout. */
     ml_timer_start(&timer);
     uid_p = ml_queue_get(&queue, (void **)&message_p);
     ASSERT_EQ(uid_p, &timeout);
-    ASSERT_EQ(message_p->stopped, false);
+    ASSERT_EQ(ml_timer_is_stopped(&timer), false);
     ml_message_free(message_p);
 }
 
@@ -177,7 +177,7 @@ TEST(multiple_timers, basic_fixture)
     for (i = 0; i < 10; i++) {
         uid_p = ml_queue_get(&queues[i], (void **)&message_p);
         ASSERT_EQ(uid_p, &timeout);
-        ASSERT_EQ(message_p->stopped, false);
+        ASSERT_EQ(ml_timer_is_stopped(&timers[i]), false);
         ml_message_free(message_p);
     }
 }
