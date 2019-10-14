@@ -190,7 +190,10 @@ struct ml_timer_list_t {
 };
 
 struct ml_timer_handler_t {
-    int fd;
+    struct {
+        pthread_cond_t cond;
+        pthread_mutex_t mutex;
+    } ticker;
     struct ml_timer_list_t timers;
     pthread_t pthread;
     pthread_mutex_t mutex;
