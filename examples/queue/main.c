@@ -78,7 +78,7 @@ static void *server_main(struct server_t *self_p)
         uid_p = ml_queue_get(&self_p->queue, (void **)&ping_p);
 
         if (uid_p == &ping) {
-            printf("ping: count: %d\n", *ping_p);
+            ml_info("ping: count: %d", *ping_p);
 
             /* Put a pong message on the queue. */
             pong_p = ml_message_alloc(&pong, sizeof(*pong_p));
@@ -89,7 +89,7 @@ static void *server_main(struct server_t *self_p)
             bad_p = ml_message_alloc(&bad, 0);
             ml_queue_put(&client.queue, bad_p);
         } else {
-            printf("Server got unexpected message '%s'\n", ml_uid_str(uid_p));
+            ml_info("Server got unexpected message '%s'", ml_uid_str(uid_p));
         }
 
         ml_message_free(ping_p);
@@ -123,10 +123,10 @@ static void *client_main(struct client_t *self_p)
 
         if (uid_p == &pong) {
             pong_p = message_p;
-            printf("pong: count: %d\n", *pong_p);
+            ml_info("pong: count: %d", *pong_p);
             client_send_ping(*pong_p + 10);
         } else {
-            printf("Client got unexpected message '%s'\n", ml_uid_str(uid_p));
+            ml_info("Client got unexpected message '%s'", ml_uid_str(uid_p));
         }
 
         ml_message_free(message_p);

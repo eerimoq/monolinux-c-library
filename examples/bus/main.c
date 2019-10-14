@@ -66,7 +66,7 @@ static void *a_main(struct a_t *self_p)
     int i;
 
     /* Broadcast ping (to b_1 and b_2). */
-    printf("Broadcasting ping!\n");
+    ml_info("Broadcasting ping!");
     message_p = ml_message_alloc(&ping, 0);
     ml_broadcast(message_p);
 
@@ -75,7 +75,7 @@ static void *a_main(struct a_t *self_p)
         uid_p = ml_queue_get(&self_p->queue, &message_p);
 
         if (uid_p == &pong) {
-            printf("Got pong!\n");
+            ml_info("Got pong!");
         }
 
         ml_message_free(message_p);
@@ -94,10 +94,10 @@ static void *b_main(struct b_t *self_p)
     ml_message_free(message_p);
 
     if (uid_p == &ping) {
-        printf("Got ping!\n");
+        ml_info("Got ping!");
 
         /* Broadcast pong (to a). */
-        printf("Broadcasting pong!\n");
+        ml_info("Broadcasting pong!");
         message_p = ml_message_alloc(&pong, 0);
         ml_broadcast(message_p);
     }

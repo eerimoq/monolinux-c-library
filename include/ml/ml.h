@@ -79,6 +79,16 @@
 #define ML_DEBUG(fmt_p, ...)                              \
     ml_log_object_print(&self_p->log_object, ML_LOG_DEBUG, fmt_p, ##__VA_ARGS__)
 
+/* Default log object. */
+#define ml_emergency(fmt_p, ...) ml_log_print(ML_LOG_EMERGENCY, fmt_p, ##__VA_ARGS__)
+#define ml_alert(fmt_p, ...) ml_log_print(ML_LOG_ALERT, fmt_p, ##__VA_ARGS__)
+#define ml_critical(fmt_p, ...) ml_log_print(ML_LOG_CRITICAL, fmt_p, ##__VA_ARGS__)
+#define ml_error(fmt_p, ...) ml_log_print(ML_LOG_ERROR, fmt_p, ##__VA_ARGS__)
+#define ml_warning(fmt_p, ...) ml_log_print(ML_LOG_WARNING, fmt_p, ##__VA_ARGS__)
+#define ml_notice(fmt_p, ...) ml_log_print(ML_LOG_NOTICE, fmt_p, ##__VA_ARGS__)
+#define ml_info(fmt_p, ...) ml_log_print(ML_LOG_INFO, fmt_p, ##__VA_ARGS__)
+#define ml_debug(fmt_p, ...) ml_log_print(ML_LOG_DEBUG, fmt_p, ##__VA_ARGS__)
+
 #define ML_TIMER_PERIODIC (1 << 0)
 
 #define membersof(array) (sizeof(array) / sizeof((array)[0]))

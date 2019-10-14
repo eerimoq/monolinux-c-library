@@ -49,24 +49,24 @@ int main()
     ml_timer_init(&timer_2, 3000, &timeout_2, &queue, ML_TIMER_PERIODIC);
     ml_timer_init(&timer_3, 5000, &timeout_3, &queue, 0);
 
-    ml_log_print(ML_LOG_INFO, "Starting timer 1.");
+    ml_info("Starting timer 1.");
     ml_timer_start(&timer_1);
 
-    ml_log_print(ML_LOG_INFO, "Starting timer 2.");
+    ml_info("Starting timer 2.");
     ml_timer_start(&timer_2);
 
-    ml_log_print(ML_LOG_INFO, "Starting timer 3.");
+    ml_info("Starting timer 3.");
     ml_timer_start(&timer_3);
 
     while (true) {
         uid_p = ml_queue_get(&queue, (void **)&message_p);
 
         if (uid_p == &timeout_1) {
-            ml_log_print(ML_LOG_INFO, "Timer 1 expired.");
+            ml_info("Timer 1 expired.");
         } else if (uid_p == &timeout_2) {
-            ml_log_print(ML_LOG_INFO, "Timer 2 expired.");
+            ml_info("Timer 2 expired.");
         } else if (uid_p == &timeout_3) {
-            ml_log_print(ML_LOG_INFO, "Timer 3 expired.");
+            ml_info("Timer 3 expired.");
         }
 
         ml_message_free(message_p);
