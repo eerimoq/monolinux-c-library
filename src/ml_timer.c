@@ -30,6 +30,7 @@
  */
 
 #include <unistd.h>
+#include <sys/timerfd.h>
 #include "ml/ml.h"
 
 static void timer_list_insert(struct ml_timer_list_t *self_p,
@@ -133,25 +134,30 @@ static void tick(struct ml_timer_handler_t *self_p)
 
 static void *handler_main(struct ml_timer_handler_t *handler_p)
 {
-    struct timespec abstimeout;
+    struct itimerspec timeout;
+    uint64_t value;
+    ssize_t res;
 
-    pthread_mutex_init(&handler_p->ticker.mutex, NULL);
-    pthread_cond_init (&handler_p->ticker.cond, NULL);
-    pthread_mutex_lock(&handler_p->ticker.mutex);
+    handler_p->fd = timerfd_create(CLOCK_REALTIME, 0);
 
-    clock_gettime(CLOCK_REALTIME, &abstimeout);
+    if (handler_p->fd == -1) {
+        return (NULL);
+    }
 
-    while (1) {
-        abstimeout.tv_nsec += 10000000L;
+    timeout.it_value.tv_sec = 0;
+    timeout.it_value.tv_nsec = 10000000;
+    timeout.it_interval.tv_sec= 0;
+    timeout.it_interval.tv_nsec = 10000000;
+    timerfd_settime(handler_p->fd, 0, &timeout, NULL);
 
-        if (abstimeout.tv_nsec >= 1000000000L) {
-            abstimeout.tv_nsec -= 1000000000L;
-            abstimeout.tv_sec++;
+    while (true) {
+        res = read(handler_p->fd, &value, sizeof(value));
+
+        if (res != sizeof(value)) {
+            sleep(1);
+            continue;
         }
 
-        pthread_cond_timedwait(&handler_p->ticker.cond,
-                               &handler_p->ticker.mutex,
-                               &abstimeout);
         tick(handler_p);
     }
 
