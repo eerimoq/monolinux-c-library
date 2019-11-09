@@ -27,7 +27,8 @@
 #define REGISTER_TEST(name)                             \
     narwhal_register_test(&narwhal_test_ ## name)
 
-#define NARWHAL_TEST_FAILURE() narwhal_test_failure()
+#define NARWHAL_TEST_FAILURE(message_p)                 \
+    narwhal_test_failure(__FILE__, __LINE__, message_p)
 
 #define NARWHAL_PRINT_FORMAT(value)                     \
     _Generic((value),                                   \
@@ -70,16 +71,19 @@
         __typeof__(right) _narwhal_assert_right = (right);              \
                                                                         \
         if (!check(_narwhal_assert_left, _narwhal_assert_right)) {      \
-            char _narwhal_assert_message[1024];                         \
-            snprintf(_narwhal_assert_message,                           \
-                     sizeof(_narwhal_assert_message),                   \
-                     message "\n",                                      \
+            char _narwhal_message_format[1024];                         \
+            char _narwhal_message[1024];                                \
+            snprintf(_narwhal_message_format,                           \
+                     sizeof(_narwhal_message_format),                   \
+                     message,                                           \
                      NARWHAL_PRINT_FORMAT(_narwhal_assert_left),        \
                      NARWHAL_PRINT_FORMAT(_narwhal_assert_right));      \
-            printf(_narwhal_assert_message,                             \
-                   _narwhal_assert_left,                                \
-                   _narwhal_assert_right);                              \
-            NARWHAL_TEST_FAILURE();                                     \
+            snprintf(_narwhal_message,                                  \
+                     sizeof(_narwhal_message),                          \
+                     _narwhal_message_format,                           \
+                     _narwhal_assert_left,                              \
+                     _narwhal_assert_right);                            \
+            NARWHAL_TEST_FAILURE(_narwhal_message);                     \
         }                                                               \
     } while (0)
 
@@ -200,21 +204,21 @@
 #define ASSERT_MEMORY(left, right, size)                \
     do {                                                \
         if (memcmp((left), (right), (size)) != 0) {     \
-            NARWHAL_TEST_FAILURE();                     \
+            NARWHAL_TEST_FAILURE("");                   \
         }                                               \
     } while (0)
 
 #define ASSERT(cond)                            \
     if (!(cond)) {                              \
-        NARWHAL_TEST_FAILURE();                 \
+        NARWHAL_TEST_FAILURE("");               \
     }
 
-#define FAIL() NARWHAL_TEST_FAILURE()
+#define FAIL() NARWHAL_TEST_FAILURE("")
 
 #define CAPTURE_OUTPUT(stdout_name, stderr_name)                        \
     int stdout_name ## i;                                               \
-    char *stdout_name = NULL;                                           \
-    char *stderr_name = NULL;                                           \
+    static char *stdout_name = NULL;                                    \
+    static char *stderr_name = NULL;                                    \
                                                                         \
     for (stdout_name ## i = 0, narwhal_capture_output_start(&stdout_name, \
                                                             &stderr_name); \
@@ -239,7 +243,9 @@ void narwhal_capture_output_start(char **stdout_pp, char **stderr_pp);
 
 void narwhal_capture_output_stop(void);
 
-__attribute__ ((noreturn)) void narwhal_test_failure(void);
+__attribute__ ((noreturn)) void narwhal_test_failure(const char *file_p,
+                                                     int line,
+                                                     const char *message_p);
 
 void narwhal_register_test(struct narwhal_test_t *test_p);
 

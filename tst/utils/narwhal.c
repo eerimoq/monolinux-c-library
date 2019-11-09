@@ -32,12 +32,15 @@ struct tests_t {
 };
 
 struct capture_output_t {
+    bool running;
     char **output_pp;
     size_t length;
     int original_fd;
     FILE *temporary_file_p;
     FILE *original_file_p;
 };
+
+static struct narwhal_test_t *current_test_p = NULL;
 
 static struct tests_t tests = {
     .head_p = NULL,
@@ -64,8 +67,9 @@ static void capture_output_destroy(struct capture_output_t *self_p)
     if (self_p->output_pp != NULL) {
         if (*self_p->output_pp != NULL) {
             free(*self_p->output_pp);
-            self_p->output_pp = NULL;
         }
+
+        self_p->output_pp = NULL;
     }
 }
 
@@ -95,22 +99,30 @@ static void capture_output_start(struct capture_output_t *self_p,
                                  char **output_pp)
 {
     self_p->output_pp = output_pp;
+    self_p->length = 0;
+    self_p->running = true;
     capture_output_redirect(self_p);
 }
 
 static void capture_output_stop(struct capture_output_t *self_p)
 {
-    ssize_t nmembers;
+    size_t nmembers;
 
-    if (self_p->output_pp == NULL) {
+    if (!self_p->running) {
         return;
     }
 
+    self_p->running = false;
     capture_output_restore(self_p);
 
-    self_p->length = ftell(self_p->temporary_file_p);
+    self_p->length = (size_t)ftell(self_p->temporary_file_p);
     fseek(self_p->temporary_file_p, 0, SEEK_SET);
     *self_p->output_pp = malloc(self_p->length + 1);
+
+    if (*self_p->output_pp == NULL) {
+        printf("Failed to allocate memory.\n");
+        exit(1);
+    }
 
     if (self_p->length > 0) {
         nmembers = fread(*self_p->output_pp,
@@ -120,7 +132,7 @@ static void capture_output_stop(struct capture_output_t *self_p)
 
         if (nmembers != 1) {
             printf("Failed to read capture output.\n");
-            FAIL();
+            exit(1);
         }
     }
 
@@ -139,6 +151,63 @@ static float timeval_to_ms(struct timeval *timeval_p)
     res += (float)(1000 * timeval_p->tv_sec);
 
     return (res);
+}
+
+static void print_signal_failure(struct narwhal_test_t *test_p)
+{
+    printf("\n");
+    printf("%s failed:\n\n", test_p->name_p);
+    printf("  Location: " COLOR_BOLD(GREEN, "unknown\n"));
+    printf("  Error:    " COLOR_BOLD(RED, "Terminated by signal %d.\n"),
+           test_p->signal_number);
+}
+
+static void print_location_context(const char *filename_p, size_t line_number)
+{
+    FILE *file_p;
+    char line_prefix[64];
+    char line[256];
+    size_t first_line;
+    size_t i;
+
+    file_p = fopen(filename_p, "r");
+
+    if (file_p == NULL) {
+        return;
+    }
+
+    if (line_number < 2) {
+        first_line = 1;
+    } else {
+        first_line = (line_number - 2);
+    }
+
+    for (i = 1; i < line_number + 3; i++) {
+        if (fgets(&line[0], sizeof(line), file_p) == NULL) {
+            goto out1;
+        }
+
+        if (i < first_line) {
+            continue;
+        }
+
+        if (i == line_number) {
+            snprintf(line_prefix,
+                     sizeof(line_prefix),
+                     "> " COLOR_BOLD(MAGENTA, "%ld"),
+                     i);
+            printf("  %23s", line_prefix);
+            printf(" |  " COLOR_BOLD(CYAN, "%s"), line);
+        } else {
+            printf("  " COLOR(MAGENTA, "%6zu"), i);
+            printf(" |  %s", line);
+        }
+    }
+
+ out1:
+
+    printf("\n");
+    fclose(file_p);
 }
 
 static void print_test_results(struct narwhal_test_t *test_p,
@@ -235,8 +304,8 @@ static int run_tests(struct narwhal_test_t *tests_p)
     res = 0;
 
     while (test_p != NULL) {
-        printf("enter: %s\n", test_p->name_p);
         gettimeofday(&test_start_time, NULL);
+        current_test_p = test_p;
         test_p->before_fork_func();
 
         result_p = subprocess_call(test_entry, test_p);
@@ -252,7 +321,11 @@ static int run_tests(struct narwhal_test_t *tests_p)
         gettimeofday(&test_end_time, NULL);
         timersub(&test_end_time, &test_start_time, &elapsed_time);
         test_p->elapsed_time_ms = timeval_to_ms(&elapsed_time);
-        printf("exit: %s\n", test_p->name_p);
+
+        if (test_p->signal_number != -1) {
+            print_signal_failure(test_p);
+        }
+
         test_p = test_p->next_p;
     }
 
@@ -275,12 +348,20 @@ bool narwhal_check_substring(const char *actual_p, const char *expected_p)
             && (strstr(actual_p, expected_p) != NULL));
 }
 
-void narwhal_test_failure(void)
+void narwhal_test_failure(const char *file_p,
+                          int line,
+                          const char *message_p)
 {
     narwhal_capture_output_stop();
     capture_output_destroy(&capture_stdout);
     capture_output_destroy(&capture_stderr);
-    traceback_print();
+    printf("\n");
+    printf("%s failed:\n\n", current_test_p->name_p);
+    printf("  Location: " COLOR_BOLD(GREEN, "%s:%d:\n"), file_p, line);
+    printf("  Error:    " COLOR_BOLD(RED, "%s\n\n"), message_p);
+    print_location_context(file_p, line);
+    traceback_print("  ");
+    printf("\n");
     exit(1);
 }
 
@@ -293,16 +374,6 @@ void narwhal_capture_output_start(char **output_pp, char **errput_pp)
 void narwhal_capture_output_stop()
 {
     capture_output_stop(&capture_stdout);
-    capture_output_stop(&capture_stderr);
-}
-
-void narwhal_capture_stderr_start(char **output_pp)
-{
-    capture_output_start(&capture_stderr, output_pp);
-}
-
-void narwhal_capture_stderr_stop()
-{
     capture_output_stop(&capture_stderr);
 }
 

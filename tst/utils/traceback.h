@@ -31,4 +31,4 @@
 /**
  * Print a traceback.
  */
-void traceback_print(void);
+void traceback_print(const char *prefix_p);
