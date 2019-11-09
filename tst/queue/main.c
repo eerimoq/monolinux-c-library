@@ -36,7 +36,7 @@ ML_UID(m2);
 
 static struct ml_queue_t queue;
 
-TEST(multiple_put_get, basic_fixture)
+TEST(multiple_put_get)
 {
     void *message_1_p;
     void *message_2_p;
@@ -113,7 +113,7 @@ static void *queue_empty_and_full_main(void *arg_p)
     return (NULL);
 }
 
-TEST(queue_empty_and_full, basic_fixture)
+TEST(queue_empty_and_full)
 {
     struct ml_uid_t *uid_p;
     void *message_p;
@@ -142,12 +142,4 @@ TEST(queue_empty_and_full, basic_fixture)
     }
 
     pthread_join(pthread, NULL);
-}
-
-int main()
-{
-    return RUN_TESTS(
-        multiple_put_get,
-        queue_empty_and_full
-    );
 }

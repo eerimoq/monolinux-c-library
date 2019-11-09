@@ -33,7 +33,7 @@
 
 ML_UID(timeout);
 
-TEST(single_shot, basic_fixture)
+TEST(single_shot)
 {
     struct ml_timer_t timer;
     struct ml_queue_t queue;
@@ -53,7 +53,7 @@ TEST(single_shot, basic_fixture)
     ml_message_free(message_p);
 }
 
-TEST(periodic, basic_fixture)
+TEST(periodic)
 {
     struct ml_timer_t timer;
     struct ml_queue_t queue;
@@ -79,7 +79,7 @@ TEST(periodic, basic_fixture)
     ml_timer_stop(&timer);
 }
 
-TEST(stopped, basic_fixture)
+TEST(stopped)
 {
     struct ml_timer_t timer;
     struct ml_queue_t queue;
@@ -103,7 +103,7 @@ TEST(stopped, basic_fixture)
     ml_message_free(message_p);
 }
 
-TEST(restart_after_timeout, basic_fixture)
+TEST(restart_after_timeout)
 {
     struct ml_timer_t timer;
     struct ml_queue_t queue;
@@ -132,7 +132,7 @@ TEST(restart_after_timeout, basic_fixture)
     ml_message_free(message_p);
 }
 
-TEST(restart_after_stop, basic_fixture)
+TEST(restart_after_stop)
 {
     struct ml_timer_t timer;
     struct ml_queue_t queue;
@@ -153,7 +153,7 @@ TEST(restart_after_stop, basic_fixture)
     ml_timer_stop(&timer);
 }
 
-TEST(multiple_timers, basic_fixture)
+TEST(multiple_timers)
 {
     int timeouts[10] = {
         50, 0, 100, 75, 50, 50, 100, 90, 10, 0
@@ -180,16 +180,4 @@ TEST(multiple_timers, basic_fixture)
         ASSERT_EQ(ml_timer_is_stopped(&timers[i]), false);
         ml_message_free(message_p);
     }
-}
-
-int main()
-{
-    return RUN_TESTS(
-        single_shot,
-        periodic,
-        stopped,
-        restart_after_timeout,
-        restart_after_stop,
-        multiple_timers
-    );
 }

@@ -161,7 +161,7 @@ static void mock_push_ml_network_interface_ip_address(const char *name_p,
     mock_push_ioctl_get(name_p, SIOCGIFADDR, &ifreq_out, res);
 }
 
-TEST(network_interface_configure, basic_fixture)
+TEST(network_interface_configure)
 {
     ml_shell_init();
 
@@ -175,7 +175,7 @@ TEST(network_interface_configure, basic_fixture)
                                              "255.255.255.0"), 0);
 }
 
-TEST(network_interface_up, basic_fixture)
+TEST(network_interface_up)
 {
     ml_shell_init();
 
@@ -187,7 +187,7 @@ TEST(network_interface_up, basic_fixture)
     ASSERT_EQ(ml_network_interface_up("eth0"), 0);
 }
 
-TEST(network_interface_down, basic_fixture)
+TEST(network_interface_down)
 {
     ml_shell_init();
 
@@ -199,7 +199,7 @@ TEST(network_interface_down, basic_fixture)
     ASSERT_EQ(ml_network_interface_down("eth0"), 0);
 }
 
-TEST(command_ifconfig_no_args, basic_fixture)
+TEST(command_ifconfig_no_args)
 {
     ml_shell_command_callback_t command_ifconfig;
     const char *argv[] = { "ifconfig" };
@@ -211,7 +211,7 @@ TEST(command_ifconfig_no_args, basic_fixture)
 
     command_ifconfig = mock_get_callback("ifconfig");
 
-    CAPTURE_OUTPUT(output) {
+    CAPTURE_OUTPUT(output, errput) {
         ASSERT_EQ(command_ifconfig(membersof(argv), argv), -1);
     }
 
@@ -221,7 +221,7 @@ TEST(command_ifconfig_no_args, basic_fixture)
               "ifconfig <interface> <ip-address> <netmask>\n");
 }
 
-TEST(command_ifconfig_configure, basic_fixture)
+TEST(command_ifconfig_configure)
 {
     ml_shell_command_callback_t command_ifconfig;
     const char *argv[] = { "ifconfig", "eth2", "192.168.0.4", "255.255.255.0" };
@@ -235,14 +235,14 @@ TEST(command_ifconfig_configure, basic_fixture)
 
     mock_push_configure("eth2");
 
-    CAPTURE_OUTPUT(output) {
+    CAPTURE_OUTPUT(output, errput) {
         ASSERT_EQ(command_ifconfig(membersof(argv), argv), 0);
     }
 
     ASSERT_EQ(output, "");
 }
 
-TEST(command_ifconfig_up, basic_fixture)
+TEST(command_ifconfig_up)
 {
     ml_shell_command_callback_t command_ifconfig;
     const char *argv[] = { "ifconfig", "eth2", "up" };
@@ -256,14 +256,14 @@ TEST(command_ifconfig_up, basic_fixture)
 
     mock_push_up("eth2");
 
-    CAPTURE_OUTPUT(output) {
+    CAPTURE_OUTPUT(output, errput) {
         ASSERT_EQ(command_ifconfig(membersof(argv), argv), 0);
     }
 
     ASSERT_EQ(output, "");
 }
 
-TEST(command_ifconfig_down, basic_fixture)
+TEST(command_ifconfig_down)
 {
     ml_shell_command_callback_t command_ifconfig;
     const char *argv[] = { "ifconfig", "eth1", "down" };
@@ -277,14 +277,14 @@ TEST(command_ifconfig_down, basic_fixture)
 
     mock_push_down("eth1");
 
-    CAPTURE_OUTPUT(output) {
+    CAPTURE_OUTPUT(output, errput) {
         ASSERT_EQ(command_ifconfig(membersof(argv), argv), 0);
     }
 
     ASSERT_EQ(output, "");
 }
 
-TEST(command_ifconfig_foobar, basic_fixture)
+TEST(command_ifconfig_foobar)
 {
     ml_shell_command_callback_t command_ifconfig;
     const char *argv[] = { "ifconfig", "eth1", "foobar" };
@@ -296,7 +296,7 @@ TEST(command_ifconfig_foobar, basic_fixture)
 
     command_ifconfig = mock_get_callback("ifconfig");
 
-    CAPTURE_OUTPUT(output) {
+    CAPTURE_OUTPUT(output, errput) {
         ASSERT_EQ(command_ifconfig(membersof(argv), argv), -1);
     }
 
@@ -306,7 +306,7 @@ TEST(command_ifconfig_foobar, basic_fixture)
               "ifconfig <interface> <ip-address> <netmask>\n");
 }
 
-TEST(command_ifconfig_print, basic_fixture)
+TEST(command_ifconfig_print)
 {
     ml_shell_command_callback_t command_ifconfig;
     const char *argv[] = { "ifconfig", "eth1" };
@@ -331,7 +331,7 @@ TEST(command_ifconfig_print, basic_fixture)
     mock_push_ml_network_interface_mac_address("eth1", &mac_address[0], 0);
     mock_push_ml_network_interface_index("eth1", 5, 0);
 
-    CAPTURE_OUTPUT(output) {
+    CAPTURE_OUTPUT(output, errput) {
         ASSERT_EQ(command_ifconfig(membersof(argv), argv), 0);
     }
 
@@ -341,7 +341,7 @@ TEST(command_ifconfig_print, basic_fixture)
               "Index:       5\n");
 }
 
-TEST(command_ifconfig_print_ip_failure, basic_fixture)
+TEST(command_ifconfig_print_ip_failure)
 {
     ml_shell_command_callback_t command_ifconfig;
     const char *argv[] = { "ifconfig", "eth1" };
@@ -366,7 +366,7 @@ TEST(command_ifconfig_print_ip_failure, basic_fixture)
     mock_push_ml_network_interface_mac_address("eth1", &mac_address[0], 0);
     mock_push_ml_network_interface_index("eth1", 5, 0);
 
-    CAPTURE_OUTPUT(output) {
+    CAPTURE_OUTPUT(output, errput) {
         ASSERT_EQ(command_ifconfig(membersof(argv), argv), 0);
     }
 
@@ -376,7 +376,7 @@ TEST(command_ifconfig_print_ip_failure, basic_fixture)
               "Index:       5\n");
 }
 
-TEST(command_udp_send_no_args, basic_fixture)
+TEST(command_udp_send_no_args)
 {
     ml_shell_command_callback_t command_udp_send;
     const char *argv[] = { "udp_send" };
@@ -388,14 +388,14 @@ TEST(command_udp_send_no_args, basic_fixture)
 
     command_udp_send = mock_get_callback("udp_send");
 
-    CAPTURE_OUTPUT(output) {
+    CAPTURE_OUTPUT(output, errput) {
         ASSERT_EQ(command_udp_send(membersof(argv), argv), -1);
     }
 
     ASSERT_EQ(output, "udp_send <ip-address> <port> <data>\n");
 }
 
-TEST(command_udp_send_bad_ip_address, basic_fixture)
+TEST(command_udp_send_bad_ip_address)
 {
     ml_shell_command_callback_t command_udp_send;
     const char *argv[] = { "udp_send", "b.b.c.d", "9999", "Hello" };
@@ -407,14 +407,14 @@ TEST(command_udp_send_bad_ip_address, basic_fixture)
 
     command_udp_send = mock_get_callback("udp_send");
 
-    CAPTURE_OUTPUT(output) {
+    CAPTURE_OUTPUT(output, errput) {
         ASSERT_EQ(command_udp_send(membersof(argv), argv), -1);
     }
 
     ASSERT_SUBSTRING(output, "udp_send <ip-address> <port> <data>\n");
 }
 
-TEST(command_udp_send_open_socket_failure, basic_fixture)
+TEST(command_udp_send_open_socket_failure)
 {
     ml_shell_command_callback_t command_udp_send;
     const char *argv[] = { "udp_send", "1.2.3.4", "9999", "Hello" };
@@ -426,16 +426,16 @@ TEST(command_udp_send_open_socket_failure, basic_fixture)
 
     command_udp_send = mock_get_callback("udp_send");
 
-    CAPTURE_OUTPUT(output) {
+    CAPTURE_OUTPUT(output, errput) {
         mock_push_socket(AF_INET, SOCK_DGRAM, 0, -1);
         ASSERT_EQ(command_udp_send(membersof(argv), argv), -1);
     }
 
-    ASSERT_SUBSTRING(output, "error: socket:");
+    ASSERT_SUBSTRING(errput, "error: socket:");
     ASSERT_SUBSTRING(output, "udp_send <ip-address> <port> <data>\n");
 }
 
-TEST(command_udp_send_sendto_failure, basic_fixture)
+TEST(command_udp_send_sendto_failure)
 {
     int fd;
     ml_shell_command_callback_t command_udp_send;
@@ -450,7 +450,7 @@ TEST(command_udp_send_sendto_failure, basic_fixture)
     command_udp_send = mock_get_callback("udp_send");
     fd = 9;
 
-    CAPTURE_OUTPUT(output) {
+    CAPTURE_OUTPUT(output, errput) {
         mock_push_socket(AF_INET, SOCK_DGRAM, 0, fd);
         memset(&other, 0, sizeof(other));
         other.sin_family = AF_INET;
@@ -466,11 +466,11 @@ TEST(command_udp_send_sendto_failure, basic_fixture)
         ASSERT_EQ(command_udp_send(membersof(argv), argv), -1);
     }
 
-    ASSERT_SUBSTRING(output, "sendto failed:");
+    ASSERT_SUBSTRING(errput, "sendto failed:");
     ASSERT_SUBSTRING(output, "udp_send <ip-address> <port> <data>\n");
 }
 
-TEST(command_udp_send, basic_fixture)
+TEST(command_udp_send)
 {
     int fd;
     ml_shell_command_callback_t command_udp_send;
@@ -485,7 +485,7 @@ TEST(command_udp_send, basic_fixture)
     command_udp_send = mock_get_callback("udp_send");
     fd = 9;
 
-    CAPTURE_OUTPUT(output) {
+    CAPTURE_OUTPUT(output, errput) {
         mock_push_socket(AF_INET, SOCK_DGRAM, 0, fd);
         memset(&other, 0, sizeof(other));
         other.sin_family = AF_INET;
@@ -504,7 +504,7 @@ TEST(command_udp_send, basic_fixture)
     ASSERT_EQ(output, "");
 }
 
-TEST(command_udp_recv_no_args, basic_fixture)
+TEST(command_udp_recv_no_args)
 {
     ml_shell_command_callback_t command_udp_recv;
     const char *argv[] = { "udp_recv" };
@@ -516,14 +516,14 @@ TEST(command_udp_recv_no_args, basic_fixture)
 
     command_udp_recv = mock_get_callback("udp_recv");
 
-    CAPTURE_OUTPUT(output) {
+    CAPTURE_OUTPUT(output, errput) {
         ASSERT_EQ(command_udp_recv(membersof(argv), argv), -1);
     }
 
     ASSERT_EQ(output, "udp_recv <port> [<timeout in seconds>]\n");
 }
 
-TEST(command_udp_recv_open_socket_failure, basic_fixture)
+TEST(command_udp_recv_open_socket_failure)
 {
     ml_shell_command_callback_t command_udp_recv;
     const char *argv[] = { "udp_recv", "9999" };
@@ -535,34 +535,11 @@ TEST(command_udp_recv_open_socket_failure, basic_fixture)
 
     command_udp_recv = mock_get_callback("udp_recv");
 
-    CAPTURE_OUTPUT(output) {
+    CAPTURE_OUTPUT(output, errput) {
         mock_push_socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP, -1);
         ASSERT_EQ(command_udp_recv(membersof(argv), argv), -1);
     }
 
-    ASSERT_SUBSTRING(output, "error: socket:");
+    ASSERT_SUBSTRING(errput, "error: socket:");
     ASSERT_SUBSTRING(output, "udp_recv <port> [<timeout in seconds>]\n");
-}
-
-int main()
-{
-    return RUN_TESTS(
-        network_interface_configure,
-        network_interface_up,
-        network_interface_down,
-        command_ifconfig_no_args,
-        command_ifconfig_configure,
-        command_ifconfig_up,
-        command_ifconfig_down,
-        command_ifconfig_foobar,
-        command_ifconfig_print,
-        command_ifconfig_print_ip_failure,
-        command_udp_send_no_args,
-        command_udp_send_bad_ip_address,
-        command_udp_send_open_socket_failure,
-        command_udp_send_sendto_failure,
-        command_udp_send,
-        command_udp_recv_no_args,
-        command_udp_recv_open_socket_failure
-    );
 }

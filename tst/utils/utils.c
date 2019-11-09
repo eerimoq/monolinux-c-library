@@ -4,14 +4,18 @@
 #include "utils.h"
 #include "mocks/mock.h"
 
-TEST_FIXTURE(basic_fixture, void)
+int setup()
 {
     ml_init();
 
-    CLEANUP_FIXTURE(basic_fixture)
-    {
-        mock_finalize();
-    }
+    return (0);
+}
+
+int teardown()
+{
+    mock_finalize();
+
+    return (0);
 }
 
 int stdin_pipe(void)

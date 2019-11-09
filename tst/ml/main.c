@@ -33,7 +33,7 @@
 #include "utils/mocks/mock.h"
 #include "utils/utils.h"
 
-TEST(strip, basic_fixture)
+TEST(strip)
 {
     char string1[] = "1  ";
     char string2[] = " 1 ";
@@ -62,7 +62,7 @@ TEST(strip, basic_fixture)
     ASSERT_EQ(begin_p, &string4[3]);
 }
 
-TEST(lstrip, basic_fixture)
+TEST(lstrip)
 {
     char string1[] = "1 ";
     char string2[] = " 1";
@@ -86,7 +86,7 @@ TEST(lstrip, basic_fixture)
     ASSERT_EQ(begin_p, &string3[2]);
 }
 
-TEST(rstrip, basic_fixture)
+TEST(rstrip)
 {
     char string1[] = "1 ";
     char string2[] = " 1";
@@ -105,18 +105,18 @@ TEST(rstrip, basic_fixture)
     ASSERT_EQ(&string3[0], "");
 }
 
-TEST(hexdump_empty, basic_fixture)
+TEST(hexdump_empty)
 {
-    CAPTURE_OUTPUT(output) {
+    CAPTURE_OUTPUT(output, errput) {
         ml_hexdump("", 0);
     }
 
     ASSERT_EQ(output, "");
 }
 
-TEST(hexdump_short, basic_fixture)
+TEST(hexdump_short)
 {
-    CAPTURE_OUTPUT(output) {
+    CAPTURE_OUTPUT(output, errput) {
         ml_hexdump("1", 1);
     }
 
@@ -125,9 +125,9 @@ TEST(hexdump_short, basic_fixture)
         "00000000: 31                                              '1'\n");
 }
 
-TEST(hexdump_long, basic_fixture)
+TEST(hexdump_long)
 {
-    CAPTURE_OUTPUT(output) {
+    CAPTURE_OUTPUT(output, errput) {
         ml_hexdump(
             "110238\x00\x21h0112039jiajsFEWAFWE@#%!45eeeeeeeeeeeeeeeeeeeeeee"
             "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\x01\x0ageeeeerG012345678901234"
@@ -158,14 +158,14 @@ TEST(hexdump_long, basic_fixture)
         "00000100: 37                                              '7'\n");
 }
 
-TEST(hexdump_file_0_0, basic_fixture)
+TEST(hexdump_file_0_0)
 {
     FILE *fin_p;
 
     fin_p = fopen("hexdump.in", "rb");
     ASSERT(fin_p != NULL);
 
-    CAPTURE_OUTPUT(output) {
+    CAPTURE_OUTPUT(output, errput) {
         ml_hexdump_file(fin_p, 0, 0);
     }
 
@@ -174,14 +174,14 @@ TEST(hexdump_file_0_0, basic_fixture)
     ASSERT_EQ(output, "");
 }
 
-TEST(hexdump_file_0_16, basic_fixture)
+TEST(hexdump_file_0_16)
 {
     FILE *fin_p;
 
     fin_p = fopen("hexdump.in", "rb");
     ASSERT(fin_p != NULL);
 
-    CAPTURE_OUTPUT(output) {
+    CAPTURE_OUTPUT(output, errput) {
         ml_hexdump_file(fin_p, 0, 16);
     }
 
@@ -192,14 +192,14 @@ TEST(hexdump_file_0_16, basic_fixture)
         "00000000: 30 31 32 33 34 35 36 37 38 39 30 31 32 33 34 35 '0123456789012345'\n");
 }
 
-TEST(hexdump_file_1_16, basic_fixture)
+TEST(hexdump_file_1_16)
 {
     FILE *fin_p;
 
     fin_p = fopen("hexdump.in", "rb");
     ASSERT(fin_p != NULL);
 
-    CAPTURE_OUTPUT(output) {
+    CAPTURE_OUTPUT(output, errput) {
         ml_hexdump_file(fin_p, 1, 16);
     }
 
@@ -210,14 +210,14 @@ TEST(hexdump_file_1_16, basic_fixture)
         "00000001: 31 32 33 34 35 36 37 38 39 30 31 32 33 34 35 36 '1234567890123456'\n");
 }
 
-TEST(hexdump_file_0_m1, basic_fixture)
+TEST(hexdump_file_0_m1)
 {
     FILE *fin_p;
 
     fin_p = fopen("hexdump.in", "rb");
     ASSERT(fin_p != NULL);
 
-    CAPTURE_OUTPUT(output) {
+    CAPTURE_OUTPUT(output, errput) {
         ml_hexdump_file(fin_p, 0, -1);
     }
 
@@ -230,14 +230,14 @@ TEST(hexdump_file_0_m1, basic_fixture)
         "00000020: 32 33 34 35 36 37 38 39                         '23456789'\n");
 }
 
-TEST(hexdump_file_1_m1, basic_fixture)
+TEST(hexdump_file_1_m1)
 {
     FILE *fin_p;
 
     fin_p = fopen("hexdump.in", "rb");
     ASSERT(fin_p != NULL);
 
-    CAPTURE_OUTPUT(output) {
+    CAPTURE_OUTPUT(output, errput) {
         ml_hexdump_file(fin_p, 1, -1);
     }
 
@@ -250,18 +250,18 @@ TEST(hexdump_file_1_m1, basic_fixture)
         "00000021: 33 34 35 36 37 38 39                            '3456789'\n");
 }
 
-TEST(print_file, basic_fixture)
+TEST(print_file)
 {
-    CAPTURE_OUTPUT(output) {
+    CAPTURE_OUTPUT(output, errput) {
         ml_print_file("hexdump.in");
     }
 
     ASSERT_EQ(output, "0123456789012345678901234567890123456789");
 }
 
-TEST(print_uptime, basic_fixture)
+TEST(print_uptime)
 {
-    CAPTURE_OUTPUT(output) {
+    CAPTURE_OUTPUT(output, errput) {
         ml_print_uptime();
     }
 
@@ -273,7 +273,7 @@ static ML_UID(m1);
 
 static struct ml_queue_t queue;
 
-TEST(bus, basic_fixture)
+TEST(bus)
 {
     struct ml_uid_t *uid_p;
     int *message_p;
@@ -292,14 +292,14 @@ TEST(bus, basic_fixture)
     ml_message_free(rmessage_p);
 }
 
-TEST(ml_mount_ok, basic_fixture)
+TEST(ml_mount_ok)
 {
     mock_push_mount("a", "b", "c", 0, "", 1, 0);
 
     ASSERT_EQ(ml_mount("a", "b", "c"), 0);
 }
 
-TEST(insmod, basic_fixture)
+TEST(insmod)
 {
     int fd;
 
@@ -319,7 +319,7 @@ static void test_spawn_entry(void *arg_p)
     ml_queue_put(&test_spawn_queue, arg_p);
 }
 
-TEST(spawn, basic_fixture)
+TEST(spawn)
 {
     void *message_p;
 
@@ -329,27 +329,4 @@ TEST(spawn, basic_fixture)
     ASSERT_EQ(ml_queue_get(&test_spawn_queue, &message_p),
               &test_spawn_message_id);
     ml_message_free(message_p);
-}
-
-int main()
-{
-    return RUN_TESTS(
-        strip,
-        lstrip,
-        rstrip,
-        hexdump_empty,
-        hexdump_short,
-        hexdump_long,
-        hexdump_file_0_0,
-        hexdump_file_0_16,
-        hexdump_file_1_16,
-        hexdump_file_0_m1,
-        hexdump_file_1_m1,
-        print_file,
-        print_uptime,
-        bus,
-        ml_mount_ok,
-        insmod,
-        spawn
-    );
 }

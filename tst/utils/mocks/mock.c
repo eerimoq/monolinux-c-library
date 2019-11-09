@@ -66,12 +66,12 @@ static struct item_t *pop_item(const char *name_p)
 
     if (item_p == NULL) {
         printf("Expected mock item %s, but none are available.", name_p);
-        ASSERT(0);
+        FAIL();
     }
 
     if (strcmp(item_p->name_p, name_p) != 0) {
         printf("Expected mock item %s, but got %s.\n", name_p, item_p->name_p);
-        ASSERT(0);
+        FAIL();
     }
 
     list.next_p = item_p->next_p;
@@ -111,7 +111,7 @@ void mock_pop_assert(const char *name_p, const void *buf_p)
         ml_hexdump(&item_p->data[0], item_p->size);
         printf("Actual: \n");
         ml_hexdump(buf_p, item_p->size);
-        ASSERT(0);
+        FAIL();
     }
 
     free(item_p);
@@ -129,6 +129,6 @@ void mock_finalize(void)
             item_p = item_p->next_p;
         }
 
-        ASSERT(0);
+        FAIL();
     }
 }

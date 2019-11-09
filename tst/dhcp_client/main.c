@@ -575,7 +575,7 @@ static void mock_push_poll_failure(void)
     mock_push_poll(&fds[0], 5, -1, -1);
 }
 
-TEST(start_join, basic_fixture)
+TEST(start_join)
 {
     struct ml_dhcp_client_t client;
 
@@ -587,7 +587,7 @@ TEST(start_join, basic_fixture)
     ml_dhcp_client_join(&client);
 }
 
-TEST(start_failure_last_init_step, basic_fixture)
+TEST(start_failure_last_init_step)
 {
     struct ml_dhcp_client_t client;
     struct sockaddr_ll addr;
@@ -624,7 +624,7 @@ TEST(start_failure_last_init_step, basic_fixture)
     ml_dhcp_client_start(&client);
 }
 
-TEST(new, basic_fixture)
+TEST(new)
 {
     struct ml_dhcp_client_t client;
 
@@ -639,7 +639,7 @@ TEST(new, basic_fixture)
     ml_dhcp_client_join(&client);
 }
 
-TEST(renew, basic_fixture)
+TEST(renew)
 {
     struct ml_dhcp_client_t client;
 
@@ -656,7 +656,7 @@ TEST(renew, basic_fixture)
     ml_dhcp_client_join(&client);
 }
 
-TEST(renew_nack, basic_fixture)
+TEST(renew_nack)
 {
     struct ml_dhcp_client_t client;
 
@@ -675,7 +675,7 @@ TEST(renew_nack, basic_fixture)
     ml_dhcp_client_join(&client);
 }
 
-TEST(renew_response_timeout, basic_fixture)
+TEST(renew_response_timeout)
 {
     struct ml_dhcp_client_t client;
 
@@ -694,7 +694,7 @@ TEST(renew_response_timeout, basic_fixture)
     ml_dhcp_client_join(&client);
 }
 
-TEST(rebind_timeout, basic_fixture)
+TEST(rebind_timeout)
 {
     struct ml_dhcp_client_t client;
 
@@ -713,7 +713,7 @@ TEST(rebind_timeout, basic_fixture)
     ml_dhcp_client_join(&client);
 }
 
-TEST(discovery_response_timeout, basic_fixture)
+TEST(discovery_response_timeout)
 {
     struct ml_dhcp_client_t client;
 
@@ -729,7 +729,7 @@ TEST(discovery_response_timeout, basic_fixture)
     ml_dhcp_client_join(&client);
 }
 
-TEST(request_response_timeout, basic_fixture)
+TEST(request_response_timeout)
 {
 }
 
@@ -774,21 +774,4 @@ TEST(request_nack)
 void __wrap_ml_timer_handler_init(struct ml_timer_handler_t *self_p)
 {
     (void)self_p;
-}
-
-int main()
-{
-    return RUN_TESTS(
-        start_join,
-        start_failure_last_init_step,
-        new,
-        renew,
-        renew_nack,
-        renew_response_timeout,
-        rebind_timeout,
-        discovery_response_timeout,
-        request_response_timeout,
-        discard_offers_in_requesting,
-        request_nack
-    );
 }

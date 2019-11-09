@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019, Erik Moqvist
+ * Copyright (c) 2019 Erik Moqvist
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -23,40 +23,62 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- * This file is part of the Monolinux C library project.
+ * This file is part of the traceback project.
  */
 
+#include <stdio.h>
+#include <execinfo.h>
+#include "traceback.h"
+#include <stdlib.h>
 #include <unistd.h>
-#include "narwhal.h"
-#include "ml/ml.h"
-#include "utils/mocks/mock.h"
-#include "utils/utils.h"
 
-static struct ml_queue_t queue;
-static ML_UID(mid);
+#define DEPTH_MAX 100
 
-static void test_full_entry(void *arg_p)
+void traceback_print(void)
 {
-    usleep(500);
-    ml_queue_put(&queue, arg_p);
-}
-
-TEST(full)
-{
-    void *message_p;
-    struct ml_worker_pool_t worker_pool;
+    int depth;
+    void *addresses[DEPTH_MAX];
+    char exe[256];
+    char command[384];
+    ssize_t size;
+    int res;
     int i;
 
-    ml_queue_init(&queue, 100);
-    ml_worker_pool_init(&worker_pool, 4, 10);
+    depth = backtrace(&addresses[0], DEPTH_MAX);
 
-    for (i = 0; i < 100; i++) {
-        message_p = ml_message_alloc(&mid, 0);
-        ml_worker_pool_spawn(&worker_pool, test_full_entry, message_p);
+    printf("Traceback (most recent call last):\n");
+
+    size = readlink("/proc/self/exe", &exe[0], sizeof(exe) - 1);
+
+    if (size == -1) {
+        printf("No executable found!\n");
+
+        return;
     }
 
-    for (i = 0; i < 100; i++) {
-        ASSERT_EQ(ml_queue_get(&queue, &message_p), &mid);
-        ml_message_free(message_p);
+    exe[size] = '\0';
+
+    for (i = (depth - 1); i >= 0; i--) {
+        printf("  ");
+        fflush(stdout);
+
+        snprintf(&command[0],
+                 sizeof(command),
+                 "addr2line -f -p -e %s %p",
+                 &exe[0],
+                 addresses[i]);
+        command[sizeof(command) - 1] = '\0';
+
+        res = system(&command[0]);
+
+        if (res == -1) {
+            return;
+        } else if (WIFEXITED(res)) {
+            if (WEXITSTATUS(res) != 0) {
+                return;
+            }
+        } else {
+            return;
+        }
     }
 }

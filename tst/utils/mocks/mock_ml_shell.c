@@ -91,7 +91,7 @@ ml_shell_command_callback_t mock_get_callback(const char *name_p)
     }
 
     printf("Shell command callback not found for %s.\n", name_p);
-    ASSERT(0);
+    FAIL();
 
     return (NULL);
 }

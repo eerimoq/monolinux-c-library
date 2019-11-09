@@ -37,7 +37,7 @@ static struct ml_bus_t bus;
 static struct ml_queue_t queue_1;
 static struct ml_queue_t queue_2;
 
-TEST(broadcast_to_two_subscribers, basic_fixture)
+TEST(broadcast_to_two_subscribers)
 {
     struct ml_uid_t *uid_p;
     void *bmessage_p;
@@ -51,7 +51,7 @@ TEST(broadcast_to_two_subscribers, basic_fixture)
 
     /* Broadcast. */
     bmessage_p = ml_message_alloc(&m1, 0);
-    ASSERT(bmessage_p != NULL);
+    ASSERT_NE(bmessage_p, NULL);
     ml_bus_broadcast(&bus, bmessage_p);
 
     /* Get message for first subscriber. */
@@ -65,11 +65,4 @@ TEST(broadcast_to_two_subscribers, basic_fixture)
     ASSERT_EQ(uid_p, &m1);
     ASSERT_EQ(message_p, bmessage_p);
     ml_message_free(message_p);
-}
-
-int main()
-{
-    return RUN_TESTS(
-        broadcast_to_two_subscribers
-    );
 }

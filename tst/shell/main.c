@@ -57,14 +57,14 @@ static int command_hello(int argc, const char *argv[])
     return (0);
 }
 
-TEST(various_commands, basic_fixture)
+TEST(various_commands)
 {
     int fd;
 
     ml_shell_init();
     ml_shell_register_command("hello", "My command.", command_hello);
 
-    CAPTURE_OUTPUT(output) {
+    CAPTURE_OUTPUT(output, errput) {
         fd = stdin_pipe();
         ml_shell_start();
         input(fd, "help\n");
@@ -133,13 +133,13 @@ TEST(various_commands, basic_fixture)
               "$ exit\n");
 }
 
-TEST(command_ls, basic_fixture)
+TEST(command_ls)
 {
     int fd;
 
     ml_shell_init();
 
-    CAPTURE_OUTPUT(output) {
+    CAPTURE_OUTPUT(output, errput) {
         fd = stdin_pipe();
         ml_shell_start();
         input(fd, "ls\n");
@@ -150,13 +150,13 @@ TEST(command_ls, basic_fixture)
     ASSERT_SUBSTRING(output, "OK\n$ ");
 }
 
-TEST(command_cat, basic_fixture)
+TEST(command_cat)
 {
     int fd;
 
     ml_shell_init();
 
-    CAPTURE_OUTPUT(output) {
+    CAPTURE_OUTPUT(output, errput) {
         fd = stdin_pipe();
         ml_shell_start();
         input(fd, "cat\n");
@@ -179,13 +179,13 @@ TEST(command_cat, basic_fixture)
         "$ exit\n");
 }
 
-TEST(command_hexdump, basic_fixture)
+TEST(command_hexdump)
 {
     int fd;
 
     ml_shell_init();
 
-    CAPTURE_OUTPUT(output) {
+    CAPTURE_OUTPUT(output, errput) {
         fd = stdin_pipe();
         ml_shell_start();
         input(fd, "hexdump\n");
@@ -218,13 +218,13 @@ TEST(command_hexdump, basic_fixture)
         "$ exit\n");
 }
 
-TEST(command_editing, basic_fixture)
+TEST(command_editing)
 {
     int fd;
 
     ml_shell_init();
 
-    CAPTURE_OUTPUT(output) {
+    CAPTURE_OUTPUT(output, errput) {
         fd = stdin_pipe();
         ml_shell_start();
 
@@ -301,14 +301,14 @@ static int command_quotes(int argc, const char *argv[])
     return (0);
 }
 
-TEST(quotes, basic_fixture)
+TEST(quotes)
 {
     int fd;
 
     ml_shell_init();
     ml_shell_register_command("quotes", ".", command_quotes);
 
-    CAPTURE_OUTPUT(output) {
+    CAPTURE_OUTPUT(output, errput) {
         fd = stdin_pipe();
         ml_shell_start();
         input(fd, "quotes \"ba\\\" \\r\" \"\"\n");
@@ -323,13 +323,13 @@ TEST(quotes, basic_fixture)
         "$ exit\n");
 }
 
-TEST(history, basic_fixture)
+TEST(history)
 {
     int fd;
 
     ml_shell_init();
 
-    CAPTURE_OUTPUT(output) {
+    CAPTURE_OUTPUT(output, errput) {
         fd = stdin_pipe();
         ml_shell_start();
         input(fd, "foo\n");
@@ -391,7 +391,7 @@ TEST(history, basic_fixture)
         "exit\n");
 }
 
-TEST(history_full, basic_fixture)
+TEST(history_full)
 {
     int fd;
     int i;
@@ -399,7 +399,7 @@ TEST(history_full, basic_fixture)
 
     ml_shell_init();
 
-    CAPTURE_OUTPUT(output) {
+    CAPTURE_OUTPUT(output, errput) {
         fd = stdin_pipe();
         ml_shell_start();
 
@@ -676,7 +676,7 @@ TEST(history_full, basic_fixture)
         "$ exit\n");
 }
 
-TEST(command_insmod, basic_fixture)
+TEST(command_insmod)
 {
     int fd;
 
@@ -692,7 +692,7 @@ TEST(command_insmod, basic_fixture)
 
     ml_shell_init();
 
-    CAPTURE_OUTPUT(output) {
+    CAPTURE_OUTPUT(output, errput) {
         fd = stdin_pipe();
         ml_shell_start();
         input(fd, "insmod\n");
@@ -713,7 +713,7 @@ TEST(command_insmod, basic_fixture)
               "$ exit\n");
 }
 
-TEST(command_df_setmntent_failure, basic_fixture)
+TEST(command_df_setmntent_failure)
 {
     int fd;
 
@@ -721,7 +721,7 @@ TEST(command_df_setmntent_failure, basic_fixture)
 
     ml_shell_init();
 
-    CAPTURE_OUTPUT(output) {
+    CAPTURE_OUTPUT(output, errput) {
         fd = stdin_pipe();
         ml_shell_start();
         input(fd, "df\n");
@@ -735,7 +735,7 @@ TEST(command_df_setmntent_failure, basic_fixture)
               "$ exit\n");
 }
 
-TEST(command_df, basic_fixture)
+TEST(command_df)
 {
     int fd;
     FILE *f_p;
@@ -770,7 +770,7 @@ TEST(command_df, basic_fixture)
 
     ml_shell_init();
 
-    CAPTURE_OUTPUT(output) {
+    CAPTURE_OUTPUT(output, errput) {
         fd = stdin_pipe();
         ml_shell_start();
         input(fd, "df\n");
@@ -790,13 +790,13 @@ TEST(command_df, basic_fixture)
     free(mntent_proc_p);
 }
 
-TEST(command_suicide_no_args, basic_fixture)
+TEST(command_suicide_no_args)
 {
     int fd;
 
     ml_shell_init();
 
-    CAPTURE_OUTPUT(output) {
+    CAPTURE_OUTPUT(output, errput) {
         fd = stdin_pipe();
         ml_shell_start();
         input(fd, "suicide\n");
@@ -811,13 +811,13 @@ TEST(command_suicide_no_args, basic_fixture)
               "$ exit\n");
 }
 
-TEST(command_find_too_many_args, basic_fixture)
+TEST(command_find_too_many_args)
 {
     int fd;
 
     ml_shell_init();
 
-    CAPTURE_OUTPUT(output) {
+    CAPTURE_OUTPUT(output, errput) {
         fd = stdin_pipe();
         ml_shell_start();
         input(fd, "find a b\n");
@@ -832,7 +832,7 @@ TEST(command_find_too_many_args, basic_fixture)
               "$ exit\n");
 }
 
-TEST(command_find_no_args, basic_fixture)
+TEST(command_find_no_args)
 {
     int fd;
     const char *paths[] = {
@@ -846,7 +846,7 @@ TEST(command_find_no_args, basic_fixture)
 
     ml_shell_init();
 
-    CAPTURE_OUTPUT(output) {
+    CAPTURE_OUTPUT(output, errput) {
         fd = stdin_pipe();
         ml_shell_start();
         input(fd, "find\n");
@@ -863,7 +863,7 @@ TEST(command_find_no_args, basic_fixture)
               "$ exit\n");
 }
 
-TEST(command_find_in_dir, basic_fixture)
+TEST(command_find_in_dir)
 {
     int fd;
     const char *paths[] = {
@@ -877,7 +877,7 @@ TEST(command_find_in_dir, basic_fixture)
 
     ml_shell_init();
 
-    CAPTURE_OUTPUT(output) {
+    CAPTURE_OUTPUT(output, errput) {
         fd = stdin_pipe();
         ml_shell_start();
         input(fd, "find tmp\n");
@@ -894,13 +894,13 @@ TEST(command_find_in_dir, basic_fixture)
               "$ exit\n");
 }
 
-TEST(command_mknod_no_args, basic_fixture)
+TEST(command_mknod_no_args)
 {
     int fd;
 
     ml_shell_init();
 
-    CAPTURE_OUTPUT(output) {
+    CAPTURE_OUTPUT(output, errput) {
         fd = stdin_pipe();
         ml_shell_start();
         input(fd, "mknod\n");
@@ -915,13 +915,13 @@ TEST(command_mknod_no_args, basic_fixture)
               "$ exit\n");
 }
 
-TEST(command_mknod_bad_type, basic_fixture)
+TEST(command_mknod_bad_type)
 {
     int fd;
 
     ml_shell_init();
 
-    CAPTURE_OUTPUT(output) {
+    CAPTURE_OUTPUT(output, errput) {
         fd = stdin_pipe();
         ml_shell_start();
         input(fd, "mknod /dev/foo g\n");
@@ -936,7 +936,7 @@ TEST(command_mknod_bad_type, basic_fixture)
               "$ exit\n");
 }
 
-TEST(command_mknod_fifo, basic_fixture)
+TEST(command_mknod_fifo)
 {
     int fd;
 
@@ -944,7 +944,7 @@ TEST(command_mknod_fifo, basic_fixture)
 
     ml_shell_init();
 
-    CAPTURE_OUTPUT(output) {
+    CAPTURE_OUTPUT(output, errput) {
         fd = stdin_pipe();
         ml_shell_start();
         input(fd, "mknod /dev/foo p\n");
@@ -958,7 +958,7 @@ TEST(command_mknod_fifo, basic_fixture)
               "$ exit\n");
 }
 
-TEST(command_mknod_char, basic_fixture)
+TEST(command_mknod_char)
 {
     int fd;
 
@@ -966,7 +966,7 @@ TEST(command_mknod_char, basic_fixture)
 
     ml_shell_init();
 
-    CAPTURE_OUTPUT(output) {
+    CAPTURE_OUTPUT(output, errput) {
         fd = stdin_pipe();
         ml_shell_start();
         input(fd, "mknod /dev/bar c 5 6\n");
@@ -980,13 +980,13 @@ TEST(command_mknod_char, basic_fixture)
               "$ exit\n");
 }
 
-TEST(command_mknod_char_no_minor, basic_fixture)
+TEST(command_mknod_char_no_minor)
 {
     int fd;
 
     ml_shell_init();
 
-    CAPTURE_OUTPUT(output) {
+    CAPTURE_OUTPUT(output, errput) {
         fd = stdin_pipe();
         ml_shell_start();
         input(fd, "mknod /dev/bar c 5\n");
@@ -1001,7 +1001,7 @@ TEST(command_mknod_char_no_minor, basic_fixture)
               "$ exit\n");
 }
 
-TEST(command_mknod_block, basic_fixture)
+TEST(command_mknod_block)
 {
     int fd;
 
@@ -1009,7 +1009,7 @@ TEST(command_mknod_block, basic_fixture)
 
     ml_shell_init();
 
-    CAPTURE_OUTPUT(output) {
+    CAPTURE_OUTPUT(output, errput) {
         fd = stdin_pipe();
         ml_shell_start();
         input(fd, "mknod /dev/sda1 b 8 1\n");
@@ -1023,13 +1023,13 @@ TEST(command_mknod_block, basic_fixture)
               "$ exit\n");
 }
 
-TEST(command_mount_no_args, basic_fixture)
+TEST(command_mount_no_args)
 {
     int fd;
 
     ml_shell_init();
 
-    CAPTURE_OUTPUT(output) {
+    CAPTURE_OUTPUT(output, errput) {
         fd = stdin_pipe();
         ml_shell_start();
         input(fd, "mount\n");
@@ -1044,7 +1044,7 @@ TEST(command_mount_no_args, basic_fixture)
               "$ exit\n");
 }
 
-TEST(command_mount, basic_fixture)
+TEST(command_mount)
 {
     int fd;
 
@@ -1058,7 +1058,7 @@ TEST(command_mount, basic_fixture)
 
     ml_shell_init();
 
-    CAPTURE_OUTPUT(output) {
+    CAPTURE_OUTPUT(output, errput) {
         fd = stdin_pipe();
         ml_shell_start();
         input(fd, "mount /dev/sda1 /mnt/disk ext4\n");
@@ -1070,33 +1070,4 @@ TEST(command_mount, basic_fixture)
               "mount /dev/sda1 /mnt/disk ext4\n"
               "OK\n"
               "$ exit\n");
-}
-
-int main()
-{
-    return RUN_TESTS(
-        various_commands,
-        command_ls,
-        command_cat,
-        command_hexdump,
-        command_editing,
-        quotes,
-        history,
-        history_full,
-        command_insmod,
-        command_df_setmntent_failure,
-        command_df,
-        command_suicide_no_args,
-        command_find_too_many_args,
-        command_find_no_args,
-        command_find_in_dir,
-        command_mknod_no_args,
-        command_mknod_bad_type,
-        command_mknod_fifo,
-        command_mknod_char,
-        command_mknod_char_no_minor,
-        command_mknod_block,
-        command_mount_no_args,
-        command_mount
-    );
 }

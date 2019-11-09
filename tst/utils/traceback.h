@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019, Erik Moqvist
+ * Copyright (c) 2019 Erik Moqvist
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -23,40 +23,12 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- * This file is part of the Monolinux C library project.
+ * This file is part of the traceback project.
  */
 
-#include <unistd.h>
-#include "narwhal.h"
-#include "utils/utils.h"
-#include "ml/ml.h"
+#define TRACEBACK_VERSION "0.1.0"
 
-ML_UID(m1);
-
-static int on_free_count;
-
-static void on_free_cb(void *message_p)
-{
-    int *value_p;
-
-    value_p = (int *)message_p;
-
-    if (*value_p == 5) {
-        on_free_count++;
-    }
-}
-
-TEST(on_free)
-{
-    void *message_p;
-    int *value_p;
-
-    on_free_count = 0;
-    message_p = ml_message_alloc(&m1, sizeof(*message_p));
-    ASSERT_NE(message_p, NULL);
-    value_p = (int *)message_p;
-    *value_p = 5;
-    ml_message_set_on_free(message_p, on_free_cb);
-    ml_message_free(message_p);
-    ASSERT_EQ(on_free_count, 1);
-}
+/**
+ * Print a traceback.
+ */
+void traceback_print(void);
