@@ -27,7 +27,7 @@
  */
 
 #include <fcntl.h>
-#include "narwhal.h"
+#include "nala.h"
 #include "ml/ml.h"
 #include "utils/mocks/mock_libc.h"
 #include "utils/mocks/mock.h"

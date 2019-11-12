@@ -28,7 +28,7 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include "narwhal.h"
+#include "nala.h"
 #include "mock.h"
 #include "mock_ml_shell.h"
 

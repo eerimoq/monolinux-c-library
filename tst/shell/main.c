@@ -33,7 +33,7 @@
 #include <ftw.h>
 #include <fcntl.h>
 #include <sys/sysmacros.h>
-#include "narwhal.h"
+#include "nala.h"
 #include "utils/mocks/mock_libc.h"
 #include "utils/mocks/mock.h"
 #include "utils/utils.h"

@@ -27,7 +27,7 @@
  */
 
 #include <unistd.h>
-#include "narwhal.h"
+#include "nala.h"
 #include "utils/utils.h"
 #include "ml/ml.h"
 
