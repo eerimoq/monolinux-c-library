@@ -40,14 +40,6 @@
 #include <arpa/inet.h>
 #include "ml/ml.h"
 
-void mock_push_mount(const char *source_p,
-                     const char *target_p,
-                     const char *type_p,
-                     unsigned long flags,
-                     const void *data_p,
-                     size_t data_size,
-                     int res);
-
 void mock_push_bind(int fd,
                     const struct sockaddr *addr_p,
                     socklen_t addrlen,

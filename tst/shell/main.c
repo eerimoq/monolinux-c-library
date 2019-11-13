@@ -33,6 +33,7 @@
 #include <ftw.h>
 #include <fcntl.h>
 #include <sys/sysmacros.h>
+#include <sys/mount.h>
 #include "nala.h"
 #include "nala_mocks.h"
 #include "utils/mocks/mock_libc.h"
@@ -1049,13 +1050,8 @@ TEST(command_mount)
 {
     int fd;
 
-    mock_push_mount("/dev/sda1",
-                    "/mnt/disk",
-                    "ext4",
-                    0,
-                    "",
-                    1,
-                    0);
+    mount_mock_once("/dev/sda1", "/mnt/disk", "ext4", 0, 0);
+    mount_mock_set___data_in("", 1);
 
     ml_shell_init();
 

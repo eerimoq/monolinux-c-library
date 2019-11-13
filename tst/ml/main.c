@@ -27,6 +27,7 @@
  */
 
 #include <fcntl.h>
+#include <sys/mount.h>
 #include "nala.h"
 #include "nala_mocks.h"
 #include "ml/ml.h"
@@ -295,7 +296,8 @@ TEST(bus)
 
 TEST(ml_mount_ok)
 {
-    mock_push_mount("a", "b", "c", 0, "", 1, 0);
+    mount_mock_once("a", "b", "c", 0, 0);
+    mount_mock_set___data_in("", 1);
 
     ASSERT_EQ(ml_mount("a", "b", "c"), 0);
 }

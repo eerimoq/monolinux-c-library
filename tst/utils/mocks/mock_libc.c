@@ -40,40 +40,6 @@
 #include "mock.h"
 #include "mock_libc.h"
 
-void mock_push_mount(const char *source_p,
-                     const char *target_p,
-                     const char *type_p,
-                     unsigned long flags,
-                     const void *data_p,
-                     size_t data_size,
-                     int res)
-{
-    mock_push("mount(source_p)", source_p, strlen(source_p) + 1);
-    mock_push("mount(target_p)", target_p, strlen(target_p) + 1);
-    mock_push("mount(type_p)", type_p, strlen(type_p) + 1);
-    mock_push("mount(flags)", &flags, sizeof(flags));
-    mock_push("mount(data_p)", data_p, data_size);
-    mock_push("mount(): return (res)", &res, sizeof(res));
-}
-
-int __wrap_mount(const char *source_p,
-                 const char *target_p,
-                 const char *type_p,
-                 unsigned long flags,
-                 const void *data_p)
-{
-    int res;
-
-    mock_pop_assert("mount(source_p)", source_p);
-    mock_pop_assert("mount(target_p)", target_p);
-    mock_pop_assert("mount(type_p)", type_p);
-    mock_pop_assert("mount(flags)", &flags);
-    mock_pop_assert("mount(data_p)", data_p);
-    mock_pop("mount(): return (res)", &res);
-
-    return (res);
-}
-
 void mock_push_bind(int fd,
                     const struct sockaddr *addr_p,
                     socklen_t addrlen,
