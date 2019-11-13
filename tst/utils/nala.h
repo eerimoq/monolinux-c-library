@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define VERSION "0.12.0"
+#define VERSION "0.16.0"
 
 #define TEST(name)                                      \
     void name(void);                                    \
@@ -235,13 +235,13 @@
 #define ASSERT(cond)                            \
     if (!(cond)) {                              \
         nala_reset_all_mocks();                 \
-        NALA_TEST_FAILURE(strdup("Assert.\n")); \
+        NALA_TEST_FAILURE(nala_format("Assert.\n")); \
     }
 
 #define FAIL()                                  \
     do {                                        \
         nala_reset_all_mocks();                 \
-        NALA_TEST_FAILURE(strdup("Fail.\n"));   \
+        NALA_TEST_FAILURE(nala_format("Fail.\n"));   \
     } while (0);
 
 #define CAPTURE_OUTPUT(stdout_name, stderr_name)                        \
