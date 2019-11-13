@@ -4,6 +4,8 @@ language: c
 
 before_install:
   - source setup.sh
+  - python3 --version
+  - pip3 install nala
 
 script:
   - make -j $(cat /proc/cpuinfo | grep processor | wc -l) run
