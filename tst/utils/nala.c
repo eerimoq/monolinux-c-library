@@ -226,7 +226,6 @@ void nala_free_diff_matrix(NalaDiffMatrix *diff_matrix);
 #include <stdlib.h>
 
 char *nala_hexdump(const uint8_t *buffer, size_t size, size_t bytes_per_row);
-size_t nala_optimal_bytes_per_row(size_t element_size, size_t target, size_t range);
 
 #endif
 
@@ -237,8 +236,6 @@ size_t nala_optimal_bytes_per_row(size_t element_size, size_t target, size_t ran
 #include <stdbool.h>
 #include <stdio.h>
 
-size_t nala_util_read_stream(FILE *stream, char **buffer);
-bool nala_is_short_string(const char *string);
 int nala_min_int(int a, int b);
 size_t nala_min_size_t(size_t a, size_t b);
 size_t nala_count_chars(const char *string, char chr);
@@ -296,6 +293,10 @@ int teardown(void);
 void nala_assert_all_mocks_completed(void);
 
 __attribute__ ((weak)) void nala_assert_all_mocks_completed(void)
+{
+}
+
+__attribute__ ((weak)) void nala_reset_all_mocks(void)
 {
 }
 
@@ -531,6 +532,7 @@ static void test_entry(void *arg_p)
         }
     }
 
+    nala_reset_all_mocks();
     capture_output_destroy(&capture_stdout);
     capture_output_destroy(&capture_stderr);
 
@@ -611,85 +613,71 @@ static const char *display_inline_diff(FILE *file_p,
                                        bool use_original)
 {
     NalaDiffChunk *inline_chunk = &inline_diff->chunks[0];
-
     size_t line_index = 0;
     size_t index = 0;
 
-    for (size_t i = 0; i < lines; i++)
-        {
-            const char *next = nala_next_line(string);
-            size_t line_length = (size_t)(next - string);
+    for (size_t i = 0; i < lines; i++) {
+        const char *next = nala_next_line(string);
+        size_t line_length = (size_t)(next - string);
 
-            char line_prefix[64];
+        char line_prefix[64];
 
-            if (use_original)
-                {
-                    snprintf(line_prefix,
-                             sizeof(line_prefix),
-                             COLOR(RED, "- ") COLOR_BOLD(RED, "%ld"),
-                             *line_number);
-                    fprintf(file_p, "   %37s" COLOR(RED, " |  "), line_prefix);
-                }
-            else
-                {
-                    snprintf(line_prefix,
-                             sizeof(line_prefix),
-                             COLOR(GREEN, "+ ") COLOR_BOLD(GREEN, "%ld"),
-                             *line_number);
-                    fprintf(file_p, "   %37s" COLOR(GREEN, " |  "), line_prefix);
-                }
-
-            while (index - line_index < line_length)
-                {
-                    size_t chunk_end =
-                        use_original ? inline_chunk->original_end : inline_chunk->modified_end;
-
-                    size_t start = index - line_index;
-                    size_t end = nala_min_size_t(chunk_end - line_index, line_length);
-
-                    size_t characters = end - start;
-
-                    if (inline_chunk->type == NALA_DIFF_CHUNK_TYPE_MATCHED)
-                        {
-                            fprintf(file_p, "%.*s", (int)characters, string + index - line_index);
-                        }
-                    else if (characters > 0)
-                        {
-                            if (use_original)
-                                {
-                                    fprintf(file_p,
-                                            COLOR_BOLD(RED, "%.*s"),
-                                            (int)characters,
-                                            string + index - line_index);
-                                }
-                            else
-                                {
-                                    fprintf(file_p,
-                                            COLOR_BOLD(GREEN, "%.*s"),
-                                            (int)characters,
-                                            string + index - line_index);
-                                }
-                        }
-
-                    index += characters;
-
-                    if (index >= chunk_end)
-                        {
-                            inline_chunk++;
-                        }
-                }
-
-            fprintf(file_p, "\n");
-
-            if (!use_original)
-                {
-                    (*line_number)++;
-                }
-
-            string = next + 1;
-            line_index += line_length + 1;
-            index = line_index;
+        if (use_original) {
+            snprintf(line_prefix,
+                     sizeof(line_prefix),
+                     COLOR(RED, "- ") COLOR_BOLD(RED, "%ld"),
+                     *line_number);
+            fprintf(file_p, "   %37s" COLOR(RED, " |  "), line_prefix);
+        } else {
+            snprintf(line_prefix,
+                     sizeof(line_prefix),
+                     COLOR(GREEN, "+ ") COLOR_BOLD(GREEN, "%ld"),
+                     *line_number);
+            fprintf(file_p, "   %37s" COLOR(GREEN, " |  "), line_prefix);
         }
+
+        while (index - line_index < line_length) {
+            size_t chunk_end =
+                use_original ? inline_chunk->original_end : inline_chunk->modified_end;
+
+            size_t start = index - line_index;
+            size_t end = nala_min_size_t(chunk_end - line_index, line_length);
+
+            size_t characters = end - start;
+
+            if (inline_chunk->type == NALA_DIFF_CHUNK_TYPE_MATCHED) {
+                fprintf(file_p, "%.*s", (int)characters, string + index - line_index);
+            } else if (characters > 0) {
+                if (use_original) {
+                    fprintf(file_p,
+                            COLOR_BOLD(RED, "%.*s"),
+                            (int)characters,
+                            string + index - line_index);
+                } else {
+                    fprintf(file_p,
+                            COLOR_BOLD(GREEN, "%.*s"),
+                            (int)characters,
+                            string + index - line_index);
+                }
+            }
+
+            index += characters;
+
+            if (index >= chunk_end) {
+                inline_chunk++;
+            }
+        }
+
+        fprintf(file_p, "\n");
+
+        if (!use_original) {
+            (*line_number)++;
+        }
+
+        string = next + 1;
+        line_index += line_length + 1;
+        index = line_index;
+    }
 
     return string;
 }
@@ -704,107 +692,93 @@ static void print_string_diff(FILE *file_p,
 
     size_t line_number = 1;
 
-    for (size_t chunk_index = 0; chunk_index < diff.size; chunk_index++)
-        {
-            NalaDiffChunk *chunk = &diff.chunks[chunk_index];
+    for (size_t chunk_index = 0; chunk_index < diff.size; chunk_index++) {
+        NalaDiffChunk *chunk = &diff.chunks[chunk_index];
 
-            size_t original_lines = chunk->original_end - chunk->original_start;
-            size_t modified_lines = chunk->modified_end - chunk->modified_start;
+        size_t original_lines = chunk->original_end - chunk->original_start;
+        size_t modified_lines = chunk->modified_end - chunk->modified_start;
 
-            if (chunk->type == NALA_DIFF_CHUNK_TYPE_MATCHED)
-                {
-                    for (size_t i = 0; i < original_lines; i++)
-                        {
-                            const char *original_next = nala_next_line(original);
-                            const char *modified_next = nala_next_line(modified);
+        if (chunk->type == NALA_DIFF_CHUNK_TYPE_MATCHED) {
+            for (size_t i = 0; i < original_lines; i++) {
+                const char *original_next = nala_next_line(original);
+                const char *modified_next = nala_next_line(modified);
 
-                            if (original_lines < 7 || (i < 2 && chunk_index > 0) ||
-                                (original_lines - i < 3 && chunk_index < diff.size - 1))
-                                {
-                                    fprintf(file_p, COLOR(MAGENTA, "%6zu"), line_number);
-                                    fprintf(file_p, " |  %.*s\n", (int)(original_next - original), original);
-                                }
-                            else if (i == 2)
-                                {
-                                    fprintf(file_p, "   :\n");
-                                }
-
-                            line_number++;
-                            original = original_next + 1;
-                            modified = modified_next + 1;
-                        }
+                if (original_lines < 7 || (i < 2 && chunk_index > 0) ||
+                    (original_lines - i < 3 && chunk_index < diff.size - 1)) {
+                    fprintf(file_p, COLOR(MAGENTA, "%6zu"), line_number);
+                    fprintf(file_p, " |  %.*s\n", (int)(original_next - original), original);
+                } else if (i == 2) {
+                    fprintf(file_p, "   :\n");
                 }
-            else if (chunk->type == NALA_DIFF_CHUNK_TYPE_REPLACED)
-                {
-                    const char *original_end = nala_next_lines(original, original_lines);
-                    const char *modified_end = nala_next_lines(modified, modified_lines);
 
-                    size_t original_length = (size_t)(original_end - original);
-                    size_t modified_length = (size_t)(modified_end - modified);
+                line_number++;
+                original = original_next + 1;
+                modified = modified_next + 1;
+            }
+        } else if (chunk->type == NALA_DIFF_CHUNK_TYPE_REPLACED) {
+            const char *original_end = nala_next_lines(original, original_lines);
+            const char *modified_end = nala_next_lines(modified, modified_lines);
 
-                    NalaDiff inline_diff =
-                        nala_diff_strings_lengths(original,
-                                                  original_length,
-                                                  modified,
-                                                  modified_length);
+            size_t original_length = (size_t)(original_end - original);
+            size_t modified_length = (size_t)(modified_end - modified);
 
-                    original = display_inline_diff(file_p,
-                                                   &inline_diff,
-                                                   original_lines,
-                                                   original,
-                                                   &line_number,
-                                                   true);
-                    modified = display_inline_diff(file_p,
-                                                   &inline_diff,
-                                                   modified_lines,
-                                                   modified,
-                                                   &line_number,
-                                                   false);
+            NalaDiff inline_diff =
+                nala_diff_strings_lengths(original,
+                                          original_length,
+                                          modified,
+                                          modified_length);
 
-                    free(inline_diff.chunks);
-                }
-            else if (chunk->type == NALA_DIFF_CHUNK_TYPE_DELETED)
-                {
-                    for (size_t i = 0; i < original_lines; i++)
-                        {
-                            const char *original_next = nala_next_line(original);
+            original = display_inline_diff(file_p,
+                                           &inline_diff,
+                                           original_lines,
+                                           original,
+                                           &line_number,
+                                           true);
+            modified = display_inline_diff(file_p,
+                                           &inline_diff,
+                                           modified_lines,
+                                           modified,
+                                           &line_number,
+                                           false);
 
-                            char line_prefix[64];
-                            snprintf(line_prefix,
-                                     sizeof(line_prefix),
-                                     COLOR(RED, "- ") COLOR_BOLD(RED, "%ld"),
-                                     line_number);
+            free(inline_diff.chunks);
+        } else if (chunk->type == NALA_DIFF_CHUNK_TYPE_DELETED) {
+            for (size_t i = 0; i < original_lines; i++) {
+                const char *original_next = nala_next_line(original);
 
-                            printf("   %37s", line_prefix);
-                            printf(COLOR(RED, " |  ") COLOR_BOLD(RED, "%.*s\n"),
-                                   (int)(original_next - original),
-                                   original);
+                char line_prefix[64];
+                snprintf(line_prefix,
+                         sizeof(line_prefix),
+                         COLOR(RED, "- ") COLOR_BOLD(RED, "%ld"),
+                         line_number);
 
-                            original = original_next + 1;
-                        }
-                }
-            else if (chunk->type == NALA_DIFF_CHUNK_TYPE_ADDED)
-                {
-                    for (size_t i = 0; i < modified_lines; i++)
-                        {
-                            const char *modified_next = nala_next_line(modified);
+                printf("   %37s", line_prefix);
+                printf(COLOR(RED, " |  ") COLOR_BOLD(RED, "%.*s\n"),
+                       (int)(original_next - original),
+                       original);
 
-                            char line_prefix[64];
-                            snprintf(line_prefix,
-                                     sizeof(line_prefix),
-                                     COLOR(GREEN, "+ ") COLOR_BOLD(GREEN, "%ld"),
-                                     line_number);
+                original = original_next + 1;
+            }
+        } else if (chunk->type == NALA_DIFF_CHUNK_TYPE_ADDED) {
+            for (size_t i = 0; i < modified_lines; i++) {
+                const char *modified_next = nala_next_line(modified);
 
-                            printf("   %37s", line_prefix);
-                            printf(COLOR(GREEN, " |  ") COLOR_BOLD(GREEN, "%.*s\n"),
-                                   (int)(modified_next - modified),
-                                   modified);
+                char line_prefix[64];
+                snprintf(line_prefix,
+                         sizeof(line_prefix),
+                         COLOR(GREEN, "+ ") COLOR_BOLD(GREEN, "%ld"),
+                         line_number);
 
-                            line_number++;
-                            modified = modified_next + 1;
-                        }
-                }
+                printf("   %37s", line_prefix);
+                printf(COLOR(GREEN, " |  ") COLOR_BOLD(GREEN, "%.*s\n"),
+                       (int)(modified_next - modified),
+                       modified);
+
+                line_number++;
+                modified = modified_next + 1;
+            }
         }
+    }
 
     free(diff.chunks);
 }
@@ -1317,45 +1291,12 @@ void nala_traceback_print(const char *prefix_p)
         }
     }
 }
-// #include "utils.h"
-
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
+// #include "utils.h"
 
-size_t nala_util_read_stream(FILE *stream, char **output_buffer)
-{
-    char buffer[256];
-    size_t output_length = 0;
-
-    size_t read_count = fread(buffer, 1, sizeof(buffer) - 1, stream);
-    buffer[read_count] = '\0';
-
-    if (read_count > 0) {
-        *output_buffer = malloc(read_count + 1);
-        memcpy(*output_buffer, buffer, read_count + 1);
-    }
-
-    output_length = read_count;
-
-    while (read_count + 1 == sizeof(buffer)) {
-        read_count = fread(buffer, 1, sizeof(buffer) - 1, stream);
-        buffer[read_count] = '\0';
-        output_length += read_count;
-
-        *output_buffer = realloc(*output_buffer, output_length + 1);
-        memcpy(*output_buffer + output_length - read_count, buffer, read_count + 1);
-    }
-
-    return output_length;
-}
-
-bool nala_is_short_string(const char *string)
-{
-    return strlen(string) < 64 && strchr(string, '\n') == NULL;
-}
 
 int nala_min_int(int a, int b)
 {
@@ -1415,8 +1356,6 @@ const char *nala_next_lines(const char *string, size_t lines)
 #include <stdbool.h>
 #include <stdio.h>
 
-size_t nala_util_read_stream(FILE *stream, char **buffer);
-bool nala_is_short_string(const char *string);
 int nala_min_int(int a, int b);
 size_t nala_min_size_t(size_t a, size_t b);
 size_t nala_count_chars(const char *string, char chr);
@@ -1768,45 +1707,4 @@ char *nala_hexdump(const uint8_t *buffer, size_t size, size_t bytes_per_row)
     fclose(stream);
 
     return dump;
-}
-
-size_t nala_optimal_bytes_per_row(size_t element_size, size_t target, size_t range)
-{
-    size_t min = target - range;
-    size_t max = target + range;
-
-    if (element_size < min) {
-        return (size_t)((double)target / (double)element_size + 0.5) * element_size;
-    }
-
-    if (element_size > max) {
-        if (element_size % target == 0) {
-            return target;
-        }
-
-        size_t div_min = target;
-        size_t div_max = target;
-
-        while (div_min > min || div_max < max) {
-            if (div_min > min) {
-                div_min--;
-
-                if (element_size % div_min == 0) {
-                    return div_min;
-                }
-            }
-
-            if (div_max < max) {
-                div_max++;
-
-                if (element_size % div_max == 0) {
-                    return div_max;
-                }
-            }
-        }
-
-        return target;
-    }
-
-    return element_size;
 }

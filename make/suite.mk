@@ -9,16 +9,23 @@ CFLAGS += -DUNIT_TEST
 COVERAGE_FILTERS +=
 INC += $(ML_ROOT)/tst/utils
 SRC += $(ML_ROOT)/tst/utils/nala.c
+SRC += nala_mocks.c
+NALA = nala
 
 .PHONY: all run build coverage
 
 all: run
 	$(MAKE) coverage
 
-build: $(EXE)
+build: nala_mocks.h
+	$(MAKE) $(EXE)
 
-run: $(EXE)
+run: build
 	$(EXE)
+
+nala_mocks.h: main.c
+	[ -f nala_mocks.h ] || touch nala_mocks.h
+	$(CC) $(INC:%=-I%) -E main.c | $(NALA) generate_mocks
 
 coverage:
 	gcovr --root ../.. \

@@ -31,11 +31,6 @@
 
 void mock_push_ml_network_init(void);
 
-void mock_push_ml_network_interface_configure(const char *name_p,
-                                              const char *ipv4_address_p,
-                                              const char *ipv4_netmask_p,
-                                              int res);
-
 void mock_push_ml_network_interface_up(const char *name_p,
                                        int res);
 

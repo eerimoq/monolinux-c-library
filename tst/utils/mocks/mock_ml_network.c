@@ -42,41 +42,6 @@ void __wrap_ml_network_init(void)
 {
 }
 
-void mock_push_ml_network_interface_configure(const char *name_p,
-                                              const char *ipv4_address_p,
-                                              const char *ipv4_netmask_p,
-                                              int res)
-{
-    mock_push("ml_network_interface_configure(name_p)",
-              name_p,
-              strlen(name_p) + 1);
-    mock_push("ml_network_interface_configure(ipv4_address_p)",
-              ipv4_address_p,
-              strlen(ipv4_address_p) + 1);
-    mock_push("ml_network_interface_configure(ipv4_netmask_p)",
-              ipv4_netmask_p,
-              strlen(ipv4_netmask_p) + 1);
-    mock_push("ml_network_interface_configure(): return (res)",
-              &res,
-              sizeof(res));
-}
-
-int __wrap_ml_network_interface_configure(const char *name_p,
-                                          const char *ipv4_address_p,
-                                          const char *ipv4_netmask_p)
-{
-    int res;
-
-    mock_pop_assert("ml_network_interface_configure(name_p)", name_p);
-    mock_pop_assert("ml_network_interface_configure(ipv4_address_p)",
-                    ipv4_address_p);
-    mock_pop_assert("ml_network_interface_configure(ipv4_netmask_p)",
-                    ipv4_netmask_p);
-    mock_pop("ml_network_interface_configure(): return (res)", &res);
-
-    return (res);
-}
-
 void mock_push_ml_network_interface_up(const char *name_p,
                                        int res)
 {

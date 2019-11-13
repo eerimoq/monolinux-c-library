@@ -27,6 +27,7 @@
  */
 
 #include "nala.h"
+#include "nala_mocks.h"
 #include "ml/ml.h"
 #include "utils/utils.h"
 #include "utils/mocks/mock_libc.h"
@@ -65,7 +66,7 @@ static void mock_push_configure(const char *name_p)
     struct ifreq ifreq;
 
     fd = 5;
-    mock_push_socket(AF_INET, SOCK_DGRAM, 0, fd);
+    socket_mock_once(AF_INET, SOCK_DGRAM, 0, fd);
     memset(&ifreq, 0, sizeof(ifreq));
     strcpy(&ifreq.ifr_name[0], name_p);
     create_address_request(&ifreq, "192.168.0.4");
@@ -81,7 +82,7 @@ static void mock_push_up(const char *name_p)
     struct ifreq ifreq;
 
     fd = 5;
-    mock_push_socket(AF_INET, SOCK_DGRAM, 0, fd);
+    socket_mock_once(AF_INET, SOCK_DGRAM, 0, fd);
     memset(&ifreq, 0, sizeof(ifreq));
     strcpy(&ifreq.ifr_name[0], name_p);
     mock_push_ioctl_ifreq_ok(fd, SIOCGIFFLAGS, &ifreq);
@@ -96,7 +97,7 @@ static void mock_push_down(const char *name_p)
     struct ifreq ifreq;
 
     fd = 5;
-    mock_push_socket(AF_INET, SOCK_DGRAM, 0, fd);
+    socket_mock_once(AF_INET, SOCK_DGRAM, 0, fd);
     memset(&ifreq, 0, sizeof(ifreq));
     strcpy(&ifreq.ifr_name[0], name_p);
     mock_push_ioctl_ifreq_ok(fd, SIOCGIFFLAGS, &ifreq);
@@ -113,7 +114,7 @@ static void mock_push_ioctl_get(const char *name_p,
     struct ifreq ifreq_in;
 
     fd = 5;
-    mock_push_socket(AF_INET, SOCK_DGRAM, 0, fd);
+    socket_mock_once(AF_INET, SOCK_DGRAM, 0, fd);
     memset(&ifreq_in, 0, sizeof(ifreq_in));
     strcpy(&ifreq_in.ifr_name[0], name_p);
     memcpy(&ifreq_out_p->ifr_name,
@@ -427,7 +428,7 @@ TEST(command_udp_send_open_socket_failure)
     command_udp_send = mock_get_callback("udp_send");
 
     CAPTURE_OUTPUT(output, errput) {
-        mock_push_socket(AF_INET, SOCK_DGRAM, 0, -1);
+        socket_mock_once(AF_INET, SOCK_DGRAM, 0, -1);
         ASSERT_EQ(command_udp_send(membersof(argv), argv), -1);
     }
 
@@ -451,7 +452,7 @@ TEST(command_udp_send_sendto_failure)
     fd = 9;
 
     CAPTURE_OUTPUT(output, errput) {
-        mock_push_socket(AF_INET, SOCK_DGRAM, 0, fd);
+        socket_mock_once(AF_INET, SOCK_DGRAM, 0, fd);
         memset(&other, 0, sizeof(other));
         other.sin_family = AF_INET;
         other.sin_port = htons(1234);
@@ -486,7 +487,7 @@ TEST(command_udp_send)
     fd = 9;
 
     CAPTURE_OUTPUT(output, errput) {
-        mock_push_socket(AF_INET, SOCK_DGRAM, 0, fd);
+        socket_mock_once(AF_INET, SOCK_DGRAM, 0, fd);
         memset(&other, 0, sizeof(other));
         other.sin_family = AF_INET;
         other.sin_port = htons(1234);
@@ -536,7 +537,7 @@ TEST(command_udp_recv_open_socket_failure)
     command_udp_recv = mock_get_callback("udp_recv");
 
     CAPTURE_OUTPUT(output, errput) {
-        mock_push_socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP, -1);
+        socket_mock_once(AF_INET, SOCK_DGRAM, IPPROTO_UDP, -1);
         ASSERT_EQ(command_udp_recv(membersof(argv), argv), -1);
     }
 

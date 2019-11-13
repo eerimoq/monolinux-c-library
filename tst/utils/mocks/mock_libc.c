@@ -40,10 +40,6 @@
 #include "mock.h"
 #include "mock_libc.h"
 
-/* socket() and close() may be used by nala. Should not use wrap,
-   but instead only replace symbols in tested files. Possibly examine
-   the backtrace. Both variants are dirty. */
-
 void mock_push_mount(const char *source_p,
                      const char *target_p,
                      const char *type_p,
@@ -74,26 +70,6 @@ int __wrap_mount(const char *source_p,
     mock_pop_assert("mount(flags)", &flags);
     mock_pop_assert("mount(data_p)", data_p);
     mock_pop("mount(): return (res)", &res);
-
-    return (res);
-}
-
-void mock_push_socket(int domain, int type, int protocol, int res)
-{
-    mock_push("socket(domain)", &domain, sizeof(domain));
-    mock_push("socket(type)", &type, sizeof(type));
-    mock_push("socket(protocol)", &protocol, sizeof(protocol));
-    mock_push("socket(): return (res)", &res, sizeof(res));
-}
-
-int __wrap_socket(int domain, int type, int protocol)
-{
-    int res;
-
-    mock_pop_assert("socket(domain)", &domain);
-    mock_pop_assert("socket(type)", &type);
-    mock_pop_assert("socket(protocol)", &protocol);
-    mock_pop("socket(): return (res)", &res);
 
     return (res);
 }

@@ -26,9 +26,12 @@
  * This file is part of the Monolinux C library project.
  */
 
+#include <sys/types.h>
+#include <sys/socket.h>
 #include <netinet/if_ether.h>
 #include <linux/if_packet.h>
 #include "nala.h"
+#include "nala_mocks.h"
 #include "ml/ml.h"
 #include "utils/utils.h"
 #include "utils/mocks/mock_libc.h"
@@ -374,7 +377,7 @@ static void mock_push_setup_packet_socket()
     struct sockaddr_ll addr;
     int yes;
 
-    mock_push_socket(AF_PACKET, SOCK_DGRAM, 0, SOCK_PACKET_FD);
+    socket_mock_once(AF_PACKET, SOCK_DGRAM, 0, SOCK_PACKET_FD);
     memset(&addr, 0, sizeof(addr));
     addr.sll_family = AF_PACKET;
     addr.sll_protocol = htons(ETH_P_IP);
@@ -393,7 +396,7 @@ static void mock_push_setup_udp_socket()
 {
     struct sockaddr_in addr;
 
-    mock_push_socket(AF_INET, SOCK_DGRAM, 0, SOCK_UDP_FD);
+    socket_mock_once(AF_INET, SOCK_DGRAM, 0, SOCK_UDP_FD);
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
     addr.sin_port = htons(68);
@@ -453,7 +456,7 @@ static void mock_push_ml_dhcp_client_start(void)
     struct itimerspec timeout;
     int interface_index;
     uint8_t mac_address[] = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06 };
-    
+
     interface_index = 5;
     mock_push_ml_network_interface_index("eth0", interface_index, 0);
     mock_push_ml_network_interface_mac_address("eth0", &mac_address[0], 0);
@@ -505,7 +508,7 @@ static void mock_push_requesting_to_bound(void)
     mock_push_timerfd_settime(RENEW_FD, 0, &timeout, 0);
     timeout.it_value.tv_sec = 40;
     mock_push_timerfd_settime(REBIND_FD, 0, &timeout, 0);
-    mock_push_ml_network_interface_configure("eth0",
+    ml_network_interface_configure_mock_once("eth0",
                                              "192.168.0.3",
                                              "255.255.255.0",
                                              0);
@@ -541,7 +544,7 @@ static void mock_push_renewing_to_bound(void)
     mock_push_timerfd_settime(RENEW_FD, 0, &timeout, 0);
     timeout.it_value.tv_sec = 40;
     mock_push_timerfd_settime(REBIND_FD, 0, &timeout, 0);
-    mock_push_ml_network_interface_configure("eth0",
+    ml_network_interface_configure_mock_once("eth0",
                                              "192.168.0.3",
                                              "255.255.255.0",
                                              0);
@@ -598,7 +601,7 @@ TEST(start_failure_last_init_step)
     interface_index = 5;
     mock_push_ml_network_interface_index("eth0", interface_index, 0);
     mock_push_ml_network_interface_mac_address("eth0", &mac_address[0], 0);
-    mock_push_socket(AF_PACKET, SOCK_DGRAM, 0, SOCK_FD);
+    socket_mock_once(AF_PACKET, SOCK_DGRAM, 0, SOCK_FD);
     memset(&addr, 0, sizeof(addr));
     addr.sll_family = AF_PACKET;
     addr.sll_protocol = htons(ETH_P_IP);
