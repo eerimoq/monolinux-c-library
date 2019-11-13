@@ -755,7 +755,8 @@ TEST(command_df)
     stat.f_bsize = 512;
     stat.f_blocks = 20000;
     stat.f_bfree = 15000;
-    mock_push_statvfs("/", &stat, 0);
+    statvfs_mock_once("/", 0);
+    statvfs_mock_set___buf_out(&stat, sizeof(stat));
 
     /* /proc. */
     mntent_proc_p = xmalloc(sizeof(*mntent_proc_p));
@@ -764,7 +765,8 @@ TEST(command_df)
     stat.f_bsize = 512;
     stat.f_blocks = 40000;
     stat.f_bfree = 10000;
-    mock_push_statvfs("/proc", &stat, 0);
+    statvfs_mock_once("/proc", 0);
+    statvfs_mock_set___buf_out(&stat, sizeof(stat));
 
     /* No more mounted file systems. */
     mock_push_getmntent(f_p, NULL);

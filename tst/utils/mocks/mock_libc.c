@@ -299,24 +299,6 @@ int __wrap_endmntent(FILE *stream_p)
     return (res);
 }
 
-void mock_push_statvfs(const char *path_p, struct statvfs *buf_p, int res)
-{
-    mock_push("statvfs(path_p)", path_p, strlen(path_p) + 1);
-    mock_push("statvfs(buf_p)", buf_p, sizeof(*buf_p));
-    mock_push("statvfs(): return (res)", &res, sizeof(res));
-}
-
-int __wrap_statvfs(const char *path_p, struct statvfs *buf_p)
-{
-    int res;
-
-    mock_pop_assert("statvfs(path_p)", path_p);
-    mock_pop("statvfs(buf_p)", buf_p);
-    mock_pop("statvfs(): return (res)", &res);
-
-    return (res);
-}
-
 void mock_push_nftw(const char *dirpath_p,
                     int nopenfd,
                     int flags,

@@ -2,7 +2,6 @@ INC += ..
 SRC += ../utils/utils.c
 SRC += ../utils/mocks/mock.c
 SRC += ../utils/mocks/mock_libc.c
-LDFLAGS += -Wl,--wrap=statvfs
 LDFLAGS += -Wl,--wrap=setmntent
 LDFLAGS += -Wl,--wrap=getmntent
 LDFLAGS += -Wl,--wrap=endmntent
