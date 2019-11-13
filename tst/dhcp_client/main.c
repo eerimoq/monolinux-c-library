@@ -36,7 +36,6 @@
 #include "ml/ml.h"
 #include "utils/utils.h"
 #include "utils/mocks/mock_libc.h"
-#include "utils/mocks/mock_ml_network.h"
 #include "utils/mocks/mock.h"
 
 /* File descriptors. */
@@ -462,7 +461,10 @@ static void mock_push_ml_dhcp_client_start(void)
     ml_network_interface_index_mock_once("eth0", 0);
     ml_network_interface_index_mock_set_index_p_out(&interface_index,
                                                     sizeof(interface_index));
-    mock_push_ml_network_interface_mac_address("eth0", &mac_address[0], 0);
+    ml_network_interface_mac_address_mock_once("eth0", 0);
+    ml_network_interface_mac_address_mock_set_mac_address_p_out(
+        &mac_address[0],
+        sizeof(mac_address));
     mock_push_setup_packet_socket();
     timerfd_create_mock_once(CLOCK_REALTIME, 0, RENEW_FD);
     timerfd_create_mock_once(CLOCK_REALTIME, 0, REBIND_FD);
@@ -605,7 +607,10 @@ TEST(start_failure_last_init_step)
     ml_network_interface_index_mock_once("eth0", 0);
     ml_network_interface_index_mock_set_index_p_out(&interface_index,
                                                     sizeof(interface_index));
-    mock_push_ml_network_interface_mac_address("eth0", &mac_address[0], 0);
+    ml_network_interface_mac_address_mock_once("eth0", 0);
+    ml_network_interface_mac_address_mock_set_mac_address_p_out(
+        &mac_address[0],
+        sizeof(mac_address));
     socket_mock_once(AF_PACKET, SOCK_DGRAM, 0, SOCK_FD);
     memset(&addr, 0, sizeof(addr));
     addr.sll_family = AF_PACKET;
