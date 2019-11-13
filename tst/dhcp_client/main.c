@@ -382,7 +382,8 @@ static void mock_push_setup_packet_socket()
     addr.sll_family = AF_PACKET;
     addr.sll_protocol = htons(ETH_P_IP);
     addr.sll_ifindex = 5;
-    mock_push_bind(SOCK_PACKET_FD, (struct sockaddr *)&addr, sizeof(addr), 0);
+    bind_mock_once(SOCK_PACKET_FD, sizeof(addr), 0);
+    bind_mock_set___addr_in(&addr, sizeof(addr));
     yes = 1;
     mock_push_setsockopt(SOCK_PACKET_FD,
                          SOL_SOCKET,
@@ -401,7 +402,8 @@ static void mock_push_setup_udp_socket()
     addr.sin_family = AF_INET;
     addr.sin_port = htons(68);
     addr.sin_addr.s_addr = INADDR_ANY;
-    mock_push_bind(SOCK_FD, (struct sockaddr *)&addr, sizeof(addr), 0);
+    bind_mock_once(SOCK_FD, sizeof(addr), 0);
+    bind_mock_set___addr_in(&addr, sizeof(addr));
 }
 
 static void mock_push_packet_sendto(const uint8_t *buf_p, size_t size)
@@ -414,12 +416,9 @@ static void mock_push_packet_sendto(const uint8_t *buf_p, size_t size)
     addr.sll_ifindex = 5;
     addr.sll_halen = 6;
     memset(&addr.sll_addr[0], 0xff, addr.sll_halen);
-    mock_push_sendto(SOCK_FD,
-                     buf_p,
-                     size,
-                     (struct sockaddr *)&addr,
-                     sizeof(addr),
-                     size);
+    sendto_mock_once(SOCK_FD, size, 0, sizeof(addr), size);
+    sendto_mock_set___buf_in(buf_p, size);
+    sendto_mock_set___addr_in((struct sockaddr *)&addr, sizeof(addr));
 }
 
 static void mock_push_udp_sendto(const uint8_t *buf_p, size_t size)
@@ -430,17 +429,15 @@ static void mock_push_udp_sendto(const uint8_t *buf_p, size_t size)
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = htonl(0xc0a80001);
     addr.sin_port = htons(67);
-    mock_push_sendto(SOCK_FD,
-                     buf_p,
-                     size,
-                     (struct sockaddr *)&addr,
-                     sizeof(addr),
-                     size);
+    sendto_mock_once(SOCK_FD, size, 0, sizeof(addr), size);
+    sendto_mock_set___buf_in(buf_p, size);
+    sendto_mock_set___addr_in((struct sockaddr *)&addr, sizeof(addr));
 }
 
 static void mock_push_dhcp_read(uint8_t *buf_p, size_t size)
 {
-    mock_push_ml_read(SOCK_FD, buf_p, 1024, size);
+    ml_read_mock_once(SOCK_FD, 1024, size);
+    ml_read_mock_set_buf_p_out(buf_p, 1024);
 }
 
 static void mock_push_timer_read(int fd)
@@ -448,7 +445,8 @@ static void mock_push_timer_read(int fd)
     uint64_t value;
 
     value = 0;
-    mock_push_ml_read(fd, &value, sizeof(value), sizeof(value));
+    ml_read_mock_once(fd, sizeof(value), sizeof(value));
+    ml_read_mock_set_buf_p_out(&value, sizeof(value));
 }
 
 static void mock_push_ml_dhcp_client_start(void)
@@ -616,7 +614,8 @@ TEST(start_failure_last_init_step)
     addr.sll_family = AF_PACKET;
     addr.sll_protocol = htons(ETH_P_IP);
     addr.sll_ifindex = interface_index;
-    mock_push_bind(SOCK_FD, (struct sockaddr *)&addr, sizeof(addr), 0);
+    bind_mock_once(SOCK_FD, sizeof(addr), 0);
+    bind_mock_set___addr_in(&addr, sizeof(addr));
     yes = 1;
     mock_push_setsockopt(SOCK_FD,
                          SOL_SOCKET,

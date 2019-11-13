@@ -719,7 +719,7 @@ TEST(command_df_setmntent_failure)
 {
     int fd;
 
-    mock_push_setmntent("/proc/mounts", "r", NULL);
+    setmntent_mock_once("/proc/mounts", "r", NULL);
 
     ml_shell_init();
 
@@ -746,12 +746,13 @@ TEST(command_df)
     struct statvfs stat;
 
     f_p = (FILE *)1;
-    mock_push_setmntent("/proc/mounts", "r", f_p);
+    setmntent_mock_once("/proc/mounts", "r", f_p);
 
     /* /. */
     mntent_root_p = xmalloc(sizeof(*mntent_root_p));
     mntent_root_p->mnt_dir = "/";
-    mock_push_getmntent(f_p, mntent_root_p);
+    getmntent_mock_once(mntent_root_p);
+    getmntent_mock_set___stream_in_pointer(f_p);
     stat.f_bsize = 512;
     stat.f_blocks = 20000;
     stat.f_bfree = 15000;
@@ -761,7 +762,8 @@ TEST(command_df)
     /* /proc. */
     mntent_proc_p = xmalloc(sizeof(*mntent_proc_p));
     mntent_proc_p->mnt_dir = "/proc";
-    mock_push_getmntent(f_p, mntent_proc_p);
+    getmntent_mock_once(mntent_proc_p);
+    getmntent_mock_set___stream_in_pointer(f_p);
     stat.f_bsize = 512;
     stat.f_blocks = 40000;
     stat.f_bfree = 10000;
@@ -769,8 +771,10 @@ TEST(command_df)
     statvfs_mock_set___buf_out(&stat, sizeof(stat));
 
     /* No more mounted file systems. */
-    mock_push_getmntent(f_p, NULL);
-    mock_push_endmntent(f_p, 0);
+    getmntent_mock_once(NULL);
+    getmntent_mock_set___stream_in_pointer(f_p);
+    endmntent_mock_once(0);
+    endmntent_mock_set___stream_in_pointer(f_p);
 
     ml_shell_init();
 

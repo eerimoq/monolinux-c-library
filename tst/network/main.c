@@ -457,12 +457,9 @@ TEST(command_udp_send_sendto_failure)
         other.sin_family = AF_INET;
         other.sin_port = htons(1234);
         inet_aton("1.2.3.4", &other.sin_addr);
-        mock_push_sendto(fd,
-                         "Hello!",
-                         6,
-                         (struct sockaddr *)&other,
-                         sizeof(other),
-                         -1);
+        sendto_mock_once(fd, 6, 0, sizeof(other), -1);
+        sendto_mock_set___buf_in("Hello!", 6);
+        sendto_mock_set___addr_in(&other, sizeof(other));
         ml_close_mock_once(fd, 0);
         ASSERT_EQ(command_udp_send(membersof(argv), argv), -1);
     }
@@ -492,12 +489,9 @@ TEST(command_udp_send)
         other.sin_family = AF_INET;
         other.sin_port = htons(1234);
         inet_aton("1.2.3.4", &other.sin_addr);
-        mock_push_sendto(fd,
-                         "Hello!",
-                         6,
-                         (struct sockaddr *)&other,
-                         sizeof(other),
-                         6);
+        sendto_mock_once(fd, 6, 0, sizeof(other), 6);
+        sendto_mock_set___buf_in("Hello!", 6);
+        sendto_mock_set___addr_in(&other, sizeof(other));
         ml_close_mock_once(fd, 0);
         ASSERT_EQ(command_udp_send(membersof(argv), argv), 0);
     }

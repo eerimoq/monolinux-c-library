@@ -1,7 +1,4 @@
-LDFLAGS += -Wl,--wrap=bind
 LDFLAGS += -Wl,--wrap=setsockopt
-LDFLAGS += -Wl,--wrap=sendto
-LDFLAGS += -Wl,--wrap=ml_read
 LDFLAGS += -Wl,--wrap=timerfd_settime
 LDFLAGS += -Wl,--wrap=poll
 LDFLAGS += -Wl,--wrap=ml_network_interface_mac_address

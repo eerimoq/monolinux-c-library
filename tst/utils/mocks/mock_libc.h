@@ -40,11 +40,6 @@
 #include <arpa/inet.h>
 #include "ml/ml.h"
 
-void mock_push_bind(int fd,
-                    const struct sockaddr *addr_p,
-                    socklen_t addrlen,
-                    int res);
-
 void mock_push_setsockopt(int sockfd,
                           int level,
                           int optname,
@@ -62,31 +57,6 @@ void mock_push_ioctl(int fd,
 void mock_push_ioctl_ifreq_ok(int fd,
                               unsigned long request,
                               struct ifreq *ifreq_p);
-
-void mock_push_sendto(int fd,
-                      const void *buf_p,
-                      size_t len,
-                      const struct sockaddr *dest_addr_p,
-                      socklen_t addrlen,
-                      ssize_t res);
-
-void mock_push_recvfrom(int fd,
-                        void *buf_p,
-                        size_t len,
-                        struct sockaddr_in *dest_addr_p,
-                        ssize_t res);
-
-void mock_push_ml_read(int fd, void *buf_p, size_t count, ssize_t res);
-
-void mock_push_ml_write(int fd, const void *buf_p, size_t count, ssize_t res);
-
-void mock_push_setmntent(const char *filename_p,
-                         const char *type_p,
-                         FILE *res_p);
-
-void mock_push_getmntent(FILE *stream_p, struct mntent *res_p);
-
-void mock_push_endmntent(FILE *stream_p, int res);
 
 void mock_push_nftw(const char *dirpath_p,
                     int nopenfd,
