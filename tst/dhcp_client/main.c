@@ -28,6 +28,7 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/timerfd.h>
 #include <netinet/if_ether.h>
 #include <linux/if_packet.h>
 #include "nala.h"
@@ -458,13 +459,15 @@ static void mock_push_ml_dhcp_client_start(void)
     uint8_t mac_address[] = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06 };
 
     interface_index = 5;
-    mock_push_ml_network_interface_index("eth0", interface_index, 0);
+    ml_network_interface_index_mock_once("eth0", 0);
+    ml_network_interface_index_mock_set_index_p_out(&interface_index,
+                                                    sizeof(interface_index));
     mock_push_ml_network_interface_mac_address("eth0", &mac_address[0], 0);
     mock_push_setup_packet_socket();
-    mock_push_timerfd_create(CLOCK_REALTIME, 0, RENEW_FD);
-    mock_push_timerfd_create(CLOCK_REALTIME, 0, REBIND_FD);
-    mock_push_timerfd_create(CLOCK_REALTIME, 0, RESP_FD);
-    mock_push_timerfd_create(CLOCK_REALTIME, 0, INIT_FD);
+    timerfd_create_mock_once(CLOCK_REALTIME, 0, RENEW_FD);
+    timerfd_create_mock_once(CLOCK_REALTIME, 0, REBIND_FD);
+    timerfd_create_mock_once(CLOCK_REALTIME, 0, RESP_FD);
+    timerfd_create_mock_once(CLOCK_REALTIME, 0, INIT_FD);
     memset(&timeout, 0, sizeof(timeout));
     timeout.it_value.tv_sec = 0;
     timeout.it_value.tv_nsec = 1;
@@ -512,10 +515,10 @@ static void mock_push_requesting_to_bound(void)
                                              "192.168.0.3",
                                              "255.255.255.0",
                                              0);
-    mock_push_ml_network_interface_add_route("eth0",
+    ml_network_interface_add_route_mock_once("eth0",
                                              "192.168.0.1",
                                              0);
-    mock_push_ml_close(SOCK_PACKET_FD, 0);
+    ml_close_mock_once(SOCK_PACKET_FD, 0);
     mock_push_setup_udp_socket();
 }
 
@@ -548,10 +551,10 @@ static void mock_push_renewing_to_bound(void)
                                              "192.168.0.3",
                                              "255.255.255.0",
                                              0);
-    mock_push_ml_network_interface_add_route("eth0",
+    ml_network_interface_add_route_mock_once("eth0",
                                              "192.168.0.1",
                                              0);
-    mock_push_ml_close(SOCK_PACKET_FD, 0);
+    ml_close_mock_once(SOCK_PACKET_FD, 0);
     mock_push_setup_udp_socket();
 }
 
@@ -566,7 +569,7 @@ static void mock_push_enter_init(void)
     mock_push_timerfd_settime(REBIND_FD, 0, &timeout, 0);
     timeout.it_value.tv_sec = 10;
     mock_push_timerfd_settime(INIT_FD, 0, &timeout, 0);
-    mock_push_ml_close(SOCK_FD, 0);
+    ml_close_mock_once(SOCK_FD, 0);
     mock_push_setup_packet_socket();
 }
 
@@ -599,7 +602,9 @@ TEST(start_failure_last_init_step)
     uint8_t mac_address[] = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06 };
 
     interface_index = 5;
-    mock_push_ml_network_interface_index("eth0", interface_index, 0);
+    ml_network_interface_index_mock_once("eth0", 0);
+    ml_network_interface_index_mock_set_index_p_out(&interface_index,
+                                                    sizeof(interface_index));
     mock_push_ml_network_interface_mac_address("eth0", &mac_address[0], 0);
     socket_mock_once(AF_PACKET, SOCK_DGRAM, 0, SOCK_FD);
     memset(&addr, 0, sizeof(addr));
@@ -614,14 +619,14 @@ TEST(start_failure_last_init_step)
                          &yes,
                          sizeof(yes),
                          0);
-    mock_push_timerfd_create(CLOCK_REALTIME, 0, RENEW_FD);
-    mock_push_timerfd_create(CLOCK_REALTIME, 0, REBIND_FD);
-    mock_push_timerfd_create(CLOCK_REALTIME, 0, RESP_FD);
-    mock_push_timerfd_create(CLOCK_REALTIME, 0, -1);
-    mock_push_ml_close(RESP_FD, 0);
-    mock_push_ml_close(REBIND_FD, 0);
-    mock_push_ml_close(RENEW_FD, 0);
-    mock_push_ml_close(SOCK_FD, 0);
+    timerfd_create_mock_once(CLOCK_REALTIME, 0, RENEW_FD);
+    timerfd_create_mock_once(CLOCK_REALTIME, 0, REBIND_FD);
+    timerfd_create_mock_once(CLOCK_REALTIME, 0, RESP_FD);
+    timerfd_create_mock_once(CLOCK_REALTIME, 0, -1);
+    ml_close_mock_once(RESP_FD, 0);
+    ml_close_mock_once(REBIND_FD, 0);
+    ml_close_mock_once(RENEW_FD, 0);
+    ml_close_mock_once(SOCK_FD, 0);
 
     ml_dhcp_client_init(&client, "eth0", ML_LOG_ALL);
     ml_dhcp_client_start(&client);

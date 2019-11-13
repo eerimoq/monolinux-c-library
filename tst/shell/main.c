@@ -34,6 +34,7 @@
 #include <fcntl.h>
 #include <sys/sysmacros.h>
 #include "nala.h"
+#include "nala_mocks.h"
 #include "utils/mocks/mock_libc.h"
 #include "utils/mocks/mock.h"
 #include "utils/utils.h"
@@ -681,14 +682,14 @@ TEST(command_insmod)
     int fd;
 
     fd = 99;
-    mock_push_ml_open("foo.ko", O_RDONLY, fd);
-    mock_push_ml_finit_module(fd, "", 0, 0);
-    mock_push_ml_close(fd, 0);
+    ml_open_mock_once("foo.ko", O_RDONLY, fd);
+    ml_finit_module_mock_once(fd, "", 0, 0);
+    ml_close_mock_once(fd, 0);
 
     fd = 98;
-    mock_push_ml_open("bar.ko", O_RDONLY, fd);
-    mock_push_ml_finit_module(fd, "fie=fum", 0, 0);
-    mock_push_ml_close(fd, 0);
+    ml_open_mock_once("bar.ko", O_RDONLY, fd);
+    ml_finit_module_mock_once(fd, "fie=fum", 0, 0);
+    ml_close_mock_once(fd, 0);
 
     ml_shell_init();
 
@@ -940,7 +941,7 @@ TEST(command_mknod_fifo)
 {
     int fd;
 
-    mock_push_ml_mknod("/dev/foo", S_IFIFO | 0666, 0, 0);
+    ml_mknod_mock_once("/dev/foo", S_IFIFO | 0666, 0, 0);
 
     ml_shell_init();
 
@@ -962,7 +963,7 @@ TEST(command_mknod_char)
 {
     int fd;
 
-    mock_push_ml_mknod("/dev/bar", S_IFCHR | 0666, makedev(5, 6), 0);
+    ml_mknod_mock_once("/dev/bar", S_IFCHR | 0666, makedev(5, 6), 0);
 
     ml_shell_init();
 
@@ -1005,7 +1006,7 @@ TEST(command_mknod_block)
 {
     int fd;
 
-    mock_push_ml_mknod("/dev/sda1", S_IFBLK | 0666, makedev(8, 1), 0);
+    ml_mknod_mock_once("/dev/sda1", S_IFBLK | 0666, makedev(8, 1), 0);
 
     ml_shell_init();
 

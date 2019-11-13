@@ -28,6 +28,7 @@
 
 #include <fcntl.h>
 #include "nala.h"
+#include "nala_mocks.h"
 #include "ml/ml.h"
 #include "utils/mocks/mock_libc.h"
 #include "utils/mocks/mock.h"
@@ -304,9 +305,9 @@ TEST(insmod)
     int fd;
 
     fd = 99;
-    mock_push_ml_open("foo.ko", O_RDONLY, fd);
-    mock_push_ml_finit_module(fd, "", 0, 0);
-    mock_push_ml_close(fd, 0);
+    ml_open_mock_once("foo.ko", O_RDONLY, fd);
+    ml_finit_module_mock_once(fd, "", 0, 0);
+    ml_close_mock_once(fd, 0);
 
     ASSERT_EQ(ml_insert_module("foo.ko", ""), 0);
 }

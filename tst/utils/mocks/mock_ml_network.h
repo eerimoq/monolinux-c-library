@@ -29,28 +29,12 @@
 #ifndef MOCK_ML_NETWORK_H
 #define MOCK_ML_NETWORK_H
 
-void mock_push_ml_network_init(void);
-
-void mock_push_ml_network_interface_up(const char *name_p,
-                                       int res);
-
-void mock_push_ml_network_interface_down(const char *name_p,
-                                         int res);
-
 void mock_push_ml_network_interface_ip_address(const char *name_p,
                                                struct in_addr *addr_p,
                                                int res);
 
-void mock_push_ml_network_interface_index(const char *name_p,
-                                          int index,
-                                          int res);
-
 void mock_push_ml_network_interface_mac_address(const char *name_p,
                                                 uint8_t *mac_address_p,
                                                 int res);
-
-void mock_push_ml_network_interface_add_route(const char *name_p,
-                                              const char *ip_address_p,
-                                              int res);
 
 #endif

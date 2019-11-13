@@ -241,40 +241,6 @@ ssize_t __wrap_recvfrom(int fd,
     return (res);
 }
 
-void mock_push_ml_open(const char *path_p, int flags, int res)
-{
-    mock_push("ml_open(path_p)", path_p, strlen(path_p) + 1);
-    mock_push("ml_open(flags)", &flags, sizeof(flags));
-    mock_push("ml_open(): return (res)", &res, sizeof(res));
-}
-
-int __wrap_ml_open(const char *path_p, int flags)
-{
-    int res;
-
-    mock_pop_assert("ml_open(path_p)", path_p);
-    mock_pop_assert("ml_open(flags)", &flags);
-    mock_pop("ml_open(): return (res)", &res);
-
-    return (res);
-}
-
-void mock_push_ml_close(int fd, int res)
-{
-    mock_push("ml_close(fd)", &fd, sizeof(fd));
-    mock_push("ml_close(): return (res)", &res, sizeof(res));
-}
-
-int __wrap_ml_close(int fd)
-{
-    int res;
-
-    mock_pop_assert("ml_close(fd)", &fd);
-    mock_pop("ml_close(): return (res)", &res);
-
-    return (res);
-}
-
 void mock_push_ml_read(int fd, void *buf_p, size_t count, ssize_t res)
 {
     mock_push("ml_read(fd)", &fd, sizeof(fd));
@@ -311,29 +277,6 @@ ssize_t __wrap_ml_write(int fd, const void *buf_p, size_t count)
     mock_pop_assert("ml_write(count)", &count);
     mock_pop_assert("ml_write(buf_p)", buf_p);
     mock_pop("ml_write(): return (res)", &res);
-
-    return (res);
-}
-
-void mock_push_ml_finit_module(int fd,
-                               const char *params_p,
-                               int flags,
-                               int res)
-{
-    mock_push("ml_finit_module(fd)", &fd, sizeof(fd));
-    mock_push("ml_finit_module(params_p)", params_p, strlen(params_p) + 1);
-    mock_push("ml_finit_module(flags)", &flags, sizeof(flags));
-    mock_push("ml_finit_module(): return (res)", &res, sizeof(res));
-}
-
-int __wrap_ml_finit_module(int fd, const char *params_p, int flags)
-{
-    int res;
-
-    mock_pop_assert("ml_finit_module(fd)", &fd);
-    mock_pop_assert("ml_finit_module(params_p)", params_p);
-    mock_pop_assert("ml_finit_module(flags)", &flags);
-    mock_pop("ml_finit_module(): return (res)", &res);
 
     return (res);
 }
@@ -458,44 +401,6 @@ int __wrap_nftw(const char *dirpath_p,
     }
 
     mock_pop("nftw(): return (res)", &res);
-
-    return (res);
-}
-
-void mock_push_ml_mknod(const char *path_p, mode_t mode, dev_t dev, int res)
-{
-    mock_push("ml_mknod(path_p)", path_p, strlen(path_p) + 1);
-    mock_push("ml_mknod(mode)", &mode, sizeof(mode));
-    mock_push("ml_mknod(dev)", &dev, sizeof(dev));
-    mock_push("ml_mknod(): return (res)", &res, sizeof(res));
-}
-
-int __wrap_ml_mknod(const char *path_p, mode_t mode, dev_t dev)
-{
-    int res;
-
-    mock_pop_assert("ml_mknod(path_p)", path_p);
-    mock_pop_assert("ml_mknod(mode)", &mode);
-    mock_pop_assert("ml_mknod(dev)", &dev);
-    mock_pop("ml_mknod(): return (res)", &res);
-
-    return (res);
-}
-
-void mock_push_timerfd_create(int clockid, int flags, int res)
-{
-    mock_push("timerfd_create(clockid)", &clockid, sizeof(clockid));
-    mock_push("timerfd_create(flags)", &flags, sizeof(flags));
-    mock_push("timerfd_create(): return (res)", &res, sizeof(res));
-}
-
-int __wrap_timerfd_create(int clockid, int flags)
-{
-    int res;
-
-    mock_pop_assert("timerfd_create(clockid)", &clockid);
-    mock_pop_assert("timerfd_create(flags)", &flags);
-    mock_pop("timerfd_create(): return (res)", &res);
 
     return (res);
 }

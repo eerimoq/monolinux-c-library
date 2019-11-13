@@ -84,18 +84,9 @@ void mock_push_recvfrom(int fd,
                         struct sockaddr_in *dest_addr_p,
                         ssize_t res);
 
-void mock_push_ml_open(const char *path_p, int flags, int res);
-
-void mock_push_ml_close(int fd, int res);
-
 void mock_push_ml_read(int fd, void *buf_p, size_t count, ssize_t res);
 
 void mock_push_ml_write(int fd, const void *buf_p, size_t count, ssize_t res);
-
-void mock_push_ml_finit_module(int fd,
-                               const char *params_p,
-                               int flags,
-                               int res);
 
 void mock_push_setmntent(const char *filename_p,
                          const char *type_p,
@@ -114,10 +105,6 @@ void mock_push_nftw(const char *dirpath_p,
                     mode_t modes[],
                     int length,
                     int res);
-
-void mock_push_ml_mknod(const char *path_p, mode_t mode, dev_t dev, int res);
-
-void mock_push_timerfd_create(int clockid, int flags, int res);
 
 void mock_push_timerfd_settime(int fd,
                                int flags,

@@ -73,7 +73,7 @@ static void mock_push_configure(const char *name_p)
     mock_push_ioctl_ifreq_ok(fd, SIOCSIFADDR, &ifreq);
     create_address_request(&ifreq, "255.255.255.0");
     mock_push_ioctl_ifreq_ok(fd, SIOCSIFNETMASK, &ifreq);
-    mock_push_ml_close(fd, 0);
+    ml_close_mock_once(fd, 0);
 }
 
 static void mock_push_up(const char *name_p)
@@ -88,7 +88,7 @@ static void mock_push_up(const char *name_p)
     mock_push_ioctl_ifreq_ok(fd, SIOCGIFFLAGS, &ifreq);
     ifreq.ifr_flags = IFF_UP;
     mock_push_ioctl_ifreq_ok(fd, SIOCSIFFLAGS, &ifreq);
-    mock_push_ml_close(fd, 0);
+    ml_close_mock_once(fd, 0);
 }
 
 static void mock_push_down(const char *name_p)
@@ -102,7 +102,7 @@ static void mock_push_down(const char *name_p)
     strcpy(&ifreq.ifr_name[0], name_p);
     mock_push_ioctl_ifreq_ok(fd, SIOCGIFFLAGS, &ifreq);
     mock_push_ioctl_ifreq_ok(fd, SIOCSIFFLAGS, &ifreq);
-    mock_push_ml_close(fd, 0);
+    ml_close_mock_once(fd, 0);
 }
 
 static void mock_push_ioctl_get(const char *name_p,
@@ -126,7 +126,7 @@ static void mock_push_ioctl_get(const char *name_p,
                     ifreq_out_p,
                     sizeof(ifreq_in),
                     res);
-    mock_push_ml_close(fd, 0);
+    ml_close_mock_once(fd, 0);
 }
 
 static void mock_push_ml_network_interface_index(const char *name_p,
@@ -463,7 +463,7 @@ TEST(command_udp_send_sendto_failure)
                          (struct sockaddr *)&other,
                          sizeof(other),
                          -1);
-        mock_push_ml_close(fd, 0);
+        ml_close_mock_once(fd, 0);
         ASSERT_EQ(command_udp_send(membersof(argv), argv), -1);
     }
 
@@ -498,7 +498,7 @@ TEST(command_udp_send)
                          (struct sockaddr *)&other,
                          sizeof(other),
                          6);
-        mock_push_ml_close(fd, 0);
+        ml_close_mock_once(fd, 0);
         ASSERT_EQ(command_udp_send(membersof(argv), argv), 0);
     }
 
