@@ -168,34 +168,6 @@ int __wrap_nftw(const char *dirpath_p,
     return (res);
 }
 
-void mock_push_timerfd_settime(int fd,
-                               int flags,
-                               const struct itimerspec *new_value_p,
-                               int res)
-{
-    mock_push("timerfd_settime(fd)", &fd, sizeof(fd));
-    mock_push("timerfd_settime(flags)", &flags, sizeof(flags));
-    mock_push("timerfd_settime(new_value_p)", new_value_p, sizeof(*new_value_p));
-    mock_push("timerfd_settime(): return (res)", &res, sizeof(res));
-}
-
-int __wrap_timerfd_settime(int fd,
-                           int flags,
-                           const struct itimerspec *new_value_p,
-                           struct itimerspec *old_value_p)
-{
-    (void)old_value_p;
-
-    int res;
-
-    mock_pop_assert("timerfd_settime(fd)", &fd);
-    mock_pop_assert("timerfd_settime(flags)", &flags);
-    mock_pop_assert("timerfd_settime(new_value_p)", new_value_p);
-    mock_pop("timerfd_settime(): return (res)", &res);
-
-    return (res);
-}
-
 void mock_push_poll(struct pollfd *fds_p, nfds_t nfds, int timeout, int res)
 {
     nfds_t i;

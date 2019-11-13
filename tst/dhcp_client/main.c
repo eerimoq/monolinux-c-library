@@ -471,7 +471,8 @@ static void mock_push_ml_dhcp_client_start(void)
     memset(&timeout, 0, sizeof(timeout));
     timeout.it_value.tv_sec = 0;
     timeout.it_value.tv_nsec = 1;
-    mock_push_timerfd_settime(INIT_FD, 0, &timeout, 0);
+    timerfd_settime_mock_once(INIT_FD, 0, 0);
+    timerfd_settime_mock_set___utmr_in(&timeout, sizeof(timeout));
 }
 
 static void mock_push_init_to_selecting(void)
@@ -483,7 +484,8 @@ static void mock_push_init_to_selecting(void)
     mock_push_packet_sendto(&discover[0], sizeof(discover));
     memset(&timeout, 0, sizeof(timeout));
     timeout.it_value.tv_sec = 5;
-    mock_push_timerfd_settime(RESP_FD, 0, &timeout, 0);
+    timerfd_settime_mock_once(RESP_FD, 0, 0);
+    timerfd_settime_mock_set___utmr_in(&timeout, sizeof(timeout));
 }
 
 static void mock_push_selecting_to_requesting(void)
@@ -495,7 +497,8 @@ static void mock_push_selecting_to_requesting(void)
     mock_push_packet_sendto(&request[0], sizeof(request));
     memset(&timeout, 0, sizeof(timeout));
     timeout.it_value.tv_sec = 5;
-    mock_push_timerfd_settime(RESP_FD, 0, &timeout, 0);
+    timerfd_settime_mock_once(RESP_FD, 0, 0);
+    timerfd_settime_mock_set___utmr_in(&timeout, sizeof(timeout));
 }
 
 static void mock_push_requesting_to_bound(void)
@@ -506,11 +509,14 @@ static void mock_push_requesting_to_bound(void)
     mock_push_dhcp_read(&ack[0], sizeof(ack));
     memset(&timeout, 0, sizeof(timeout));
     timeout.it_value.tv_sec = 0;
-    mock_push_timerfd_settime(RESP_FD, 0, &timeout, 0);
+    timerfd_settime_mock_once(RESP_FD, 0, 0);
+    timerfd_settime_mock_set___utmr_in(&timeout, sizeof(timeout));
     timeout.it_value.tv_sec = 30;
-    mock_push_timerfd_settime(RENEW_FD, 0, &timeout, 0);
+    timerfd_settime_mock_once(RENEW_FD, 0, 0);
+    timerfd_settime_mock_set___utmr_in(&timeout, sizeof(timeout));
     timeout.it_value.tv_sec = 40;
-    mock_push_timerfd_settime(REBIND_FD, 0, &timeout, 0);
+    timerfd_settime_mock_once(REBIND_FD, 0, 0);
+    timerfd_settime_mock_set___utmr_in(&timeout, sizeof(timeout));
     ml_network_interface_configure_mock_once("eth0",
                                              "192.168.0.3",
                                              "255.255.255.0",
@@ -531,7 +537,8 @@ static void mock_push_bound_to_renewing(void)
     mock_push_udp_sendto(&request_udp[0], sizeof(request_udp));
     memset(&timeout, 0, sizeof(timeout));
     timeout.it_value.tv_sec = 5;
-    mock_push_timerfd_settime(RESP_FD, 0, &timeout, 0);
+    timerfd_settime_mock_once(RESP_FD, 0, 0);
+    timerfd_settime_mock_set___utmr_in(&timeout, sizeof(timeout));
 }
 
 static void mock_push_renewing_to_bound(void)
@@ -542,11 +549,14 @@ static void mock_push_renewing_to_bound(void)
     mock_push_dhcp_read(&ack_udp[0], sizeof(ack_udp));
     memset(&timeout, 0, sizeof(timeout));
     timeout.it_value.tv_sec = 0;
-    mock_push_timerfd_settime(RESP_FD, 0, &timeout, 0);
+    timerfd_settime_mock_once(RESP_FD, 0, 0);
+    timerfd_settime_mock_set___utmr_in(&timeout, sizeof(timeout));
     timeout.it_value.tv_sec = 30;
-    mock_push_timerfd_settime(RENEW_FD, 0, &timeout, 0);
+    timerfd_settime_mock_once(RENEW_FD, 0, 0);
+    timerfd_settime_mock_set___utmr_in(&timeout, sizeof(timeout));
     timeout.it_value.tv_sec = 40;
-    mock_push_timerfd_settime(REBIND_FD, 0, &timeout, 0);
+    timerfd_settime_mock_once(REBIND_FD, 0, 0);
+    timerfd_settime_mock_set___utmr_in(&timeout, sizeof(timeout));
     ml_network_interface_configure_mock_once("eth0",
                                              "192.168.0.3",
                                              "255.255.255.0",
@@ -564,11 +574,14 @@ static void mock_push_enter_init(void)
 
     memset(&timeout, 0, sizeof(timeout));
     timeout.it_value.tv_sec = 0;
-    mock_push_timerfd_settime(RESP_FD, 0, &timeout, 0);
+    timerfd_settime_mock_once(RESP_FD, 0, 0);
+    timerfd_settime_mock_set___utmr_in(&timeout, sizeof(timeout));
     timeout.it_value.tv_sec = 0;
-    mock_push_timerfd_settime(REBIND_FD, 0, &timeout, 0);
+    timerfd_settime_mock_once(REBIND_FD, 0, 0);
+    timerfd_settime_mock_set___utmr_in(&timeout, sizeof(timeout));
     timeout.it_value.tv_sec = 10;
-    mock_push_timerfd_settime(INIT_FD, 0, &timeout, 0);
+    timerfd_settime_mock_once(INIT_FD, 0, 0);
+    timerfd_settime_mock_set___utmr_in(&timeout, sizeof(timeout));
     ml_close_mock_once(SOCK_FD, 0);
     mock_push_setup_packet_socket();
 }

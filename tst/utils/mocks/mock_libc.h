@@ -66,11 +66,6 @@ void mock_push_nftw(const char *dirpath_p,
                     int length,
                     int res);
 
-void mock_push_timerfd_settime(int fd,
-                               int flags,
-                               const struct itimerspec *new_value_p,
-                               int res);
-
 void mock_push_poll(struct pollfd *fds_p, nfds_t nfds, int timeout, int res);
 
 #endif
