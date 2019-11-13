@@ -170,11 +170,11 @@ void ml_timer_handler_init(struct ml_timer_handler_t *self_p)
     self_p->timers.tail.next_p = NULL;
     self_p->timers.tail.delta = -1;
 
+    pthread_mutex_init(&self_p->mutex, NULL);
     pthread_create(&self_p->pthread,
                    NULL,
                    (void *(*)(void *))handler_main,
                    self_p);
-    pthread_mutex_init(&self_p->mutex, NULL);
 }
 
 void ml_timer_handler_timer_init(struct ml_timer_handler_t *self_p,
