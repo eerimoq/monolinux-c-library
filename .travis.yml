@@ -1,11 +1,11 @@
-dist: xenial
+language: python
 
-language: c
+python:
+  - "3.7"
 
-before_install:
+install:
   - source setup.sh
-  - python3 --version
-  - pip3 install nala
+  - pip install nala
 
 script:
   - make -j $(cat /proc/cpuinfo | grep processor | wc -l) run
