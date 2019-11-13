@@ -27,7 +27,7 @@ app: $(EXE)
 $(EXE): $(OBJ)
 	@echo "LD $@"
 	mkdir -p $(BUILD)
-	$(CC) $(CFLAGS) $^ $(LDFLAGS) -lpthread -o $@
+	$(CC) $(CFLAGS) $^ $(LDFLAGS) $(LDFLAGS_MOCKS) -lpthread -o $@
 ifeq ($(STRIP), yes)
 	$(CROSS_COMPILE)strip $@
 endif
