@@ -6,6 +6,7 @@ CFLAGS += -coverage
 CFLAGS += -Wall -Wextra -std=gnu11
 CFLAGS += -g -Og
 CFLAGS += -DUNIT_TEST
+CFLAGS += -no-pie
 LDFLAGS_MOCKS = $(shell cat nala_mocks.ld)
 COVERAGE_FILTERS +=
 INC += $(ML_ROOT)/tst/utils

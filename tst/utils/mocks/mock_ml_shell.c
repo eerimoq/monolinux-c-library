@@ -28,9 +28,8 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include "ml/ml.h"
 #include "nala.h"
-#include "mock.h"
-#include "mock_ml_shell.h"
 
 struct callback_t {
     const char *name_p;
@@ -43,9 +42,12 @@ static struct callback_t list = {
     .next_p = NULL
 };
 
-static void save_callback(const char *name_p,
-                          ml_shell_command_callback_t callback)
+void mock_set_callback(const char *name_p,
+                       const char *description_p,
+                       ml_shell_command_callback_t callback)
 {
+    (void)description_p;
+
     struct callback_t *item_p;
 
     item_p = xmalloc(sizeof(*item_p));
@@ -55,43 +57,23 @@ static void save_callback(const char *name_p,
     list.next_p = item_p;
 }
 
-void mock_push_ml_shell_register_command(const char *name_p,
-                                         const char *description_p)
-{
-    mock_push("ml_shell_register_command(name_p)",
-              name_p,
-              strlen(name_p) + 1);
-    mock_push("ml_shell_register_command(description_p)",
-              description_p,
-              strlen(description_p) + 1);
-}
-
-void __wrap_ml_shell_register_command(const char *name_p,
-                                      const char *description_p,
-                                      ml_shell_command_callback_t callback)
-{
-    mock_pop_assert("ml_shell_register_command(name_p)", name_p);
-    mock_pop_assert("ml_shell_register_command(description_p)", description_p);
-
-    save_callback(name_p, callback);
-}
-
 ml_shell_command_callback_t mock_get_callback(const char *name_p)
 {
     struct callback_t *item_p;
 
     item_p = &list;
-    
+
     while (item_p != NULL) {
         if (strcmp(item_p->name_p, name_p) == 0) {
             return (item_p->callback);
         }
-        
+
         item_p = item_p->next_p;
     }
 
-    printf("Shell command callback not found for %s.\n", name_p);
-    FAIL();
+    NALA_TEST_FAILURE(
+        nala_format("Shell command callback not found for %s.\n",
+                    name_p));
 
     return (NULL);
 }

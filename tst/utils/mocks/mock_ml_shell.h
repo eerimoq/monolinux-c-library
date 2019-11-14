@@ -31,8 +31,9 @@
 
 #include "ml/ml.h"
 
-void mock_push_ml_shell_register_command(const char *name_p,
-                                         const char *description_p);
+void mock_set_callback(const char *name_p,
+                       const char *description_p,
+                       ml_shell_command_callback_t callback);
 
 ml_shell_command_callback_t mock_get_callback(const char *name_p);
 

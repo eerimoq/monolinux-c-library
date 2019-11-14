@@ -34,18 +34,26 @@
 #include "utils/mocks/mock_ml_shell.h"
 #include "utils/mocks/mock.h"
 
+static void mock_ml_shell_register_command(const char *name_p,
+                                           const char *description_p)
+{
+    ml_shell_register_command_mock_once(name_p, description_p, NULL);
+    ml_shell_register_command_mock_ignore_callback_in();
+    ml_shell_register_command_mock_set_callback(mock_set_callback);
+}
+
 static void mock_push_ml_network_init(void)
 {
-    mock_push_ml_shell_register_command("ifconfig",
-                                        "Network interface management.");
-    mock_push_ml_shell_register_command("route",
-                                        "Network routing.");
-    mock_push_ml_shell_register_command("udp_send",
-                                        "UDP send.");
-    mock_push_ml_shell_register_command("udp_recv",
-                                        "UDP receive.");
-    mock_push_ml_shell_register_command("tcp_send",
-                                        "TCP send.");
+    mock_ml_shell_register_command("ifconfig",
+                                   "Network interface management.");
+    mock_ml_shell_register_command("route",
+                                   "Network routing.");
+    mock_ml_shell_register_command("udp_send",
+                                   "UDP send.");
+    mock_ml_shell_register_command("udp_recv",
+                                   "UDP receive.");
+    mock_ml_shell_register_command("tcp_send",
+                                   "TCP send.");
 }
 
 static void create_address_request(struct ifreq *ifreq_p,
