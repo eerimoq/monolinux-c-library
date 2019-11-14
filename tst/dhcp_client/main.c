@@ -368,8 +368,10 @@ static void mock_push_poll_fd(int index)
     struct pollfd fds[5];
 
     init_pollfds(&fds[0]);
+    poll_mock_once(5, -1, 1);
     fds[index].revents = POLLIN;
-    mock_push_poll(&fds[0], 5, -1, 1);
+    poll_mock_set___fds_in(&fds[0], sizeof(fds));
+    poll_mock_set___fds_out(&fds[0], sizeof(fds));
 }
 
 static void mock_push_setup_packet_socket()
@@ -385,12 +387,12 @@ static void mock_push_setup_packet_socket()
     bind_mock_once(SOCK_PACKET_FD, sizeof(addr), 0);
     bind_mock_set___addr_in(&addr, sizeof(addr));
     yes = 1;
-    mock_push_setsockopt(SOCK_PACKET_FD,
+    setsockopt_mock_once(SOCK_PACKET_FD,
                          SOL_SOCKET,
                          SO_BROADCAST,
-                         &yes,
                          sizeof(yes),
                          0);
+    setsockopt_mock_set___optval_in(&yes, sizeof(yes));
 }
 
 static void mock_push_setup_udp_socket()
@@ -591,7 +593,9 @@ static void mock_push_poll_failure(void)
     struct pollfd fds[5];
 
     init_pollfds(&fds[0]);
-    mock_push_poll(&fds[0], 5, -1, -1);
+    poll_mock_once(5, -1, -1);
+    poll_mock_set___fds_in(&fds[0], sizeof(fds));
+    poll_mock_set___fds_out(&fds[0], sizeof(fds));
 }
 
 TEST(start_join)
@@ -630,12 +634,12 @@ TEST(start_failure_last_init_step)
     bind_mock_once(SOCK_FD, sizeof(addr), 0);
     bind_mock_set___addr_in(&addr, sizeof(addr));
     yes = 1;
-    mock_push_setsockopt(SOCK_FD,
+    setsockopt_mock_once(SOCK_FD,
                          SOL_SOCKET,
                          SO_BROADCAST,
-                         &yes,
                          sizeof(yes),
                          0);
+    setsockopt_mock_set___optval_in(&yes, sizeof(yes));
     timerfd_create_mock_once(CLOCK_REALTIME, 0, RENEW_FD);
     timerfd_create_mock_once(CLOCK_REALTIME, 0, REBIND_FD);
     timerfd_create_mock_once(CLOCK_REALTIME, 0, RESP_FD);

@@ -34,6 +34,25 @@
 #include "utils/mocks/mock_ml_shell.h"
 #include "utils/mocks/mock.h"
 
+int ioctl_mock_va_arg_real(int __fd,
+                           unsigned long int __request,
+                           va_list __nala_va_list)
+{
+    (void)__fd;
+    (void)__request;
+    (void)__nala_va_list;
+
+    return (-1);
+}
+
+static void mock_ioctl_ifreq_ok(int fd,
+                                unsigned long request,
+                                struct ifreq *ifreq_p)
+{
+    ioctl_mock_once(fd, request, 0, "%p", ifreq_p);
+    ioctl_mock_set_va_arg_in_at(0, ifreq_p, sizeof(*ifreq_p));
+}
+
 static void mock_ml_shell_register_command(const char *name_p,
                                            const char *description_p)
 {
@@ -78,9 +97,9 @@ static void mock_push_configure(const char *name_p)
     memset(&ifreq, 0, sizeof(ifreq));
     strcpy(&ifreq.ifr_name[0], name_p);
     create_address_request(&ifreq, "192.168.0.4");
-    mock_push_ioctl_ifreq_ok(fd, SIOCSIFADDR, &ifreq);
+    mock_ioctl_ifreq_ok(fd, SIOCSIFADDR, &ifreq);
     create_address_request(&ifreq, "255.255.255.0");
-    mock_push_ioctl_ifreq_ok(fd, SIOCSIFNETMASK, &ifreq);
+    mock_ioctl_ifreq_ok(fd, SIOCSIFNETMASK, &ifreq);
     ml_close_mock_once(fd, 0);
 }
 
@@ -93,9 +112,9 @@ static void mock_push_up(const char *name_p)
     socket_mock_once(AF_INET, SOCK_DGRAM, 0, fd);
     memset(&ifreq, 0, sizeof(ifreq));
     strcpy(&ifreq.ifr_name[0], name_p);
-    mock_push_ioctl_ifreq_ok(fd, SIOCGIFFLAGS, &ifreq);
+    mock_ioctl_ifreq_ok(fd, SIOCGIFFLAGS, &ifreq);
     ifreq.ifr_flags = IFF_UP;
-    mock_push_ioctl_ifreq_ok(fd, SIOCSIFFLAGS, &ifreq);
+    mock_ioctl_ifreq_ok(fd, SIOCSIFFLAGS, &ifreq);
     ml_close_mock_once(fd, 0);
 }
 
@@ -108,8 +127,8 @@ static void mock_push_down(const char *name_p)
     socket_mock_once(AF_INET, SOCK_DGRAM, 0, fd);
     memset(&ifreq, 0, sizeof(ifreq));
     strcpy(&ifreq.ifr_name[0], name_p);
-    mock_push_ioctl_ifreq_ok(fd, SIOCGIFFLAGS, &ifreq);
-    mock_push_ioctl_ifreq_ok(fd, SIOCSIFFLAGS, &ifreq);
+    mock_ioctl_ifreq_ok(fd, SIOCGIFFLAGS, &ifreq);
+    mock_ioctl_ifreq_ok(fd, SIOCSIFFLAGS, &ifreq);
     ml_close_mock_once(fd, 0);
 }
 
@@ -128,12 +147,9 @@ static void mock_push_ioctl_get(const char *name_p,
     memcpy(&ifreq_out_p->ifr_name,
            &ifreq_in.ifr_name,
            sizeof(ifreq_out_p->ifr_name));
-    mock_push_ioctl(fd,
-                    request,
-                    &ifreq_in,
-                    ifreq_out_p,
-                    sizeof(ifreq_in),
-                    res);
+    ioctl_mock_once(fd, request, res, "%p", &ifreq_in);
+    ioctl_mock_set_va_arg_in_at(0, &ifreq_in, sizeof(ifreq_in));
+    ioctl_mock_set_va_arg_out_at(0, ifreq_out_p, sizeof(*ifreq_out_p));
     ml_close_mock_once(fd, 0);
 }
 

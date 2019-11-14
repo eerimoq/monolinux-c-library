@@ -40,24 +40,6 @@
 #include <arpa/inet.h>
 #include "ml/ml.h"
 
-void mock_push_setsockopt(int sockfd,
-                          int level,
-                          int optname,
-                          const void *optval_p,
-                          socklen_t optlen,
-                          int res);
-
-void mock_push_ioctl(int fd,
-                     unsigned long request,
-                     void *in_data_p,
-                     void *out_data_p,
-                     size_t data_size,
-                     int res);
-
-void mock_push_ioctl_ifreq_ok(int fd,
-                              unsigned long request,
-                              struct ifreq *ifreq_p);
-
 void mock_push_nftw(const char *dirpath_p,
                     int nopenfd,
                     int flags,
@@ -65,7 +47,5 @@ void mock_push_nftw(const char *dirpath_p,
                     mode_t modes[],
                     int length,
                     int res);
-
-void mock_push_poll(struct pollfd *fds_p, nfds_t nfds, int timeout, int res);
 
 #endif
