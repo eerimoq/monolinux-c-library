@@ -31,7 +31,6 @@
 #include "ml/ml.h"
 #include "utils/utils.h"
 #include "utils/mocks/mock_libc.h"
-#include "utils/mocks/mock_ml_shell.h"
 #include "utils/mocks/mock.h"
 
 int ioctl_mock_va_arg_real(int __fd,

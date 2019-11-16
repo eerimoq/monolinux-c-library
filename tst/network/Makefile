@@ -3,7 +3,6 @@ LDFLAGS += -Wl,--wrap=ml_shell_register_command
 INC += ..
 SRC += ../utils/mocks/mock.c
 SRC += ../utils/mocks/mock_libc.c
-SRC += ../utils/mocks/mock_ml_shell.c
 SRC += ../utils/utils.c
 COVERAGE_FILTERS = .*ml_network.c
 

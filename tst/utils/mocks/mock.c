@@ -26,6 +26,8 @@
  * This file is part of the Monolinux C library project.
  */
 
+#include <string.h>
+#include <stdlib.h>
 #include <stdint.h>
 #include "nala.h"
 #include "ml/ml.h"
@@ -131,4 +133,51 @@ void mock_finalize(void)
 
         FAIL();
     }
+}
+
+struct callback_t {
+    const char *name_p;
+    ml_shell_command_callback_t callback;
+    struct callback_t *next_p;
+};
+
+static struct callback_t cmd_list = {
+    .name_p = "",
+    .next_p = NULL
+};
+
+void mock_set_callback(const char *name_p,
+                       const char *description_p,
+                       ml_shell_command_callback_t callback)
+{
+    (void)description_p;
+
+    struct callback_t *item_p;
+
+    item_p = xmalloc(sizeof(*item_p));
+    item_p->name_p = name_p;
+    item_p->callback = callback;
+    item_p->next_p = cmd_list.next_p;
+    cmd_list.next_p = item_p;
+}
+
+ml_shell_command_callback_t mock_get_callback(const char *name_p)
+{
+    struct callback_t *item_p;
+
+    item_p = &cmd_list;
+
+    while (item_p != NULL) {
+        if (strcmp(item_p->name_p, name_p) == 0) {
+            return (item_p->callback);
+        }
+
+        item_p = item_p->next_p;
+    }
+
+    NALA_TEST_FAILURE(
+        nala_format("Shell command callback not found for %s.\n",
+                    name_p));
+
+    return (NULL);
 }
