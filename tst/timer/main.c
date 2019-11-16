@@ -33,6 +33,13 @@
 
 ML_UID(timeout);
 
+int setup()
+{
+    ml_init();
+
+    return (0);
+}
+
 TEST(single_shot)
 {
     struct ml_timer_t timer;

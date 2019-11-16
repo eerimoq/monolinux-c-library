@@ -32,14 +32,6 @@
 #include <stddef.h>
 #include "ml/ml.h"
 
-void mock_push(const char *name_p, const void *buf_p, size_t size);
-
-void mock_pop(const char *name_p, void *buf_p);
-
-void mock_pop_assert(const char *name_p, const void *buf_p);
-
-void mock_finalize(void);
-
 void mock_set_callback(const char *name_p,
                        const char *description_p,
                        ml_shell_command_callback_t callback);

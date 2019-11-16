@@ -26,18 +26,14 @@
  * This file is part of the Monolinux C library project.
  */
 
-/* Needed by ftw. */
-#define _XOPEN_SOURCE 700
-#define _DEFAULT_SOURCE
-
 #include <ftw.h>
 #include <fcntl.h>
 #include <sys/sysmacros.h>
 #include <sys/mount.h>
+#include <mntent.h>
+#include <sys/statvfs.h>
 #include "nala.h"
 #include "nala_mocks.h"
-#include "utils/mocks/mock_libc.h"
-#include "utils/mocks/mock.h"
 #include "utils/utils.h"
 #include "ml/ml.h"
 
@@ -840,17 +836,32 @@ TEST(command_find_too_many_args)
               "$ exit\n");
 }
 
+static void find_callback(const char *__dir,
+                          __nftw_func_t __func,
+                          int __descriptors,
+                          int __flag)
+{
+    (void)__dir;
+    (void)__descriptors;
+    (void)__flag;
+
+    struct stat stat;
+
+    stat.st_mode = S_IFDIR;
+    ASSERT_EQ(__func("./foo", &stat, 0, NULL), 0);
+    stat.st_mode = 0;
+    ASSERT_EQ(__func("./foo/bar", &stat, 0, NULL), 0);
+    stat.st_mode = 0;
+    ASSERT_EQ(__func("./fie", &stat, 0, NULL), 0);
+}
+
 TEST(command_find_no_args)
 {
     int fd;
-    const char *paths[] = {
-        "./foo",
-        "./foo/bar",
-        "./fie"
-    };
-    mode_t modes[] = { S_IFDIR, 0, 0 };
 
-    mock_push_nftw(".", 20, FTW_PHYS, &paths[0], &modes[0], 3, 0);
+    nftw_mock_once(".", NULL, 20, FTW_PHYS, 0);
+    nftw_mock_ignore___func_in();
+    nftw_mock_set_callback(find_callback);
 
     ml_shell_init();
 
@@ -871,17 +882,32 @@ TEST(command_find_no_args)
               "$ exit\n");
 }
 
+static void tmp_callback(const char *__dir,
+                         __nftw_func_t __func,
+                         int __descriptors,
+                         int __flag)
+{
+    (void)__dir;
+    (void)__descriptors;
+    (void)__flag;
+
+    struct stat stat;
+
+    stat.st_mode = S_IFDIR;
+    ASSERT_EQ(__func("tmp/foo", &stat, 0, NULL), 0);
+    stat.st_mode = 0;
+    ASSERT_EQ(__func("tmp/foo/bar", &stat, 0, NULL), 0);
+    stat.st_mode = 0;
+    ASSERT_EQ(__func("tmp/fie", &stat, 0, NULL), 0);
+}
+
 TEST(command_find_in_dir)
 {
     int fd;
-    const char *paths[] = {
-        "tmp/foo",
-        "tmp/foo/bar",
-        "tmp/fie"
-    };
-    mode_t modes[] = { S_IFDIR, 0, 0 };
 
-    mock_push_nftw("tmp", 20, FTW_PHYS, &paths[0], &modes[0], 3, 0);
+    nftw_mock_once("tmp", NULL, 20, FTW_PHYS, 0);
+    nftw_mock_ignore___func_in();
+    nftw_mock_set_callback(tmp_callback);
 
     ml_shell_init();
 

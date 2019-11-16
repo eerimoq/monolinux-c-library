@@ -7,11 +7,12 @@ CFLAGS += -Wall -Wextra -std=gnu11
 CFLAGS += -g -Og
 CFLAGS += -DUNIT_TEST
 CFLAGS += -no-pie
-LDFLAGS_MOCKS = $(shell cat nala_mocks.ld)
+LDFLAGS_MOCKS = $(shell cat $(BUILD)/nala_mocks.ld)
 COVERAGE_FILTERS +=
 INC += $(ML_ROOT)/tst/utils
+INC += $(BUILD)
 SRC += $(ML_ROOT)/tst/utils/nala.c
-SRC += nala_mocks.c
+SRC += $(BUILD)/nala_mocks.c
 NALA = nala
 
 .PHONY: all run build coverage
@@ -19,15 +20,17 @@ NALA = nala
 all: run
 	$(MAKE) coverage
 
-build: nala_mocks.h
+build: $(BUILD)/nala_mocks.h
 	$(MAKE) $(EXE)
 
 run: build
 	$(EXE)
 
-nala_mocks.h: main.c
-	[ -f nala_mocks.h ] || touch nala_mocks.h
-	$(CC) $(INC:%=-I%) -E main.c | $(NALA) generate_mocks
+$(BUILD)/nala_mocks.h: main.c
+	mkdir -p $(BUILD)
+	[ -f nala_mocks.h ] || touch $(BUILD)/nala_mocks.h
+	$(CC) $(INC:%=-I%) -D_GNU_SOURCE=1 -E main.c \
+	    | $(NALA) generate_mocks -o $(BUILD)
 
 coverage:
 	gcovr --root ../.. \

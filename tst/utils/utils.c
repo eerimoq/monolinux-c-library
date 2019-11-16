@@ -4,20 +4,6 @@
 #include "utils.h"
 #include "mocks/mock.h"
 
-int setup()
-{
-    ml_init();
-
-    return (0);
-}
-
-int teardown()
-{
-    mock_finalize();
-
-    return (0);
-}
-
 int stdin_pipe(void)
 {
     int fds[2];

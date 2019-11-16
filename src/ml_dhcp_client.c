@@ -26,8 +26,6 @@
  * This file is part of the Monolinux C library project.
  */
 
-#define _GNU_SOURCE
-
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
