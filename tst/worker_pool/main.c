@@ -29,7 +29,7 @@
 #include <unistd.h>
 #include "nala.h"
 #include "ml/ml.h"
-#include "utils/mocks/mock.h"
+#include "utils/mock.h"
 #include "utils/utils.h"
 
 static struct ml_queue_t queue;

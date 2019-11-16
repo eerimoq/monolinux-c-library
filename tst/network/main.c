@@ -33,7 +33,7 @@
 #include "nala_mocks.h"
 #include "ml/ml.h"
 #include "utils/utils.h"
-#include "utils/mocks/mock.h"
+#include "utils/mock.h"
 
 int ioctl_mock_va_arg_real(int __fd,
                            unsigned long int __request,

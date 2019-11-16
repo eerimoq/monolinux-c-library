@@ -1,5 +1,5 @@
 INC += ..
-SRC += ../utils/mocks/mock.c
+SRC += ../utils/mock.c
 SRC += ../utils/utils.c
 COVERAGE_FILTERS = .*ml_network.c
 
