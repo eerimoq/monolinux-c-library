@@ -28,7 +28,6 @@
 
 #include <unistd.h>
 #include "nala.h"
-#include "utils/utils.h"
 #include "ml/ml.h"
 
 ML_UID(m1);

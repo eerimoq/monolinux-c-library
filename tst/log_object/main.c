@@ -27,7 +27,6 @@
  */
 
 #include "nala.h"
-#include "utils/utils.h"
 #include "ml/ml.h"
 
 TEST(format)

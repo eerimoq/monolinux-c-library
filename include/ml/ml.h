@@ -499,8 +499,6 @@ int ml_socket(int domain, int type, int protocol);
 
 int ml_ioctl(int fd, unsigned long request, void *data_p);
 
-int finit_module(int fd, const char *params_p, int flags);
-
 /**
  * Initialize a DHCP client for given ethernet interface.
  */

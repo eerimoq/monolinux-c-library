@@ -34,8 +34,6 @@
 #include "nala.h"
 #include "nala_mocks.h"
 #include "ml/ml.h"
-#include "utils/utils.h"
-#include "utils/mock.h"
 
 /* File descriptors. */
 #define SOCK_FD          11

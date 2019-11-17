@@ -29,8 +29,6 @@
 #include <unistd.h>
 #include "nala.h"
 #include "ml/ml.h"
-#include "utils/mock.h"
-#include "utils/utils.h"
 
 static struct ml_queue_t queue;
 static ML_UID(mid);

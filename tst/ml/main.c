@@ -31,8 +31,6 @@
 #include "nala.h"
 #include "nala_mocks.h"
 #include "ml/ml.h"
-#include "utils/mock.h"
-#include "utils/utils.h"
 
 int setup()
 {
