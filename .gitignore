@@ -4,3 +4,4 @@ suite
 nala_mocks.c
 nala_mocks.h
 nala_mocks.ld
+report.json
