@@ -748,29 +748,29 @@ TEST(command_df)
     mntent_root_p = xmalloc(sizeof(*mntent_root_p));
     mntent_root_p->mnt_dir = "/";
     getmntent_mock_once(mntent_root_p);
-    getmntent_mock_set___stream_in_pointer(f_p);
+    getmntent_mock_set_stream_in_pointer(f_p);
     stat.f_bsize = 512;
     stat.f_blocks = 20000;
     stat.f_bfree = 15000;
     statvfs_mock_once("/", 0);
-    statvfs_mock_set___buf_out(&stat, sizeof(stat));
+    statvfs_mock_set_buf_out(&stat, sizeof(stat));
 
     /* /proc. */
     mntent_proc_p = xmalloc(sizeof(*mntent_proc_p));
     mntent_proc_p->mnt_dir = "/proc";
     getmntent_mock_once(mntent_proc_p);
-    getmntent_mock_set___stream_in_pointer(f_p);
+    getmntent_mock_set_stream_in_pointer(f_p);
     stat.f_bsize = 512;
     stat.f_blocks = 40000;
     stat.f_bfree = 10000;
     statvfs_mock_once("/proc", 0);
-    statvfs_mock_set___buf_out(&stat, sizeof(stat));
+    statvfs_mock_set_buf_out(&stat, sizeof(stat));
 
     /* No more mounted file systems. */
     getmntent_mock_once(NULL);
-    getmntent_mock_set___stream_in_pointer(f_p);
+    getmntent_mock_set_stream_in_pointer(f_p);
     endmntent_mock_once(0);
-    endmntent_mock_set___stream_in_pointer(f_p);
+    endmntent_mock_set_streamp_in_pointer(f_p);
 
     ml_shell_init();
 
@@ -860,7 +860,7 @@ TEST(command_find_no_args)
     int fd;
 
     nftw_mock_once(".", NULL, 20, FTW_PHYS, 0);
-    nftw_mock_ignore___func_in();
+    nftw_mock_ignore_fn_in();
     nftw_mock_set_callback(find_callback);
 
     ml_shell_init();
@@ -906,7 +906,7 @@ TEST(command_find_in_dir)
     int fd;
 
     nftw_mock_once("tmp", NULL, 20, FTW_PHYS, 0);
-    nftw_mock_ignore___func_in();
+    nftw_mock_ignore_fn_in();
     nftw_mock_set_callback(tmp_callback);
 
     ml_shell_init();
@@ -1083,7 +1083,7 @@ TEST(command_mount)
     int fd;
 
     mount_mock_once("/dev/sda1", "/mnt/disk", "ext4", 0, 0);
-    mount_mock_set___data_in("", 1);
+    mount_mock_set_data_in("", 1);
 
     ml_shell_init();
 

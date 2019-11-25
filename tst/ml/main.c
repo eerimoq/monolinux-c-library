@@ -301,7 +301,7 @@ TEST(bus)
 TEST(ml_mount_ok)
 {
     mount_mock_once("a", "b", "c", 0, 0);
-    mount_mock_set___data_in("", 1);
+    mount_mock_set_data_in("", 1);
 
     ASSERT_EQ(ml_mount("a", "b", "c"), 0);
 }

@@ -382,10 +382,10 @@ static void mock_push_poll_fd(int index)
 
     init_pollfds(&fds[0]);
     poll_mock_once(5, -1, 1);
-    poll_mock_set___fds_in(&fds[0], sizeof(fds));
-    poll_mock_set___fds_in_assert(__fds_in_assert);
+    poll_mock_set_fds_in(&fds[0], sizeof(fds));
+    poll_mock_set_fds_in_assert(__fds_in_assert);
     fds[index].revents = POLLIN;
-    poll_mock_set___fds_out(&fds[0], sizeof(fds));
+    poll_mock_set_fds_out(&fds[0], sizeof(fds));
 }
 
 static void mock_push_setup_packet_socket()
@@ -399,14 +399,14 @@ static void mock_push_setup_packet_socket()
     addr.sll_protocol = htons(ETH_P_IP);
     addr.sll_ifindex = 5;
     bind_mock_once(SOCK_PACKET_FD, sizeof(addr), 0);
-    //bind_mock_set___addr_in(&addr, sizeof(addr));
+    //bind_mock_set_addr_in(&addr, sizeof(addr));
     yes = 1;
     setsockopt_mock_once(SOCK_PACKET_FD,
                          SOL_SOCKET,
                          SO_BROADCAST,
                          sizeof(yes),
                          0);
-    setsockopt_mock_set___optval_in(&yes, sizeof(yes));
+    setsockopt_mock_set_optval_in(&yes, sizeof(yes));
 }
 
 static void mock_push_setup_udp_socket()
@@ -419,7 +419,7 @@ static void mock_push_setup_udp_socket()
     addr.sin_port = htons(68);
     addr.sin_addr.s_addr = INADDR_ANY;
     bind_mock_once(SOCK_FD, sizeof(addr), 0);
-    //bind_mock_set___addr_in(&addr, sizeof(addr));
+    //bind_mock_set_addr_in(&addr, sizeof(addr));
 }
 
 static void mock_push_packet_sendto(const uint8_t *buf_p, size_t size)
@@ -433,8 +433,8 @@ static void mock_push_packet_sendto(const uint8_t *buf_p, size_t size)
     addr.sll_halen = 6;
     memset(&addr.sll_addr[0], 0xff, addr.sll_halen);
     sendto_mock_once(SOCK_FD, size, 0, sizeof(addr), size);
-    sendto_mock_set___buf_in(buf_p, size);
-    //sendto_mock_set___addr_in((struct sockaddr *)&addr, sizeof(addr));
+    sendto_mock_set_buf_in(buf_p, size);
+    //sendto_mock_set_addr_in((struct sockaddr *)&addr, sizeof(addr));
 }
 
 static void mock_push_udp_sendto(const uint8_t *buf_p, size_t size)
@@ -446,8 +446,8 @@ static void mock_push_udp_sendto(const uint8_t *buf_p, size_t size)
     addr.sin_addr.s_addr = htonl(0xc0a80001);
     addr.sin_port = htons(67);
     sendto_mock_once(SOCK_FD, size, 0, sizeof(addr), size);
-    sendto_mock_set___buf_in(buf_p, size);
-    //sendto_mock_set___addr_in((struct sockaddr *)&addr, sizeof(addr));
+    sendto_mock_set_buf_in(buf_p, size);
+    //sendto_mock_set_addr_in((struct sockaddr *)&addr, sizeof(addr));
 }
 
 static void mock_push_dhcp_read(uint8_t *buf_p, size_t size)
@@ -488,7 +488,7 @@ static void mock_push_ml_dhcp_client_start(void)
     timeout.it_value.tv_sec = 0;
     timeout.it_value.tv_nsec = 1;
     timerfd_settime_mock_once(INIT_FD, 0, 0);
-    timerfd_settime_mock_set___utmr_in(&timeout, sizeof(timeout));
+    timerfd_settime_mock_set_new_value_in(&timeout, sizeof(timeout));
 }
 
 static void mock_push_init_to_selecting(void)
@@ -501,7 +501,7 @@ static void mock_push_init_to_selecting(void)
     memset(&timeout, 0, sizeof(timeout));
     timeout.it_value.tv_sec = 5;
     timerfd_settime_mock_once(RESP_FD, 0, 0);
-    timerfd_settime_mock_set___utmr_in(&timeout, sizeof(timeout));
+    timerfd_settime_mock_set_new_value_in(&timeout, sizeof(timeout));
 }
 
 static void mock_push_selecting_to_requesting(void)
@@ -514,7 +514,7 @@ static void mock_push_selecting_to_requesting(void)
     memset(&timeout, 0, sizeof(timeout));
     timeout.it_value.tv_sec = 5;
     timerfd_settime_mock_once(RESP_FD, 0, 0);
-    timerfd_settime_mock_set___utmr_in(&timeout, sizeof(timeout));
+    timerfd_settime_mock_set_new_value_in(&timeout, sizeof(timeout));
 }
 
 static void mock_push_requesting_to_bound(void)
@@ -526,13 +526,13 @@ static void mock_push_requesting_to_bound(void)
     memset(&timeout, 0, sizeof(timeout));
     timeout.it_value.tv_sec = 0;
     timerfd_settime_mock_once(RESP_FD, 0, 0);
-    timerfd_settime_mock_set___utmr_in(&timeout, sizeof(timeout));
+    timerfd_settime_mock_set_new_value_in(&timeout, sizeof(timeout));
     timeout.it_value.tv_sec = 30;
     timerfd_settime_mock_once(RENEW_FD, 0, 0);
-    timerfd_settime_mock_set___utmr_in(&timeout, sizeof(timeout));
+    timerfd_settime_mock_set_new_value_in(&timeout, sizeof(timeout));
     timeout.it_value.tv_sec = 40;
     timerfd_settime_mock_once(REBIND_FD, 0, 0);
-    timerfd_settime_mock_set___utmr_in(&timeout, sizeof(timeout));
+    timerfd_settime_mock_set_new_value_in(&timeout, sizeof(timeout));
     ml_network_interface_configure_mock_once("eth0",
                                              "192.168.0.3",
                                              "255.255.255.0",
@@ -554,7 +554,7 @@ static void mock_push_bound_to_renewing(void)
     memset(&timeout, 0, sizeof(timeout));
     timeout.it_value.tv_sec = 5;
     timerfd_settime_mock_once(RESP_FD, 0, 0);
-    timerfd_settime_mock_set___utmr_in(&timeout, sizeof(timeout));
+    timerfd_settime_mock_set_new_value_in(&timeout, sizeof(timeout));
 }
 
 static void mock_push_renewing_to_bound(void)
@@ -566,13 +566,13 @@ static void mock_push_renewing_to_bound(void)
     memset(&timeout, 0, sizeof(timeout));
     timeout.it_value.tv_sec = 0;
     timerfd_settime_mock_once(RESP_FD, 0, 0);
-    timerfd_settime_mock_set___utmr_in(&timeout, sizeof(timeout));
+    timerfd_settime_mock_set_new_value_in(&timeout, sizeof(timeout));
     timeout.it_value.tv_sec = 30;
     timerfd_settime_mock_once(RENEW_FD, 0, 0);
-    timerfd_settime_mock_set___utmr_in(&timeout, sizeof(timeout));
+    timerfd_settime_mock_set_new_value_in(&timeout, sizeof(timeout));
     timeout.it_value.tv_sec = 40;
     timerfd_settime_mock_once(REBIND_FD, 0, 0);
-    timerfd_settime_mock_set___utmr_in(&timeout, sizeof(timeout));
+    timerfd_settime_mock_set_new_value_in(&timeout, sizeof(timeout));
     ml_network_interface_configure_mock_once("eth0",
                                              "192.168.0.3",
                                              "255.255.255.0",
@@ -591,13 +591,13 @@ static void mock_push_enter_init(void)
     memset(&timeout, 0, sizeof(timeout));
     timeout.it_value.tv_sec = 0;
     timerfd_settime_mock_once(RESP_FD, 0, 0);
-    timerfd_settime_mock_set___utmr_in(&timeout, sizeof(timeout));
+    timerfd_settime_mock_set_new_value_in(&timeout, sizeof(timeout));
     timeout.it_value.tv_sec = 0;
     timerfd_settime_mock_once(REBIND_FD, 0, 0);
-    timerfd_settime_mock_set___utmr_in(&timeout, sizeof(timeout));
+    timerfd_settime_mock_set_new_value_in(&timeout, sizeof(timeout));
     timeout.it_value.tv_sec = 10;
     timerfd_settime_mock_once(INIT_FD, 0, 0);
-    timerfd_settime_mock_set___utmr_in(&timeout, sizeof(timeout));
+    timerfd_settime_mock_set_new_value_in(&timeout, sizeof(timeout));
     ml_close_mock_once(SOCK_FD, 0);
     mock_push_setup_packet_socket();
 }
@@ -608,9 +608,9 @@ static void mock_push_poll_failure(void)
 
     init_pollfds(&fds[0]);
     poll_mock_once(5, -1, -1);
-    poll_mock_set___fds_in(&fds[0], sizeof(fds));
-    poll_mock_set___fds_in_assert(__fds_in_assert);
-    poll_mock_set___fds_out(&fds[0], sizeof(fds));
+    poll_mock_set_fds_in(&fds[0], sizeof(fds));
+    poll_mock_set_fds_in_assert(__fds_in_assert);
+    poll_mock_set_fds_out(&fds[0], sizeof(fds));
 }
 
 TEST(start_join)
@@ -647,14 +647,14 @@ TEST(start_failure_last_init_step)
     addr.sll_protocol = htons(ETH_P_IP);
     addr.sll_ifindex = interface_index;
     bind_mock_once(SOCK_FD, sizeof(addr), 0);
-    //bind_mock_set___addr_in(&addr, sizeof(addr));
+    //bind_mock_set_addr_in(&addr, sizeof(addr));
     yes = 1;
     setsockopt_mock_once(SOCK_FD,
                          SOL_SOCKET,
                          SO_BROADCAST,
                          sizeof(yes),
                          0);
-    setsockopt_mock_set___optval_in(&yes, sizeof(yes));
+    setsockopt_mock_set_optval_in(&yes, sizeof(yes));
     timerfd_create_mock_once(CLOCK_REALTIME, 0, RENEW_FD);
     timerfd_create_mock_once(CLOCK_REALTIME, 0, REBIND_FD);
     timerfd_create_mock_once(CLOCK_REALTIME, 0, RESP_FD);
