@@ -104,6 +104,7 @@ TEST(various_commands)
               "Commands\n"
               "\n"
               "          cat   Print a file.\n"
+              "         date   Print current date.\n"
               "           df   Disk space usage.\n"
               "         exit   Shell exit.\n"
               "         find   Find files and folders.\n"
@@ -1097,6 +1098,29 @@ TEST(command_mount)
 
     ASSERT_EQ(output,
               "mount /dev/sda1 /mnt/disk ext4\n"
+              "OK\n"
+              "$ exit\n");
+}
+
+TEST(command_date)
+{
+    int fd;
+
+    time_mock_once(1574845540);
+
+    ml_shell_init();
+
+    CAPTURE_OUTPUT(output, errput) {
+        fd = stdin_pipe();
+        ml_shell_start();
+        input(fd, "date\n");
+        input(fd, "exit\n");
+        ml_shell_join();
+    }
+
+    ASSERT_EQ(output,
+              "date\n"
+              "Wed Nov 27 09:05:40 2019\n"
               "OK\n"
               "$ exit\n");
 }

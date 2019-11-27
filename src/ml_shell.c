@@ -30,6 +30,7 @@
 #define _XOPEN_SOURCE 700
 #define _DEFAULT_SOURCE
 
+#include <time.h>
 #include <sys/sysmacros.h>
 #include <stdint.h>
 #include <sys/types.h>
@@ -749,6 +750,25 @@ static int command_find(int argc, const char *argv[])
 
     if (res != 0) {
         printf("find [<path>]\n");
+    }
+
+    return (res);
+}
+
+static int command_date(int argc, const char *argv[])
+{
+    (void)argc;
+    (void)argv;
+
+    int res;
+    time_t now;
+
+    res = -1;
+    now = time(NULL);
+
+    if (now != (time_t)(-1)) {
+        printf("%s", asctime(gmtime(&now)));
+        res = 0;
     }
 
     return (res);
@@ -1519,6 +1539,9 @@ void ml_shell_init(void)
     ml_shell_register_command("find",
                               "Find files and folders.",
                               command_find);
+    ml_shell_register_command("date",
+                              "Print current date.",
+                              command_date);
 }
 
 void ml_shell_start(void)

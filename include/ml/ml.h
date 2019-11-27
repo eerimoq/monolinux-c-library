@@ -552,6 +552,16 @@ void ml_timer_handler_timer_start(struct ml_timer_t *timer_p);
 
 void ml_timer_handler_timer_stop(struct ml_timer_t *timer_p);
 
+/**
+ * Get given RTC's time.
+ */
+int ml_rtc_get_time(const char *device_p, struct tm *tm_p);
+
+/**
+ * Set given RTC's time.
+ */
+int ml_rtc_set_time(const char *device_p, struct tm *tm_p);
+
 /* Exits on failure. Use with care. */
 
 void *xmalloc(size_t size);
