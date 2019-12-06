@@ -30,14 +30,7 @@
 #include "nala.h"
 #include "ml/ml.h"
 
-ML_UID(timeout);
-
-int setup()
-{
-    ml_init();
-
-    return (0);
-}
+static ML_UID(timeout);
 
 TEST(single_shot)
 {
@@ -46,6 +39,7 @@ TEST(single_shot)
     struct ml_uid_t *uid_p;
     struct ml_timer_timeout_message_t *message_p;
 
+    ml_init();
     ml_queue_init(&queue, 1);
     ml_timer_init(&timer,
                   0,
@@ -67,6 +61,7 @@ TEST(periodic)
     struct ml_timer_timeout_message_t *message_p;
     int i;
 
+    ml_init();
     ml_queue_init(&queue, 1);
     ml_timer_init(&timer,
                   1,
@@ -92,6 +87,7 @@ TEST(stopped)
     struct ml_uid_t *uid_p;
     struct ml_timer_timeout_message_t *message_p;
 
+    ml_init();
     ml_queue_init(&queue, 1);
     ml_timer_init(&timer,
                   0,
@@ -116,6 +112,7 @@ TEST(restart_after_timeout)
     struct ml_uid_t *uid_p;
     struct ml_timer_timeout_message_t *message_p;
 
+    ml_init();
     ml_queue_init(&queue, 1);
     ml_timer_init(&timer,
                   0,
@@ -143,6 +140,7 @@ TEST(restart_after_stop)
     struct ml_timer_t timer;
     struct ml_queue_t queue;
 
+    ml_init();
     ml_queue_init(&queue, 1);
     ml_timer_init(&timer,
                   10000,
@@ -169,6 +167,8 @@ TEST(multiple_timers)
     struct ml_uid_t *uid_p;
     struct ml_timer_timeout_message_t *message_p;
     int i;
+
+    ml_init();
 
     for (i = 0; i < 10; i++) {
         ml_queue_init(&queues[i], 1);

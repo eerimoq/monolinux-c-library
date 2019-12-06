@@ -30,8 +30,8 @@
 #include "nala.h"
 #include "ml/ml.h"
 
-ML_UID(m1);
-ML_UID(m2);
+static ML_UID(m1);
+static ML_UID(m2);
 
 static struct ml_queue_t queue;
 

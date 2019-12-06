@@ -1,6 +1,7 @@
 INC += $(ML_ROOT)/include $(BUILD)/root/include
+MAIN_C ?= main.c
 SRC += \
-	main.c \
+	$(MAIN_C) \
 	$(ML_ROOT)/src/ml.c \
 	$(ML_ROOT)/src/ml_bus.c \
 	$(ML_ROOT)/src/ml_dhcp_client.c \

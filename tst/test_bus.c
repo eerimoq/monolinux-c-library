@@ -30,32 +30,38 @@
 #include "nala.h"
 #include "ml/ml.h"
 
-ML_UID(m1);
+static ML_UID(m1);
 
-static int on_free_count;
+static struct ml_bus_t bus;
+static struct ml_queue_t queue_1;
+static struct ml_queue_t queue_2;
 
-static void on_free_cb(void *message_p)
+TEST(broadcast_to_two_subscribers)
 {
-    int *value_p;
-
-    value_p = (int *)message_p;
-
-    if (*value_p == 5) {
-        on_free_count++;
-    }
-}
-
-TEST(on_free)
-{
+    struct ml_uid_t *uid_p;
+    void *bmessage_p;
     void *message_p;
-    int *value_p;
 
-    on_free_count = 0;
-    message_p = ml_message_alloc(&m1, sizeof(*message_p));
-    ASSERT_NE(message_p, NULL);
-    value_p = (int *)message_p;
-    *value_p = 5;
-    ml_message_set_on_free(message_p, on_free_cb);
+    ml_queue_init(&queue_1, 1);
+    ml_queue_init(&queue_2, 1);
+    ml_bus_init(&bus);
+    ml_bus_subscribe(&bus, &queue_1, &m1);
+    ml_bus_subscribe(&bus, &queue_2, &m1);
+
+    /* Broadcast. */
+    bmessage_p = ml_message_alloc(&m1, 0);
+    ASSERT_NE(bmessage_p, NULL);
+    ml_bus_broadcast(&bus, bmessage_p);
+
+    /* Get message for first subscriber. */
+    uid_p = ml_queue_get(&queue_1, &message_p);
+    ASSERT_EQ(uid_p, &m1);
+    ASSERT_EQ(message_p, bmessage_p);
     ml_message_free(message_p);
-    ASSERT_EQ(on_free_count, 1);
+
+    /* Get message for second subscriber. */
+    uid_p = ml_queue_get(&queue_2, &message_p);
+    ASSERT_EQ(uid_p, &m1);
+    ASSERT_EQ(message_p, bmessage_p);
+    ml_message_free(message_p);
 }

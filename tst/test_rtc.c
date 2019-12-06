@@ -34,17 +34,6 @@
 #include "nala_mocks.h"
 #include "ml/ml.h"
 
-int ioctl_mock_va_arg_real(int __fd,
-                           unsigned long int __request,
-                           va_list __nala_va_list)
-{
-    (void)__fd;
-    (void)__request;
-    (void)__nala_va_list;
-
-    return (-1);
-}
-
 TEST(get_time)
 {
     struct rtc_time rtm;
