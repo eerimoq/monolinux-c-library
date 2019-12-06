@@ -32,13 +32,6 @@
 #include "nala_mocks.h"
 #include "ml/ml.h"
 
-int setup()
-{
-    ml_init();
-
-    return (0);
-}
-
 TEST(strip)
 {
     char string1[] = "1  ";
