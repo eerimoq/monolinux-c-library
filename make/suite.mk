@@ -25,13 +25,15 @@ TESTS_O = $(patsubst %,$(BUILD)%,$(abspath $(TESTS:%.c=%.o)))
 .PHONY: all run build coverage
 
 all: run
-	$(MAKE) coverage
 
 build:
 	$(MAKE) $(EXE)
 
 run: build
 	$(EXE)
+
+test: run
+	$(MAKE) coverage
 
 $(TESTS_O): $(BUILD)/nala_mocks.c
 
