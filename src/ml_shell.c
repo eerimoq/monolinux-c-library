@@ -872,6 +872,16 @@ static int command_dmesg(int argc, const char *argv[])
     return (0);
 }
 
+static int command_sync(int argc, const char *argv[])
+{
+    (void)argc;
+    (void)argv;
+
+    sync();
+
+    return (0);
+}
+
 static void history_init(void)
 {
     module.history.head_p = NULL;
@@ -1646,6 +1656,9 @@ void ml_shell_init(void)
     ml_shell_register_command("dmesg",
                               "Print the kernel ring buffer.",
                               command_dmesg);
+    ml_shell_register_command("sync",
+                              "Write pending data to disk.",
+                              command_sync);
 }
 
 void ml_shell_start(void)

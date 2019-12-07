@@ -120,6 +120,7 @@ TEST(various_commands)
               "        print   Print to file.\n"
               "       reboot   Reboot.\n"
               "      suicide   Process suicide.\n"
+              "         sync   Write pending data to disk.\n"
               "OK\n"
               "$ history\n"
               "1: help\n"
@@ -1209,5 +1210,27 @@ TEST(command_dmesg_open_error)
     ASSERT_EQ(output,
               "dmesg\n"
               "ERROR(-55)\n"
+              "$ exit\n");
+}
+
+TEST(command_sync)
+{
+    int fd;
+
+    ml_shell_init();
+
+    sync_mock_once();
+
+    CAPTURE_OUTPUT(output, errput) {
+        fd = stdin_pipe();
+        ml_shell_start();
+        input(fd, "sync\n");
+        input(fd, "exit\n");
+        ml_shell_join();
+    }
+
+    ASSERT_EQ(output,
+              "sync\n"
+              "OK\n"
               "$ exit\n");
 }
