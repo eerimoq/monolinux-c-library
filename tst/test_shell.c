@@ -1131,7 +1131,7 @@ TEST(command_print)
 {
     int fd;
     FILE file;
-    
+
     ml_shell_init();
 
     fopen_mock_once("my-file", "w", &file);
