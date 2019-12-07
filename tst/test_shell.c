@@ -1188,3 +1188,26 @@ TEST(command_dmesg)
               "OK\n"
               "$ exit\n");
 }
+
+TEST(command_dmesg_open_error)
+{
+    int fd;
+
+    ml_shell_init();
+
+    ml_open_mock_once("/dev/kmsg", O_RDONLY | O_NONBLOCK, -1);
+    ml_open_mock_set_errno(55);
+
+    CAPTURE_OUTPUT(output, errput) {
+        fd = stdin_pipe();
+        ml_shell_start();
+        input(fd, "dmesg\n");
+        input(fd, "exit\n");
+        ml_shell_join();
+    }
+
+    ASSERT_EQ(output,
+              "dmesg\n"
+              "ERROR(-55)\n"
+              "$ exit\n");
+}
