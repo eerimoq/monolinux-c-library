@@ -107,6 +107,7 @@ static void hexdump(const uint8_t *buf_p, size_t size, int offset)
 
 void ml_init(void)
 {
+    ml_log_object_module_init();
     ml_message_init();
     ml_bus_init(&module.bus);
     ml_worker_pool_init(&module.worker_pool, 4, 32);

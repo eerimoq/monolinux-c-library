@@ -335,6 +335,11 @@ void ml_worker_pool_spawn(struct ml_worker_pool_t *self_p,
                           void *arg_p);
 
 /**
+ * Initialize the log object module.
+ */
+void ml_log_object_module_init(void);
+
+/**
  * Initialize given log object with given name and mask.
  */
 void ml_log_object_init(struct ml_log_object_t *self_p,
