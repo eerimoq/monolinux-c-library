@@ -1126,3 +1126,65 @@ TEST(command_date)
               "OK\n"
               "$ exit\n");
 }
+
+TEST(command_print)
+{
+    int fd;
+    FILE file;
+    
+    ml_shell_init();
+
+    fopen_mock_once("my-file", "w", &file);
+    fwrite_mock_once(1, 5, 5);
+    fwrite_mock_set_ptr_in("hello", 5);
+    fwrite_mock_once(1, 1, 1);
+    fwrite_mock_set_ptr_in("\n", 1);
+    ml_fclose_mock_once(0);
+
+    CAPTURE_OUTPUT(output, errput) {
+        fd = stdin_pipe();
+        ml_shell_start();
+        input(fd, "print hello my-file\n");
+        input(fd, "exit\n");
+        ml_shell_join();
+    }
+
+    ASSERT_EQ(output,
+              "print hello my-file\n"
+              "OK\n"
+              "$ exit\n");
+}
+
+TEST(command_dmesg)
+{
+    int fd;
+
+    ml_shell_init();
+
+    ml_open_mock_once("/dev/kmsg", O_RDONLY | O_NONBLOCK, 5);
+    ml_read_mock_once(5, 1023, 54);
+    ml_read_mock_set_buf_p_out(
+        "6,838,4248863,-;intel_rapl: Found RAPL domain package\n",
+        54);
+    ml_read_mock_once(5, 1023, 50);
+    ml_read_mock_set_buf_p_out(
+        "6,839,4248865,-;intel_rapl: Found RAPL domain core",
+        50);
+    ml_read_mock_once(5, 1023, -1);
+    ml_close_mock_once(5, 0);
+
+    CAPTURE_OUTPUT(output, errput) {
+        fd = stdin_pipe();
+        ml_shell_start();
+        input(fd, "dmesg\n");
+        input(fd, "exit\n");
+        ml_shell_join();
+    }
+
+    ASSERT_EQ(output,
+              "dmesg\n"
+              "[    4.248863] intel_rapl: Found RAPL domain package\n"
+              "[    4.248865] intel_rapl: Found RAPL domain core\n"
+              "OK\n"
+              "$ exit\n");
+}

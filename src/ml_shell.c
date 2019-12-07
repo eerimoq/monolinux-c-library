@@ -808,7 +808,7 @@ static int command_print(int argc, const char *argv[])
             res = -errno;
         }
 
-        fclose(file_p);
+        ml_fclose(file_p);
     } else {
         res = -errno;
     }
@@ -850,14 +850,14 @@ static int command_dmesg(int argc, const char *argv[])
     ssize_t size;
     int fd;
 
-    fd = open("/dev/kmsg", O_RDONLY | O_NONBLOCK);
+    fd = ml_open("/dev/kmsg", O_RDONLY | O_NONBLOCK);
 
     if (fd == -1) {
         return (-errno);
     }
 
     for (;;) {
-        size = read(fd, &message[0], sizeof(message) - 1);
+        size = ml_read(fd, &message[0], sizeof(message) - 1);
 
         if (size <= 0) {
             break;
@@ -867,7 +867,7 @@ static int command_dmesg(int argc, const char *argv[])
         print_kernel_message(&message[0]);
     }
 
-    close(fd);
+    ml_close(fd);
 
     return (0);
 }

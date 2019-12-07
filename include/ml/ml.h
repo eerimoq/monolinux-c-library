@@ -578,6 +578,8 @@ ssize_t ml_read(int fd, void *buf_p, size_t count);
 
 ssize_t ml_write(int fd, const void *buf_p, size_t count);
 
+int ml_fclose(FILE *stream);
+
 int ml_finit_module(int fd, const char *params_p, int flags);
 
 int ml_mknod(const char *path_p, mode_t mode, dev_t dev);

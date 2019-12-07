@@ -53,6 +53,11 @@ ssize_t ml_write(int fd, const void *buf_p, size_t count)
     return (write(fd, buf_p, count));
 }
 
+int ml_fclose(FILE *file_p)
+{
+    return (fclose(file_p));
+}
+
 int ml_finit_module(int fd, const char *params_p, int flags)
 {
     return (syscall(SYS_finit_module, fd, params_p, flags));
