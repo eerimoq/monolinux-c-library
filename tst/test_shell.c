@@ -120,7 +120,7 @@ TEST(various_commands)
               "        print   Print to file.\n"
               "       reboot   Reboot.\n"
               "      suicide   Process suicide.\n"
-              "         sync   Write pending data to disk.\n"
+              "         sync   Synchronize cached writes to persistent storage.\n"
               "OK\n"
               "$ history\n"
               "1: help\n"

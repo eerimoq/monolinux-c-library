@@ -1657,7 +1657,7 @@ void ml_shell_init(void)
                               "Print the kernel ring buffer.",
                               command_dmesg);
     ml_shell_register_command("sync",
-                              "Write pending data to disk.",
+                              "Synchronize cached writes to persistent storage.",
                               command_sync);
 }
 
