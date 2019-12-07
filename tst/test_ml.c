@@ -32,6 +32,13 @@
 #include "nala_mocks.h"
 #include "ml/ml.h"
 
+static void init(void)
+{
+    ml_open_mock_once("/dev/kmsg", O_WRONLY, 10);
+    ml_init();
+    ml_open_mock_disable();
+}
+
 TEST(strip)
 {
     char string1[] = "1  ";
@@ -40,7 +47,7 @@ TEST(strip)
     char string4[] = "   ";
     char *begin_p;
 
-    ml_init();
+    init();
 
     begin_p = ml_strip(string1, NULL);
     ASSERT_EQ(begin_p, "1");
@@ -70,7 +77,7 @@ TEST(lstrip)
     char string3[] = "  ";
     char *begin_p;
 
-    ml_init();
+    init();
 
     begin_p = ml_lstrip(string1, NULL);
     ASSERT_EQ(begin_p, "1 ");
@@ -95,7 +102,7 @@ TEST(rstrip)
     char string2[] = " 1";
     char string3[] = "  ";
 
-    ml_init();
+    init();
 
     ml_rstrip(string1, NULL);
     ASSERT_EQ(&string1[0], "1");
@@ -112,7 +119,7 @@ TEST(rstrip)
 
 TEST(hexdump_empty)
 {
-    ml_init();
+    init();
 
     CAPTURE_OUTPUT(output, errput) {
         ml_hexdump("", 0);
@@ -123,7 +130,7 @@ TEST(hexdump_empty)
 
 TEST(hexdump_short)
 {
-    ml_init();
+    init();
 
     CAPTURE_OUTPUT(output, errput) {
         ml_hexdump("1", 1);
@@ -136,7 +143,7 @@ TEST(hexdump_short)
 
 TEST(hexdump_long)
 {
-    ml_init();
+    init();
 
     CAPTURE_OUTPUT(output, errput) {
         ml_hexdump(
@@ -173,7 +180,7 @@ TEST(hexdump_file_0_0)
 {
     FILE *fin_p;
 
-    ml_init();
+    init();
 
     fin_p = fopen("hexdump.in", "rb");
     ASSERT(fin_p != NULL);
@@ -191,7 +198,7 @@ TEST(hexdump_file_0_16)
 {
     FILE *fin_p;
 
-    ml_init();
+    init();
 
     fin_p = fopen("hexdump.in", "rb");
     ASSERT(fin_p != NULL);
@@ -211,7 +218,7 @@ TEST(hexdump_file_1_16)
 {
     FILE *fin_p;
 
-    ml_init();
+    init();
 
     fin_p = fopen("hexdump.in", "rb");
     ASSERT(fin_p != NULL);
@@ -231,7 +238,7 @@ TEST(hexdump_file_0_m1)
 {
     FILE *fin_p;
 
-    ml_init();
+    init();
 
     fin_p = fopen("hexdump.in", "rb");
     ASSERT(fin_p != NULL);
@@ -253,7 +260,7 @@ TEST(hexdump_file_1_m1)
 {
     FILE *fin_p;
 
-    ml_init();
+    init();
 
     fin_p = fopen("hexdump.in", "rb");
     ASSERT(fin_p != NULL);
@@ -273,7 +280,7 @@ TEST(hexdump_file_1_m1)
 
 TEST(print_file)
 {
-    ml_init();
+    init();
 
     CAPTURE_OUTPUT(output, errput) {
         ml_print_file("hexdump.in");
@@ -284,7 +291,7 @@ TEST(print_file)
 
 TEST(print_uptime)
 {
-    ml_init();
+    init();
 
     CAPTURE_OUTPUT(output, errput) {
         ml_print_uptime();
@@ -300,11 +307,11 @@ static struct ml_queue_t queue;
 
 TEST(bus)
 {
-    ml_init();
-
     struct ml_uid_t *uid_p;
     int *message_p;
     int *rmessage_p;
+
+    init();
 
     ml_queue_init(&queue, 1);
     ml_subscribe(&queue, &m1);
@@ -321,7 +328,7 @@ TEST(bus)
 
 TEST(ml_mount_ok)
 {
-    ml_init();
+    init();
 
     mount_mock_once("a", "b", "c", 0, 0);
     mount_mock_set_data_in("", 1);
@@ -333,7 +340,7 @@ TEST(insmod)
 {
     int fd;
 
-    ml_init();
+    init();
 
     fd = 99;
     ml_open_mock_once("foo.ko", O_RDONLY, fd);
@@ -355,7 +362,7 @@ TEST(spawn)
 {
     void *message_p;
 
-    ml_init();
+    init();
     ml_queue_init(&test_spawn_queue, 10);
     message_p = ml_message_alloc(&test_spawn_message_id, 0);
     ml_spawn(test_spawn_entry, message_p);

@@ -27,7 +27,9 @@
  */
 
 #include <unistd.h>
+#include <fcntl.h>
 #include "nala.h"
+#include "nala_mocks.h"
 #include "ml/ml.h"
 
 static ML_UID(timeout);
@@ -39,6 +41,7 @@ TEST(single_shot)
     struct ml_uid_t *uid_p;
     struct ml_timer_timeout_message_t *message_p;
 
+    ml_open_mock_once("/dev/kmsg", O_WRONLY, 10);
     ml_init();
     ml_queue_init(&queue, 1);
     ml_timer_init(&timer,
@@ -61,6 +64,7 @@ TEST(periodic)
     struct ml_timer_timeout_message_t *message_p;
     int i;
 
+    ml_open_mock_once("/dev/kmsg", O_WRONLY, 10);
     ml_init();
     ml_queue_init(&queue, 1);
     ml_timer_init(&timer,
@@ -87,6 +91,7 @@ TEST(stopped)
     struct ml_uid_t *uid_p;
     struct ml_timer_timeout_message_t *message_p;
 
+    ml_open_mock_once("/dev/kmsg", O_WRONLY, 10);
     ml_init();
     ml_queue_init(&queue, 1);
     ml_timer_init(&timer,
@@ -112,6 +117,7 @@ TEST(restart_after_timeout)
     struct ml_uid_t *uid_p;
     struct ml_timer_timeout_message_t *message_p;
 
+    ml_open_mock_once("/dev/kmsg", O_WRONLY, 10);
     ml_init();
     ml_queue_init(&queue, 1);
     ml_timer_init(&timer,
@@ -140,6 +146,7 @@ TEST(restart_after_stop)
     struct ml_timer_t timer;
     struct ml_queue_t queue;
 
+    ml_open_mock_once("/dev/kmsg", O_WRONLY, 10);
     ml_init();
     ml_queue_init(&queue, 1);
     ml_timer_init(&timer,
@@ -168,6 +175,7 @@ TEST(multiple_timers)
     struct ml_timer_timeout_message_t *message_p;
     int i;
 
+    ml_open_mock_once("/dev/kmsg", O_WRONLY, 10);
     ml_init();
 
     for (i = 0; i < 10; i++) {

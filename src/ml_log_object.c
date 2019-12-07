@@ -30,11 +30,13 @@
 #include <stdbool.h>
 #include <stdarg.h>
 #include <time.h>
+#include <fcntl.h>
+#include <unistd.h>
 #include "ml/ml.h"
 #include "internal.h"
 
 struct module_t {
-    FILE *kmsg_file_p;
+    int kmsg_fd;
 };
 
 static struct module_t module;
@@ -87,7 +89,7 @@ static const char *level_to_string(int level)
 
 void ml_log_object_module_init(void)
 {
-    module.kmsg_file_p = fopen("/dev/kmsg", "w");
+    module.kmsg_fd = ml_open("/dev/kmsg", O_WRONLY);
 }
 
 void ml_log_object_init(struct ml_log_object_t *self_p,
@@ -115,30 +117,34 @@ void ml_log_object_vprint(struct ml_log_object_t *self_p,
                           const char *fmt_p,
                           va_list vlist)
 {
-    char buf[16];
+    char buf[512];
     time_t now;
     struct tm tm;
     size_t length;
-    FILE *file_p;
+    ssize_t written;
 
     if ((self_p->mask & (1 << level)) == 0) {
         return;
     }
 
-    file_p = module.kmsg_file_p;
-
-    if (file_p == NULL) {
-        return;
-    }
-
     now = time(NULL);
     gmtime_r(&now, &tm);
-    strftime(&buf[0], sizeof(buf), "%b %e %T", &tm);
 
-    fprintf(file_p, "%s %s %s ", &buf[0], level_to_string(level), self_p->name_p);
-    vfprintf(file_p, fmt_p, vlist);
-    fputc('\n', file_p);
-    fflush(file_p);
+    length = strftime(&buf[0], sizeof(buf), "%b %e %T", &tm);
+    length += snprintf(&buf[length],
+                       sizeof(buf) - length,
+                       " %s %s ",
+                       level_to_string(level),
+                       self_p->name_p);
+    length += vsnprintf(&buf[length], sizeof(buf) - length, fmt_p, vlist);
+
+    if (length >= sizeof(buf)) {
+        length = (sizeof(buf) - 1);
+    }
+
+    buf[length++] = '\n';
+    written = ml_write(module.kmsg_fd, &buf[0], length);
+    (void)written;
 }
 
 void ml_log_object_print(struct ml_log_object_t *self_p,
