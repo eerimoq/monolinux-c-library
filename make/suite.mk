@@ -20,13 +20,12 @@ SRC += $(TESTS)
 NALA = nala
 MAIN_C =
 TESTS ?= main.c
-TESTS_O = $(patsubst %,$(BUILD)%,$(abspath $(TESTS:%.c=%.o)))
 
 .PHONY: all run build coverage
 
 all: run
 
-build:
+build: $(BUILD)/nala_mocks.h
 	$(MAKE) $(EXE)
 
 run: build
@@ -35,10 +34,8 @@ run: build
 test: run
 	$(MAKE) coverage
 
-$(TESTS_O): $(BUILD)/nala_mocks.c
-
-$(BUILD)/nala_mocks.c: $(TESTS)
-	echo "MOCK $^"
+$(BUILD)/nala_mocks.h: $(TESTS)
+	echo "MOCKGEN $^"
 	mkdir -p $(BUILD)
 	[ -f nala_mocks.h ] || touch $(BUILD)/nala_mocks.h
 	cat $(TESTS) > tests.pp.c
