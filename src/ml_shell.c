@@ -30,7 +30,9 @@
 #define _XOPEN_SOURCE 700
 #define _DEFAULT_SOURCE
 
+#include <fcntl.h>
 #include <time.h>
+#include <errno.h>
 #include <sys/sysmacros.h>
 #include <stdint.h>
 #include <sys/types.h>
@@ -772,6 +774,99 @@ static int command_date(int argc, const char *argv[])
     }
 
     return (res);
+}
+
+static int command_print(int argc, const char *argv[])
+{
+    FILE *file_p;
+    int res;
+    size_t length;
+
+    res = 0;
+
+    if (argc != 3) {
+        printf("Usage: print <text> <file>\n");
+
+        return (-1);
+    }
+
+    file_p = fopen(argv[2], "w");
+
+    if (file_p != NULL) {
+        length = strlen(argv[1]);
+        res = fwrite(argv[1], 1, length, file_p);
+
+        if (res == length) {
+            res = fwrite("\n", 1, 1, file_p);
+
+            if (res == 1) {
+                res = 0;
+            } else {
+                res = -errno;
+            }
+        } else {
+            res = -errno;
+        }
+
+        fclose(file_p);
+    } else {
+        res = -errno;
+    }
+
+    return (res);
+}
+
+static void print_kernel_message(char *message_p)
+{
+    unsigned long long secs;
+    unsigned long long usecs;
+    int text_pos;
+    char *text_p;
+    char *match_p;
+
+    if (sscanf(message_p, "%*u,%*u,%llu,%*[^;]; %n", &usecs, &text_pos) != 1) {
+        return;
+    }
+
+    text_p = &message_p[text_pos];
+    match_p = strchr(text_p, '\n');
+
+    if (match_p != NULL) {
+        *match_p = '\0';
+    }
+
+    secs = (usecs / 1000000);
+    usecs %= 1000000;
+
+    printf("[%5lld.%06lld] %s\n", secs, usecs, text_p);
+}
+
+static int command_dmesg(int argc, const char *argv[])
+{
+    char message[1024];
+    ssize_t size;
+    int fd;
+
+    fd = open("/dev/kmsg", O_RDONLY | O_NONBLOCK);
+
+    if (fd == -1) {
+        return (-errno);
+    }
+
+    for (;;) {
+        size = read(fd, &message[0], sizeof(message) - 1);
+
+        if (size <= 0) {
+            break;
+        }
+
+        message[size] = '\0';
+        print_kernel_message(&message[0]);
+    }
+
+    close(fd);
+
+    return (0);
 }
 
 static void history_init(void)
@@ -1542,6 +1637,12 @@ void ml_shell_init(void)
     ml_shell_register_command("date",
                               "Print current date.",
                               command_date);
+    ml_shell_register_command("print",
+                              "Print to file.",
+                              command_print);
+    ml_shell_register_command("dmesg",
+                              "Print the kernel ring buffer.",
+                              command_dmesg);
 }
 
 void ml_shell_start(void)
