@@ -796,7 +796,7 @@ static int command_print(int argc, const char *argv[])
         length = strlen(argv[1]);
         res = fwrite(argv[1], 1, length, file_p);
 
-        if (res == length) {
+        if (res == (int)length) {
             res = fwrite("\n", 1, 1, file_p);
 
             if (res == 1) {
@@ -843,6 +843,9 @@ static void print_kernel_message(char *message_p)
 
 static int command_dmesg(int argc, const char *argv[])
 {
+    (void)argc;
+    (void)argv;
+
     char message[1024];
     ssize_t size;
     int fd;
