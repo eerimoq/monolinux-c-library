@@ -26,7 +26,7 @@ Development environment installation
 .. code-block:: shell
 
    $ sudo apt install gcovr
-   $ sudo pip3 install pyinotify narmock
+   $ sudo pip3 install pyinotify nala
 
 Unit testing
 ============
