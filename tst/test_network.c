@@ -26,6 +26,7 @@
  * This file is part of the Monolinux C library project.
  */
 
+#include <string.h>
 #include <sys/ioctl.h>
 #include <net/if.h>
 #include <arpa/inet.h>

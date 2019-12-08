@@ -31,6 +31,7 @@
 #include <sys/timerfd.h>
 #include <netinet/if_ether.h>
 #include <linux/if_packet.h>
+#include <string.h>
 #include "nala.h"
 #include "nala_mocks.h"
 #include "ml/ml.h"

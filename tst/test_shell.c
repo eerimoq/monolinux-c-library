@@ -26,6 +26,8 @@
  * This file is part of the Monolinux C library project.
  */
 
+#include <string.h>
+#include <stdlib.h>
 #include <ftw.h>
 #include <fcntl.h>
 #include <sys/sysmacros.h>
