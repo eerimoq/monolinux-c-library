@@ -34,17 +34,6 @@
 #include "ml/ml.h"
 #include "utils/mock.h"
 
-int ioctl_mock_va_arg_real(int __fd,
-                           unsigned long int __request,
-                           va_list __nala_va_list)
-{
-    (void)__fd;
-    (void)__request;
-    (void)__nala_va_list;
-
-    return (-1);
-}
-
 static void mock_ioctl_ifreq_ok(int fd,
                                 unsigned long request,
                                 struct ifreq *ifreq_p)

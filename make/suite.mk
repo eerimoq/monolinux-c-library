@@ -1,4 +1,10 @@
-BUILD = $(shell readlink -f build)
+TEST ?= all
+
+ifneq ($(TEST), all)
+TESTS = $(TEST:%=test_%.c)
+endif
+
+BUILD = build/$(TEST)
 EXE = $(BUILD)/suite
 CFLAGS += -fno-omit-frame-pointer
 # CFLAGS += -fsanitize=address
@@ -45,11 +51,11 @@ $(BUILD)/nala_mocks.h: $(TESTS)
 coverage:
 	gcovr --root ../.. \
 	    --exclude-directories ".*tst.*" $(COVERAGE_FILTERS:%=-f %) \
-	    --html-details --output index.html build
+	    --html-details --output index.html $(BUILD)
 	mkdir -p $(BUILD)/coverage
 	mv index.* $(BUILD)/coverage
 	@echo
-	@echo "Code coverage report: $$(readlink -f build/coverage/index.html)"
+	@echo "Code coverage report: $$(readlink -f $(BUILD)/coverage/index.html)"
 	@echo
 
 include $(ML_ROOT)/make/common.mk
