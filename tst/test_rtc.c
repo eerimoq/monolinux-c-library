@@ -71,6 +71,8 @@ TEST(get_time_open_error)
     struct tm tm;
 
     ml_open_mock_once("/dev/rtc99", O_RDONLY, -1);
+    ioctl_mock_none();
+    ml_close_mock_none();
 
     ASSERT_EQ(ml_rtc_get_time("/dev/rtc99", &tm), -1);
 }
@@ -124,6 +126,8 @@ TEST(set_time_open_error)
     struct tm tm;
 
     ml_open_mock_once("/dev/rtc99", O_WRONLY, -1);
+    ioctl_mock_none();
+    ml_close_mock_none();
 
     tm.tm_sec = 1;
     tm.tm_min = 2;
