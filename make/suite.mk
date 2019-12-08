@@ -1,10 +1,10 @@
-TEST ?= all
+SUITE ?= all
 
-ifneq ($(TEST), all)
-TESTS = $(TEST:%=test_%.c)
+ifneq ($(SUITE), all)
+TESTS = $(SUITE:%=test_%.c)
 endif
 
-BUILD = build/$(TEST)
+BUILD = build/$(SUITE)
 EXE = $(BUILD)/suite
 CFLAGS += -fno-omit-frame-pointer
 # CFLAGS += -fsanitize=address

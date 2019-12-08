@@ -44,6 +44,13 @@ Execute all unit tests.
    $ make -s -j4
    ...
 
+Execute one test suite.
+
+.. code-block:: shell
+
+   $ make -s -j4 SUITE=bus
+   ...
+
 .. |buildstatus| image:: https://travis-ci.org/eerimoq/monolinux-c-library.svg
 .. _buildstatus: https://travis-ci.org/eerimoq/monolinux-c-library
 
