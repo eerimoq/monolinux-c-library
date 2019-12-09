@@ -43,7 +43,7 @@ test: run
 $(BUILD)/nala_mocks.h: $(TESTS)
 	echo "MOCKGEN $^"
 	mkdir -p $(BUILD)
-	[ -f nala_mocks.h ] || touch $(BUILD)/nala_mocks.h
+	[ -f $(BUILD)/nala_mocks.h ] || touch $(BUILD)/nala_mocks.h
 	cat $(TESTS) > tests.pp.c
 	$(CC) $(INC:%=-I%) -D_GNU_SOURCE=1 -E tests.pp.c \
 	    | $(NALA) generate_mocks -o $(BUILD)
