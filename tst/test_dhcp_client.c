@@ -26,6 +26,7 @@
  * This file is part of the Monolinux C library project.
  */
 
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/timerfd.h>

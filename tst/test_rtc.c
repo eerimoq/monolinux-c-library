@@ -26,6 +26,7 @@
  * This file is part of the Monolinux C library project.
  */
 
+#include <unistd.h>
 #include <time.h>
 #include <sys/ioctl.h>
 #include <fcntl.h>

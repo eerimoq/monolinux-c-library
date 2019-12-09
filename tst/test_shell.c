@@ -26,6 +26,7 @@
  * This file is part of the Monolinux C library project.
  */
 
+#include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
 #include <ftw.h>

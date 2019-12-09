@@ -26,6 +26,7 @@
  * This file is part of the Monolinux C library project.
  */
 
+#include <unistd.h>
 #include <fcntl.h>
 #include <sys/mount.h>
 #include "nala.h"
