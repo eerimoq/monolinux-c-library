@@ -90,7 +90,7 @@ static void mock_push_configure(const char *name_p)
     mock_ioctl_ifreq_ok(fd, SIOCSIFADDR, &ifreq);
     create_address_request(&ifreq, "255.255.255.0");
     mock_ioctl_ifreq_ok(fd, SIOCSIFNETMASK, &ifreq);
-    ml_close_mock_once(fd, 0);
+    close_mock_once(fd, 0);
 }
 
 static void mock_push_up(const char *name_p)
@@ -105,7 +105,7 @@ static void mock_push_up(const char *name_p)
     mock_ioctl_ifreq_ok(fd, SIOCGIFFLAGS, &ifreq);
     ifreq.ifr_flags = IFF_UP;
     mock_ioctl_ifreq_ok(fd, SIOCSIFFLAGS, &ifreq);
-    ml_close_mock_once(fd, 0);
+    close_mock_once(fd, 0);
 }
 
 static void mock_push_down(const char *name_p)
@@ -119,7 +119,7 @@ static void mock_push_down(const char *name_p)
     strcpy(&ifreq.ifr_name[0], name_p);
     mock_ioctl_ifreq_ok(fd, SIOCGIFFLAGS, &ifreq);
     mock_ioctl_ifreq_ok(fd, SIOCSIFFLAGS, &ifreq);
-    ml_close_mock_once(fd, 0);
+    close_mock_once(fd, 0);
 }
 
 static void mock_push_ioctl_get(const char *name_p,
@@ -140,7 +140,7 @@ static void mock_push_ioctl_get(const char *name_p,
     ioctl_mock_once(fd, request, res, "%p", &ifreq_in);
     ioctl_mock_set_va_arg_in_at(0, &ifreq_in, sizeof(ifreq_in));
     ioctl_mock_set_va_arg_out_at(0, ifreq_out_p, sizeof(*ifreq_out_p));
-    ml_close_mock_once(fd, 0);
+    close_mock_once(fd, 0);
 }
 
 static void mock_push_ml_network_interface_index(const char *name_p,
@@ -474,7 +474,7 @@ TEST(command_udp_send_sendto_failure)
         sendto_mock_once(fd, 6, 0, sizeof(other), -1);
         sendto_mock_set_buf_in("Hello!", 6);
         //sendto_mock_set_addr_in(&other, sizeof(other));
-        ml_close_mock_once(fd, 0);
+        close_mock_once(fd, 0);
         ASSERT_EQ(command_udp_send(membersof(argv), argv), -1);
     }
 
@@ -506,7 +506,7 @@ TEST(command_udp_send)
         sendto_mock_once(fd, 6, 0, sizeof(other), 6);
         sendto_mock_set_buf_in("Hello!", 6);
         //sendto_mock_set_addr_in(&other, sizeof(other));
-        ml_close_mock_once(fd, 0);
+        close_mock_once(fd, 0);
         ASSERT_EQ(command_udp_send(membersof(argv), argv), 0);
     }
 

@@ -53,7 +53,7 @@ static int net_open(const char *name_p,
 
 static void net_close(int netfd)
 {
-    ml_close(netfd);
+    close(netfd);
 }
 
 static void create_address_request(struct ifreq *ifreq_p,
@@ -232,7 +232,7 @@ static int udp_send(const char *ip_address_p,
                 perror("sendto failed");
             }
 
-            ml_close(sockfd);
+            close(sockfd);
         }
     }
 
@@ -316,7 +316,7 @@ static int udp_recv(const char *port_p, int timeout)
             perror("bind failed");
         }
 
-        ml_close(sockfd);
+        close(sockfd);
     }
 
     return (res);
@@ -397,7 +397,7 @@ static int tcp_send(const char *ip_address_p,
                 perror("connect");
             }
 
-            ml_close(sockfd);
+            close(sockfd);
         }
     }
 

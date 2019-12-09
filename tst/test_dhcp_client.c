@@ -453,8 +453,8 @@ static void mock_push_udp_sendto(const uint8_t *buf_p, size_t size)
 
 static void mock_push_dhcp_read(uint8_t *buf_p, size_t size)
 {
-    ml_read_mock_once(SOCK_FD, 1024, size);
-    ml_read_mock_set_buf_p_out(buf_p, 1024);
+    read_mock_once(SOCK_FD, 1024, size);
+    read_mock_set_buf_out(buf_p, 1024);
 }
 
 static void mock_push_timer_read(int fd)
@@ -462,8 +462,8 @@ static void mock_push_timer_read(int fd)
     uint64_t value;
 
     value = 0;
-    ml_read_mock_once(fd, sizeof(value), sizeof(value));
-    ml_read_mock_set_buf_p_out(&value, sizeof(value));
+    read_mock_once(fd, sizeof(value), sizeof(value));
+    read_mock_set_buf_out(&value, sizeof(value));
 }
 
 static void mock_push_ml_dhcp_client_start(void)
@@ -541,7 +541,7 @@ static void mock_push_requesting_to_bound(void)
     ml_network_interface_add_route_mock_once("eth0",
                                              "192.168.0.1",
                                              0);
-    ml_close_mock_once(SOCK_PACKET_FD, 0);
+    close_mock_once(SOCK_PACKET_FD, 0);
     mock_push_setup_udp_socket();
 }
 
@@ -581,7 +581,7 @@ static void mock_push_renewing_to_bound(void)
     ml_network_interface_add_route_mock_once("eth0",
                                              "192.168.0.1",
                                              0);
-    ml_close_mock_once(SOCK_PACKET_FD, 0);
+    close_mock_once(SOCK_PACKET_FD, 0);
     mock_push_setup_udp_socket();
 }
 
@@ -599,7 +599,7 @@ static void mock_push_enter_init(void)
     timeout.it_value.tv_sec = 10;
     timerfd_settime_mock_once(INIT_FD, 0, 0);
     timerfd_settime_mock_set_new_value_in(&timeout, sizeof(timeout));
-    ml_close_mock_once(SOCK_FD, 0);
+    close_mock_once(SOCK_FD, 0);
     mock_push_setup_packet_socket();
 }
 
@@ -660,10 +660,10 @@ TEST(start_failure_last_init_step)
     timerfd_create_mock_once(CLOCK_REALTIME, 0, REBIND_FD);
     timerfd_create_mock_once(CLOCK_REALTIME, 0, RESP_FD);
     timerfd_create_mock_once(CLOCK_REALTIME, 0, -1);
-    ml_close_mock_once(RESP_FD, 0);
-    ml_close_mock_once(REBIND_FD, 0);
-    ml_close_mock_once(RENEW_FD, 0);
-    ml_close_mock_once(SOCK_FD, 0);
+    close_mock_once(RESP_FD, 0);
+    close_mock_once(REBIND_FD, 0);
+    close_mock_once(RENEW_FD, 0);
+    close_mock_once(SOCK_FD, 0);
 
     ml_dhcp_client_init(&client, "eth0", ML_LOG_ALL);
     ml_dhcp_client_start(&client);

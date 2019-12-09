@@ -121,6 +121,7 @@ void ml_log_object_vprint(struct ml_log_object_t *self_p,
     time_t now;
     struct tm tm;
     size_t length;
+    ssize_t written;
 
     if ((self_p->mask & (1 << level)) == 0) {
         return;
@@ -142,7 +143,8 @@ void ml_log_object_vprint(struct ml_log_object_t *self_p,
     }
 
     buf[length++] = '\n';
-    ml_write(module.kmsg_fd, &buf[0], length);
+    written = write(module.kmsg_fd, &buf[0], length);
+    (void)written;
 }
 
 void ml_log_object_print(struct ml_log_object_t *self_p,

@@ -345,7 +345,7 @@ TEST(insmod)
     fd = 99;
     ml_open_mock_once("foo.ko", O_RDONLY, fd);
     ml_finit_module_mock_once(fd, "", 0, 0);
-    ml_close_mock_once(fd, 0);
+    close_mock_once(fd, 0);
 
     ASSERT_EQ(ml_insert_module("foo.ko", ""), 0);
 }

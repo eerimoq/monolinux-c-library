@@ -1,4 +1,5 @@
 #include <unistd.h>
+#include <string.h>
 #include "nala.h"
 #include "ml/ml.h"
 #include "utils.h"

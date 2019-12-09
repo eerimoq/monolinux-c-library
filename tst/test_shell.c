@@ -687,12 +687,12 @@ TEST(command_insmod)
     fd = 99;
     ml_open_mock_once("foo.ko", O_RDONLY, fd);
     ml_finit_module_mock_once(fd, "", 0, 0);
-    ml_close_mock_once(fd, 0);
+    close_mock_once(fd, 0);
 
     fd = 98;
     ml_open_mock_once("bar.ko", O_RDONLY, fd);
     ml_finit_module_mock_once(fd, "fie=fum", 0, 0);
-    ml_close_mock_once(fd, 0);
+    close_mock_once(fd, 0);
 
     ml_shell_init();
 
@@ -1142,7 +1142,7 @@ TEST(command_print)
     fwrite_mock_set_ptr_in("hello", 5);
     fwrite_mock_once(1, 1, 1);
     fwrite_mock_set_ptr_in("\n", 1);
-    ml_fclose_mock_once(0);
+    fclose_mock_once(0);
 
     CAPTURE_OUTPUT(output, errput) {
         fd = stdin_pipe();
@@ -1165,16 +1165,16 @@ TEST(command_dmesg)
     ml_shell_init();
 
     ml_open_mock_once("/dev/kmsg", O_RDONLY | O_NONBLOCK, 5);
-    ml_read_mock_once(5, 1023, 54);
-    ml_read_mock_set_buf_p_out(
+    read_mock_once(5, 1023, 54);
+    read_mock_set_buf_out(
         "6,838,4248863,-;intel_rapl: Found RAPL domain package\n",
         54);
-    ml_read_mock_once(5, 1023, 50);
-    ml_read_mock_set_buf_p_out(
+    read_mock_once(5, 1023, 50);
+    read_mock_set_buf_out(
         "6,839,4248865,-;intel_rapl: Found RAPL domain core",
         50);
-    ml_read_mock_once(5, 1023, -1);
-    ml_close_mock_once(5, 0);
+    read_mock_once(5, 1023, -1);
+    close_mock_once(5, 0);
 
     CAPTURE_OUTPUT(output, errput) {
         fd = stdin_pipe();

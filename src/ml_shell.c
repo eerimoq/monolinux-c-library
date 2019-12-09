@@ -808,7 +808,7 @@ static int command_print(int argc, const char *argv[])
             res = -errno;
         }
 
-        ml_fclose(file_p);
+        fclose(file_p);
     } else {
         res = -errno;
     }
@@ -857,7 +857,7 @@ static int command_dmesg(int argc, const char *argv[])
     }
 
     for (;;) {
-        size = ml_read(fd, &message[0], sizeof(message) - 1);
+        size = read(fd, &message[0], sizeof(message) - 1);
 
         if (size <= 0) {
             break;
@@ -867,7 +867,7 @@ static int command_dmesg(int argc, const char *argv[])
         print_kernel_message(&message[0]);
     }
 
-    ml_close(fd);
+    close(fd);
 
     return (0);
 }

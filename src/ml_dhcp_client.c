@@ -654,7 +654,7 @@ static int setup_packet_socket(struct ml_dhcp_client_t *self_p)
     return (0);
 
  err2:
-    ml_close(sock);
+    close(sock);
 
  err1:
     ML_ERROR("Packet socket setup failed.");
@@ -694,7 +694,7 @@ static int setup_udp_socket(struct ml_dhcp_client_t *self_p)
     return (0);
 
  err2:
-    ml_close(sock);
+    close(sock);
 
  err1:
     ML_ERROR("UDP socket setup failed.");
@@ -750,7 +750,7 @@ static bool is_timeout(struct pollfd *fd_p)
     timeout = false;
 
     if (fd_p->revents & POLLIN) {
-        size = ml_read(fd_p->fd, &value, sizeof(value));
+        size = read(fd_p->fd, &value, sizeof(value));
 
         if (size == sizeof(value)) {
             timeout = true;
@@ -771,7 +771,7 @@ static void update_events(struct ml_dhcp_client_t *self_p)
         ML_WARNING("Packet/UDP socket error. Interface likely down.");
         sleep(1);
     } else if (self_p->fds[SOCK_IX].revents & POLLIN) {
-        size = ml_read(self_p->fds[SOCK_IX].fd, &buf[0], sizeof(buf));
+        size = read(self_p->fds[SOCK_IX].fd, &buf[0], sizeof(buf));
 
         if (size > 0) {
             unpack_packet(self_p, &buf[0], size);
@@ -1066,7 +1066,7 @@ static void enter_init(struct ml_dhcp_client_t *self_p)
     cancel_response_timer(self_p);
     cancel_rebinding_timer(self_p);
     set_init_timer(self_p, 10, 0);
-    ml_close(self_p->fds[SOCK_IX].fd);
+    close(self_p->fds[SOCK_IX].fd);
     setup_packet_socket(self_p);
     change_state(self_p, ml_dhcp_client_state_init_t);
 }
@@ -1087,7 +1087,7 @@ static void enter_bound(struct ml_dhcp_client_t *self_p)
     set_renewal_timer(self_p);
     set_rebinding_timer(self_p);
     configure_interface(self_p);
-    ml_close(self_p->fds[SOCK_IX].fd);
+    close(self_p->fds[SOCK_IX].fd);
     change_state(self_p, ml_dhcp_client_state_bound_t);
 
     if (setup_udp_socket(self_p) != 0) {
@@ -1237,16 +1237,16 @@ static int init(struct ml_dhcp_client_t *self_p)
     return (res);
 
  err5:
-    ml_close(self_p->fds[RESP_IX].fd);
+    close(self_p->fds[RESP_IX].fd);
 
  err4:
-    ml_close(self_p->fds[REBIND_IX].fd);
+    close(self_p->fds[REBIND_IX].fd);
 
  err3:
-    ml_close(self_p->fds[RENEW_IX].fd);
+    close(self_p->fds[RENEW_IX].fd);
 
  err2:
-    ml_close(self_p->fds[SOCK_IX].fd);
+    close(self_p->fds[SOCK_IX].fd);
 
  err1:
 
@@ -1258,7 +1258,7 @@ static void destroy(struct ml_dhcp_client_t *self_p)
     size_t i;
 
     for (i = 0; i < membersof(self_p->fds); i++) {
-        ml_close(self_p->fds[i].fd);
+        close(self_p->fds[i].fd);
     }
 }
 

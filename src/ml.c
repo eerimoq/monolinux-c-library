@@ -26,6 +26,7 @@
  * This file is part of the Monolinux C library project.
  */
 
+#include <unistd.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <arpa/inet.h>
@@ -254,7 +255,7 @@ int ml_insert_module(const char *path_p, const char *params_p)
 
     if (fd != -1) {
         res = ml_finit_module(fd, params_p, 0);
-        ml_close(fd);
+        close(fd);
     }
 
     return (res);

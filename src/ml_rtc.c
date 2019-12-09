@@ -26,6 +26,7 @@
  * This file is part of the Monolinux C library project.
  */
 
+#include <unistd.h>
 #include <time.h>
 #include <linux/rtc.h>
 #include <sys/ioctl.h>
@@ -56,7 +57,7 @@ int ml_rtc_get_time(const char *device_p, struct tm *tm_p)
             tm_p->tm_isdst = rtm.tm_isdst;
         }
 
-        ml_close(fd);
+        close(fd);
     }
 
     return (res);
@@ -84,7 +85,7 @@ int ml_rtc_set_time(const char *device_p, struct tm *tm_p)
 
         res = ioctl(fd, RTC_SET_TIME, &rtm);
 
-        ml_close(fd);
+        close(fd);
     }
 
     return (res);

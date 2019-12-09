@@ -52,7 +52,7 @@ TEST(get_time)
     ml_open_mock_once("/dev/rtc99", O_RDONLY, 5);
     ioctl_mock_once(5, RTC_RD_TIME, 0, "%p", &rtm);
     ioctl_mock_set_va_arg_out_at(0, &rtm, sizeof(rtm));
-    ml_close_mock_once(5, 0);
+    close_mock_once(5, 0);
 
     ASSERT_EQ(ml_rtc_get_time("/dev/rtc99", &tm), 0);
     ASSERT_EQ(tm.tm_sec, 1);
@@ -72,7 +72,7 @@ TEST(get_time_open_error)
 
     ml_open_mock_once("/dev/rtc99", O_RDONLY, -1);
     ioctl_mock_none();
-    ml_close_mock_none();
+    close_mock_none();
 
     ASSERT_EQ(ml_rtc_get_time("/dev/rtc99", &tm), -1);
 }
@@ -83,7 +83,7 @@ TEST(get_time_ioctl_error)
 
     ml_open_mock_once("/dev/rtc99", O_RDONLY, 1);
     ioctl_mock_once(1, RTC_RD_TIME, -1, "");
-    ml_close_mock_once(1, 0);
+    close_mock_once(1, 0);
 
     ASSERT_EQ(ml_rtc_get_time("/dev/rtc99", &tm), -1);
 }
@@ -106,7 +106,7 @@ TEST(set_time)
     ml_open_mock_once("/dev/rtc99", O_WRONLY, 6);
     ioctl_mock_once(6, RTC_SET_TIME, 0, "%p", &rtm);
     ioctl_mock_set_va_arg_in_at(0, &rtm, sizeof(rtm));
-    ml_close_mock_once(6, 0);
+    close_mock_once(6, 0);
 
     tm.tm_sec = 1;
     tm.tm_min = 2;
@@ -127,7 +127,7 @@ TEST(set_time_open_error)
 
     ml_open_mock_once("/dev/rtc99", O_WRONLY, -1);
     ioctl_mock_none();
-    ml_close_mock_none();
+    close_mock_none();
 
     tm.tm_sec = 1;
     tm.tm_min = 2;
@@ -148,7 +148,7 @@ TEST(set_time_ioctl_error)
 
     ml_open_mock_once("/dev/rtc99", O_WRONLY, 1);
     ioctl_mock_once(1, RTC_SET_TIME, -1, "");
-    ml_close_mock_once(1, 0);
+    close_mock_once(1, 0);
 
     tm.tm_sec = 1;
     tm.tm_min = 2;
