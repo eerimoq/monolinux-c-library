@@ -61,6 +61,8 @@ static struct ml_message_header_t *pop_message(struct ml_queue_t *self_p)
 
 void ml_queue_init(struct ml_queue_t *self_p, int length)
 {
+    self_p->on_put.func = NULL;
+    self_p->on_put.arg_p = NULL;
     self_p->rdpos = 0;
     self_p->wrpos = 0;
     self_p->length = (length + 1);
@@ -68,6 +70,14 @@ void ml_queue_init(struct ml_queue_t *self_p, int length)
     pthread_mutex_init(&self_p->mutex, NULL);
     pthread_cond_init(&self_p->full_cond, NULL);
     pthread_cond_init(&self_p->empty_cond, NULL);
+}
+
+void ml_queue_set_on_put(struct ml_queue_t *self_p,
+                         ml_queue_put_t func,
+                         void *arg_p)
+{
+    self_p->on_put.func = func;
+    self_p->on_put.arg_p = arg_p;
 }
 
 struct ml_uid_t *ml_queue_get(struct ml_queue_t *self_p, void **message_pp)
@@ -102,4 +112,8 @@ void ml_queue_put(struct ml_queue_t *self_p, void *message_p)
     push_message(self_p, message_to_header(message_p));
     pthread_cond_signal(&self_p->empty_cond);
     pthread_mutex_unlock(&self_p->mutex);
+
+    if (self_p->on_put.func != NULL) {
+        self_p->on_put.func(self_p->on_put.arg_p);
+    }
 }

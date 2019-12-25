@@ -109,7 +109,13 @@ struct ml_message_header_t {
     ml_message_on_free_t on_free;
 };
 
+typedef void (*ml_queue_put_t)(void *arg_p);
+
 struct ml_queue_t {
+    struct {
+        ml_queue_put_t func;
+        void *arg_p;
+    } on_put;
     volatile int rdpos;
     volatile int wrpos;
     int length;
@@ -288,6 +294,14 @@ void ml_message_free(void *message_p);
  * from a queue. Multiple threads may put messages on a queue.
  */
 void ml_queue_init(struct ml_queue_t *self_p, int length);
+
+/**
+ * Set the on put callback function, called when a message is put on
+ * given queue. This function must be called before the queue is used.
+ */
+void ml_queue_set_on_put(struct ml_queue_t *self_p,
+                         ml_queue_put_t func,
+                         void *arg_p);
 
 /**
  * Get the oldest message from given message queue. It is forbidden to
