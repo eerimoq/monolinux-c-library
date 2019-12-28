@@ -60,7 +60,7 @@ int main()
 
     ml_init();
     ml_queue_init(&queue, 16);
-    ml_timer_init(&timer, 1000, &timeout, &queue, ML_TIMER_PERIODIC);
+    ml_timer_init(&timer, &timeout, &queue);
 
     event_fd = eventfd(0, EFD_SEMAPHORE);
 
@@ -71,7 +71,7 @@ int main()
     ml_queue_set_on_put(&queue,
                         (ml_queue_put_t)event_write,
                         &event_fd);
-    ml_timer_start(&timer);
+    ml_timer_start(&timer, 1000, 1000);
 
     while (true) {
         size = read(event_fd, &value, sizeof(value));

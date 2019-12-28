@@ -45,18 +45,18 @@ int main()
 
     ml_init();
     ml_queue_init(&queue, 16);
-    ml_timer_init(&timer_1, 1000, &timeout_1, &queue, ML_TIMER_PERIODIC);
-    ml_timer_init(&timer_2, 3000, &timeout_2, &queue, ML_TIMER_PERIODIC);
-    ml_timer_init(&timer_3, 5000, &timeout_3, &queue, 0);
+    ml_timer_init(&timer_1, &timeout_1, &queue);
+    ml_timer_init(&timer_2, &timeout_2, &queue);
+    ml_timer_init(&timer_3, &timeout_3, &queue);
 
     ml_info("Starting timer 1.");
-    ml_timer_start(&timer_1);
+    ml_timer_start(&timer_1, 1000, 1000);
 
     ml_info("Starting timer 2.");
-    ml_timer_start(&timer_2);
+    ml_timer_start(&timer_2, 3000, 3000);
 
     ml_info("Starting timer 3.");
-    ml_timer_start(&timer_3);
+    ml_timer_start(&timer_3, 5000, 0);
 
     while (true) {
         uid_p = ml_queue_get(&queue, (void **)&message_p);

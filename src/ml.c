@@ -401,22 +401,20 @@ void *xrealloc(void *buf_p, size_t size)
 }
 
 void ml_timer_init(struct ml_timer_t *self_p,
-                   int timeout_ms,
                    struct ml_uid_t *message_p,
-                   struct ml_queue_t *queue_p,
-                   int flags)
+                   struct ml_queue_t *queue_p)
 {
     ml_timer_handler_timer_init(&module.timer_handler,
                                 self_p,
-                                timeout_ms,
                                 message_p,
-                                queue_p,
-                                flags);
+                                queue_p);
 }
 
-void ml_timer_start(struct ml_timer_t *self_p)
+void ml_timer_start(struct ml_timer_t *self_p,
+                    unsigned int initial,
+unsigned int repeat)
 {
-    ml_timer_handler_timer_start(self_p);
+    ml_timer_handler_timer_start(self_p, initial, repeat);
 }
 
 void ml_timer_stop(struct ml_timer_t *self_p)

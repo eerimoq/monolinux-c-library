@@ -44,15 +44,11 @@ TEST(single_shot)
     ml_open_mock_once("/dev/kmsg", O_WRONLY, 10);
     ml_init();
     ml_queue_init(&queue, 1);
-    ml_timer_init(&timer,
-                  0,
-                  &timeout,
-                  &queue,
-                  0);
-    ml_timer_start(&timer);
+    ml_timer_init(&timer, &timeout, &queue);
+    ml_timer_start(&timer, 0, 0);
     uid_p = ml_queue_get(&queue, (void **)&message_p);
     ASSERT_EQ(uid_p, &timeout);
-    ASSERT_EQ(ml_timer_is_stopped(&timer), false);
+    ASSERT_EQ(ml_timer_is_message_valid(&timer), true);
     ml_message_free(message_p);
 }
 
@@ -67,24 +63,20 @@ TEST(periodic)
     ml_open_mock_once("/dev/kmsg", O_WRONLY, 10);
     ml_init();
     ml_queue_init(&queue, 1);
-    ml_timer_init(&timer,
-                  1,
-                  &timeout,
-                  &queue,
-                  ML_TIMER_PERIODIC);
-    ml_timer_start(&timer);
+    ml_timer_init(&timer, &timeout, &queue);
+    ml_timer_start(&timer, 1, 1);
 
     for (i = 0; i < 10; i++) {
         uid_p = ml_queue_get(&queue, (void **)&message_p);
         ASSERT_EQ(uid_p, &timeout);
-        ASSERT_EQ(ml_timer_is_stopped(&timer), false);
+        ASSERT_EQ(ml_timer_is_message_valid(&timer), true);
         ml_message_free(message_p);
     }
 
     ml_timer_stop(&timer);
 }
 
-TEST(stopped)
+TEST(is_message_valid)
 {
     struct ml_timer_t timer;
     struct ml_queue_t queue;
@@ -94,19 +86,15 @@ TEST(stopped)
     ml_open_mock_once("/dev/kmsg", O_WRONLY, 10);
     ml_init();
     ml_queue_init(&queue, 1);
-    ml_timer_init(&timer,
-                  0,
-                  &timeout,
-                  &queue,
-                  0);
-    ml_timer_start(&timer);
+    ml_timer_init(&timer, &timeout, &queue);
+    ml_timer_start(&timer, 0, 0);
 
-    /* Wait for the timer to expire and then stop it. It should be
-       marked as stopped. */
+    /* Wait for the timer to expire and then stop it. The received
+       message should be invalid. */
     uid_p = ml_queue_get(&queue, (void **)&message_p);
     ml_timer_stop(&timer);
     ASSERT_EQ(uid_p, &timeout);
-    ASSERT_EQ(ml_timer_is_stopped(&timer), true);
+    ASSERT_EQ(ml_timer_is_message_valid(&timer), false);
     ml_message_free(message_p);
 }
 
@@ -120,24 +108,20 @@ TEST(restart_after_timeout)
     ml_open_mock_once("/dev/kmsg", O_WRONLY, 10);
     ml_init();
     ml_queue_init(&queue, 1);
-    ml_timer_init(&timer,
-                  0,
-                  &timeout,
-                  &queue,
-                  0);
+    ml_timer_init(&timer, &timeout, &queue);
 
     /* First start. */
-    ml_timer_start(&timer);
+    ml_timer_start(&timer, 0, 0);
     uid_p = ml_queue_get(&queue, (void **)&message_p);
     ASSERT_EQ(uid_p, &timeout);
-    ASSERT_EQ(ml_timer_is_stopped(&timer), false);
+    ASSERT_EQ(ml_timer_is_message_valid(&timer), true);
     ml_message_free(message_p);
 
     /* Second start after timeout. */
-    ml_timer_start(&timer);
+    ml_timer_start(&timer, 0, 0);
     uid_p = ml_queue_get(&queue, (void **)&message_p);
     ASSERT_EQ(uid_p, &timeout);
-    ASSERT_EQ(ml_timer_is_stopped(&timer), false);
+    ASSERT_EQ(ml_timer_is_message_valid(&timer), true);
     ml_message_free(message_p);
 }
 
@@ -149,18 +133,14 @@ TEST(restart_after_stop)
     ml_open_mock_once("/dev/kmsg", O_WRONLY, 10);
     ml_init();
     ml_queue_init(&queue, 1);
-    ml_timer_init(&timer,
-                  10000,
-                  &timeout,
-                  &queue,
-                  0);
+    ml_timer_init(&timer, &timeout, &queue);
 
     /* First start and stop. */
-    ml_timer_start(&timer);
+    ml_timer_start(&timer, 10000, 0);
     ml_timer_stop(&timer);
 
     /* Start and stop again. */
-    ml_timer_start(&timer);
+    ml_timer_start(&timer, 10000, 0);
     ml_timer_stop(&timer);
 }
 
@@ -180,18 +160,14 @@ TEST(multiple_timers)
 
     for (i = 0; i < 10; i++) {
         ml_queue_init(&queues[i], 1);
-        ml_timer_init(&timers[i],
-                      timeouts[i],
-                      &timeout,
-                      &queues[i],
-                      0);
-        ml_timer_start(&timers[i]);
+        ml_timer_init(&timers[i], &timeout, &queues[i]);
+        ml_timer_start(&timers[i], timeouts[i], 0);
     }
 
     for (i = 0; i < 10; i++) {
         uid_p = ml_queue_get(&queues[i], (void **)&message_p);
         ASSERT_EQ(uid_p, &timeout);
-        ASSERT_EQ(ml_timer_is_stopped(&timers[i]), false);
+        ASSERT_EQ(ml_timer_is_message_valid(&timers[i]), true);
         ml_message_free(message_p);
     }
 }

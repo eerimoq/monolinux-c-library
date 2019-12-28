@@ -33,6 +33,8 @@
 #include <sys/timerfd.h>
 #include "ml/ml.h"
 
+#define DIV_CEIL(a, b) (((a) + (b) - 1) / (b))
+
 static void timer_list_insert(struct ml_timer_list_t *self_p,
                               struct ml_timer_t *timer_p)
 {
@@ -118,12 +120,13 @@ static void tick(struct ml_timer_handler_t *self_p)
         while (list_p->head_p->delta == 0) {
             timer_p = list_p->head_p;
             list_p->head_p = timer_p->next_p;
+            timer_p->number_of_outstanding_timeouts++;
             ml_queue_put(timer_p->queue_p,
                          ml_message_alloc(timer_p->message_p, 0));
 
             /* Re-set periodic timers. */
-            if (timer_p->flags & ML_TIMER_PERIODIC) {
-                timer_p->delta = timer_p->timeout;
+            if (timer_p->repeat_ticks > 0) {
+                timer_p->delta = timer_p->repeat_ticks;
                 timer_list_insert(list_p, timer_p);
             }
         }
@@ -179,28 +182,23 @@ void ml_timer_handler_init(struct ml_timer_handler_t *self_p)
 
 void ml_timer_handler_timer_init(struct ml_timer_handler_t *self_p,
                                  struct ml_timer_t *timer_p,
-                                 unsigned int timeout_ms,
                                  struct ml_uid_t *message_p,
-                                 struct ml_queue_t *queue_p,
-                                 int flags)
+                                 struct ml_queue_t *queue_p)
 {
     timer_p->handler_p = self_p;
-    timer_p->timeout = (timeout_ms / 10);
-
-    if (timer_p->timeout == 0) {
-        timer_p->timeout = 1;
-    }
-
     timer_p->message_p = message_p;
     timer_p->queue_p = queue_p;
-    timer_p->flags = flags;
-    timer_p->stopped = false;
+    timer_p->number_of_outstanding_timeouts = 0;
+    timer_p->number_of_timeouts_to_ignore = 0;
 }
 
-void ml_timer_handler_timer_start(struct ml_timer_t *self_p)
+void ml_timer_handler_timer_start(struct ml_timer_t *self_p,
+                                  unsigned int initial,
+                                  unsigned int repeat)
 {
-    self_p->delta = self_p->timeout;
-    self_p->stopped = false;
+    self_p->initial_ticks = DIV_CEIL(initial, 10);
+    self_p->repeat_ticks = DIV_CEIL(repeat, 10);
+    self_p->delta = self_p->initial_ticks;
 
     /* Must wait at least two ticks to ensure the timer does not
        expire early since it may be started close to the next tick
@@ -214,14 +212,27 @@ void ml_timer_handler_timer_start(struct ml_timer_t *self_p)
 
 void ml_timer_handler_timer_stop(struct ml_timer_t *self_p)
 {
-    self_p->stopped = true;
-
     pthread_mutex_lock(&self_p->handler_p->mutex);
+    self_p->number_of_timeouts_to_ignore = self_p->number_of_outstanding_timeouts;
     timer_list_remove(&self_p->handler_p->timers, self_p);
     pthread_mutex_unlock(&self_p->handler_p->mutex);
 }
 
-bool ml_timer_is_stopped(struct ml_timer_t *self_p)
+bool ml_timer_is_message_valid(struct ml_timer_t *self_p)
 {
-    return (self_p->stopped);
+    bool is_valid;
+
+    pthread_mutex_lock(&self_p->handler_p->mutex);
+    self_p->number_of_outstanding_timeouts--;
+
+    if (self_p->number_of_timeouts_to_ignore > 0) {
+        self_p->number_of_timeouts_to_ignore--;
+        is_valid = false;
+    } else {
+        is_valid = true;
+    }
+
+    pthread_mutex_unlock(&self_p->handler_p->mutex);
+
+    return (is_valid);
 }

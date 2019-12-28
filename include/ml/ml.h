@@ -37,7 +37,7 @@
 #include <pthread.h>
 #include <poll.h>
 
-#define ML_VERSION "0.5.0"
+#define ML_VERSION "0.6.0"
 
 /**
  * Create a unique identifier.
@@ -190,12 +190,13 @@ struct ml_dhcp_client_t {
 
 struct ml_timer_t {
     struct ml_timer_handler_t *handler_p;
-    unsigned int timeout;
+    unsigned int initial_ticks;
+    unsigned int repeat_ticks;
     unsigned int delta;
     struct ml_uid_t *message_p;
     struct ml_queue_t *queue_p;
-    int flags;
-    bool stopped;
+    int number_of_outstanding_timeouts;
+    int number_of_timeouts_to_ignore;
     struct ml_timer_t *next_p;
 };
 
@@ -245,20 +246,21 @@ void ml_log_print(int level, const char *fmt_p, ...);
 
 /**
  * Initialize given timer in the default timer handler. Puts a message
- * with given id on given queue on expiry. Give ML_TIMER_PERIODIC in
- * flags to make the timer periodic.
+ * with given id on given queue on expiry. Call
+ * `ml_timer_is_message_valid()` to check if a received expiry message
+ * should be discarded.
  */
 void ml_timer_init(struct ml_timer_t *self_p,
-                   int timeout_ms,
                    struct ml_uid_t *message_p,
-                   struct ml_queue_t *queue_p,
-                   int flags);
+                   struct ml_queue_t *queue_p);
 
 /**
- * Start given timer in the default timer handler. A started timer
- * must be stopped before it can be restarted.
+ * (Re)start given timer in the default timer handler. Both `initial`
+ * and `repeat` are in milliseconds.
  */
-void ml_timer_start(struct ml_timer_t *self_p);
+void ml_timer_start(struct ml_timer_t *self_p,
+                    unsigned int initial,
+                    unsigned int repeat);
 
 /**
  * Stop given timer in the default timer handler. This is a noop if
@@ -267,11 +269,12 @@ void ml_timer_start(struct ml_timer_t *self_p);
 void ml_timer_stop(struct ml_timer_t *self_p);
 
 /**
- * Returns true if the timer is stopped. Returns false if the timer is
- * running or has expired. Can be used to check if a timeout message
- * is recieved before or after the timer has been stopped.
+ * Must be called once for each received expiry message to check if it
+ * is still valid. Messages can be in flight when given timer is
+ * stopped, and calling this function ensures no such messages are
+ * used by the application.
  */
-bool ml_timer_is_stopped(struct ml_timer_t *self_p);
+bool ml_timer_is_message_valid(struct ml_timer_t *self_p);
 
 /**
  * Allocate a message with given id and size. The size may be zero.
@@ -562,12 +565,12 @@ void ml_timer_handler_init(struct ml_timer_handler_t *self_p);
 
 void ml_timer_handler_timer_init(struct ml_timer_handler_t *self_p,
                                  struct ml_timer_t *timer_p,
-                                 unsigned int timeout_ms,
                                  struct ml_uid_t *message_p,
-                                 struct ml_queue_t *queue_p,
-                                 int flags);
+                                 struct ml_queue_t *queue_p);
 
-void ml_timer_handler_timer_start(struct ml_timer_t *timer_p);
+void ml_timer_handler_timer_start(struct ml_timer_t *timer_p,
+                                  unsigned int initial,
+                                  unsigned int repeat);
 
 void ml_timer_handler_timer_stop(struct ml_timer_t *timer_p);
 
