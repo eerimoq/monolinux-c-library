@@ -144,6 +144,26 @@ TEST(restart_after_stop)
     ml_timer_stop(&timer);
 }
 
+TEST(restart_without_stop)
+{
+    struct ml_timer_t timer;
+    struct ml_queue_t queue;
+    struct ml_uid_t *uid_p;
+    struct ml_timer_timeout_message_t *message_p;
+
+    ml_open_mock_once("/dev/kmsg", O_WRONLY, 10);
+    ml_init();
+    ml_queue_init(&queue, 1);
+    ml_timer_init(&timer, &timeout, &queue);
+
+    ml_timer_start(&timer, 10000, 0);
+    ml_timer_start(&timer, 0, 0);
+    uid_p = ml_queue_get(&queue, (void **)&message_p);
+    ASSERT_EQ(uid_p, &timeout);
+    ASSERT_EQ(ml_timer_is_message_valid(&timer), true);
+    ml_message_free(message_p);
+}
+
 TEST(multiple_timers)
 {
     int timeouts[10] = {

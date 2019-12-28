@@ -37,7 +37,7 @@
 #include <pthread.h>
 #include <poll.h>
 
-#define ML_VERSION "0.6.0"
+#define ML_VERSION "0.6.1"
 
 /**
  * Create a unique identifier.

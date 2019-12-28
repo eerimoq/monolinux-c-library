@@ -196,6 +196,8 @@ void ml_timer_handler_timer_start(struct ml_timer_t *self_p,
                                   unsigned int initial,
                                   unsigned int repeat)
 {
+    ml_timer_stop(self_p);
+
     self_p->initial_ticks = DIV_CEIL(initial, 10);
     self_p->repeat_ticks = DIV_CEIL(repeat, 10);
     self_p->delta = self_p->initial_ticks;
