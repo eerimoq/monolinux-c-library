@@ -31,7 +31,8 @@ TESTS ?= main.c
 
 all: run
 
-build: $(BUILD)/nala_mocks.h
+build:
+	$(MAKE) $(BUILD)/nala_mocks.ld
 	$(MAKE) $(EXE)
 
 run: build
@@ -40,13 +41,14 @@ run: build
 test: run
 	$(MAKE) coverage
 
-$(BUILD)/nala_mocks.h: $(TESTS)
+$(BUILD)/nala_mocks.ld: $(TESTS)
 	echo "MOCKGEN $^"
 	mkdir -p $(BUILD)
 	[ -f $(BUILD)/nala_mocks.h ] || touch $(BUILD)/nala_mocks.h
 	cat $(TESTS) > tests.pp.c
 	$(CC) $(INC:%=-I%) -D_GNU_SOURCE=1 -DNALA_GENERATE_MOCKS -E tests.pp.c \
 	    | $(NALA) generate_mocks -o $(BUILD)
+	touch $@
 
 coverage:
 	gcovr --root ../.. \
