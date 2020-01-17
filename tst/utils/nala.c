@@ -8,6 +8,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <sys/time.h>
+#include <getopt.h>
 // #include "subprocess.h"
 /*
  * The MIT License (MIT)
@@ -134,18 +135,35 @@ void nala_subprocess_result_free(struct nala_subprocess_result_t *self_p);
  * This file is part of the traceback project.
  */
 
-#define NALA_TRACEBACK_VERSION "0.4.0"
+#include <stdbool.h>
+
+#define NALA_TRACEBACK_VERSION "0.7.0"
+
+typedef bool (*nala_traceback_skip_filter_t)(void *arg_p, const char *line_p);
 
 /**
  * Format given traceback. buffer_pp and depth are compatible with
  * backtrace() output.
  */
-char *nala_traceback_format(const char *prefix_p, void **buffer_pp, int depth);
+char *nala_traceback_format(void **buffer_pp,
+                       int depth,
+                       const char *prefix_p,
+                       nala_traceback_skip_filter_t skip_filter,
+                       void *arg_p);
+
+/**
+ * Create a traceback string.
+ */
+char *nala_traceback_string(const char *prefix_pp,
+                       nala_traceback_skip_filter_t skip_filter,
+                       void *arg_p);
 
 /**
  * Print a traceback.
  */
-void nala_traceback_print(const char *prefix_p);
+void nala_traceback_print(const char *prefix_pp,
+                     nala_traceback_skip_filter_t skip_filter,
+                     void *arg_p);
 
 #include "nala.h"
 // #include "diff/diff.h"
@@ -354,6 +372,8 @@ __attribute__ ((weak)) void nala_resume_all_mocks(void)
 {
 }
 
+__attribute__ ((weak)) int nala_print_call_mask = 0;
+
 static const char *get_node(void)
 {
     static char buf[128];
@@ -523,14 +543,30 @@ static float timeval_to_ms(struct timeval *timeval_p)
     return (res);
 }
 
-static void print_signal_failure(struct nala_test_t *test_p)
+static void print_test_failure_report_begin()
+{
+    printf("-------------------------- "
+           "TEST FAILURE REPORT BEGIN "
+           "--------------------------\n");
+    printf("\n");
+}
+
+static void print_test_failure_report_end()
 {
     printf("\n");
-    printf("%s failed:\n", full_test_name(test_p));
-    printf("\n");
-    printf("  Location: unknown\n");
-    printf("  Error:    " COLOR_BOLD(RED, "Terminated by signal %d.\n"),
+    printf("--------------------------- "
+           "TEST FAILURE REPORT END "
+           "---------------------------\n");
+}
+
+static void print_signal_failure(struct nala_test_t *test_p)
+{
+    print_test_failure_report_begin();
+    printf("  Test name: " COLOR(GREEN, "%s\n"), full_test_name(current_test_p));
+    printf("  Location:  " COLOR(CYAN, "unknown\n"));
+    printf("  Error:     " COLOR_BOLD(RED, "Terminated by signal %d.\n"),
            test_p->signal_number);
+    print_test_failure_report_end();
 }
 
 static void print_location_context(const char *filename_p, size_t line_number)
@@ -705,9 +741,11 @@ static void test_entry(void *arg_p)
     test_p = (struct nala_test_t *)arg_p;
     capture_output_init(&capture_stdout, stdout);
     capture_output_init(&capture_stderr, stderr);
+    nala_reset_all_mocks();
     test_p->func();
     nala_assert_all_mocks_completed();
     nala_reset_all_mocks();
+    nala_suspend_all_mocks();
     capture_output_destroy(&capture_stdout);
     capture_output_destroy(&capture_stderr);
     exit(0);
@@ -782,7 +820,7 @@ const char *nala_format(const char *format_p, ...)
     FILE *file_p;
 
     /* ToDo: Remove reset when suspend and resume are implemented. */
-    nala_reset_all_mocks();
+    // nala_reset_all_mocks();
     nala_suspend_all_mocks();
     file_p = open_memstream(&buf_p, &size);
     color_start(file_p, ANSI_COLOR_RED);
@@ -1070,6 +1108,21 @@ bool nala_check_memory(const void *left_p, const void *right_p, size_t size)
              || (memcmp(left_p, right_p, size) != 0));
 }
 
+static bool traceback_skip_filter(void *arg_p, const char *line_p)
+{
+    (void)arg_p;
+
+    if (strstr(line_p, "nala.c:") != NULL) {
+        return (true);
+    }
+
+    if (strstr(line_p, "??") != NULL) {
+        return (true);
+    }
+
+    return (false);
+}
+
 void nala_test_failure(const char *file_p,
                        int line,
                        const char *message_p)
@@ -1078,14 +1131,13 @@ void nala_test_failure(const char *file_p,
     nala_capture_output_stop();
     capture_output_destroy(&capture_stdout);
     capture_output_destroy(&capture_stderr);
-    printf("\n");
-    printf("%s failed:\n", full_test_name(current_test_p));
-    printf("\n");
-    printf("  Location:  %s:%d\n", file_p, line);
+    print_test_failure_report_begin();
+    printf("  Test name: " COLOR(GREEN, "%s\n"), full_test_name(current_test_p));
+    printf("  Location:  " COLOR(CYAN, "%s:%d\n"), file_p, line);
     printf("  Error:     %s", message_p);
     print_location_context(file_p, (size_t)line);
-    nala_traceback_print("  ");
-    printf("\n");
+    nala_traceback_print("  ", traceback_skip_filter, NULL);
+    print_test_failure_report_end();
     exit(1);
 }
 
@@ -1121,8 +1173,93 @@ int nala_run_tests()
     return (run_tests(tests.head_p));
 }
 
-__attribute__((weak)) int main(void)
+static void print_usage_and_exit(const char *program_name_p, int exit_code)
 {
+    printf("usage: %s [-h] [-v] [-a] [<test-pattern>]\n"
+           "\n"
+           "Run tests.\n"
+           "\n"
+           "positional arguments:\n"
+           "  test-pattern          Only run tests containing given pattern.\n"
+           "\n"
+           "optional arguments:\n"
+           "  -h, --help                Show this help message and exit.\n"
+           "  -v, --version             Print version information.\n"
+           "  -a, --print-all-calls     Print all calls to ease debugging.\n",
+           program_name_p);
+    exit(exit_code);
+}
+
+static void print_version_and_exit()
+{
+    printf("%s\n", NALA_VERSION);
+    exit(0);
+}
+
+static void filter_tests(const char *test_pattern_p)
+{
+    struct nala_test_t *test_p;
+
+    test_p = tests.head_p;
+    tests.head_p = NULL;
+    tests.tail_p = NULL;
+
+    while (test_p != NULL) {
+        if (strstr(full_test_name(test_p), test_pattern_p) != NULL) {
+            nala_register_test(test_p);
+        }
+
+        test_p = test_p->next_p;
+    }
+
+    if (tests.tail_p != NULL) {
+        tests.tail_p->next_p = NULL;
+    }
+}
+
+__attribute__((weak)) int main(int argc, char *argv[])
+{
+    static struct option long_options[] = {
+        { "help",            no_argument, NULL, 'h' },
+        { "version",         no_argument, NULL, 'v' },
+        { "print-all-calls", no_argument, NULL, 'a' },
+        { NULL,              no_argument, NULL, 0 }
+    };
+    int option;
+
+    /* Do not print function calls outside tests. */
+    nala_suspend_all_mocks();
+
+    while (1) {
+        option = getopt_long(argc, argv, "hva", &long_options[0], NULL);
+
+        if (option == -1) {
+            break;
+        }
+
+        switch (option) {
+
+        case 'h':
+            print_usage_and_exit(argv[0], 0);
+            break;
+
+        case 'v':
+            print_version_and_exit();
+            break;
+
+        case 'a':
+            nala_print_call_mask = 0xff;
+            break;
+
+        default:
+            print_usage_and_exit(argv[0], 1);
+        }
+    }
+
+    if (optind < argc) {
+        filter_tests(argv[optind]);
+    }
+
     return (nala_run_tests());
 }
 /*
@@ -1475,12 +1612,73 @@ void nala_subprocess_result_free(struct nala_subprocess_result_t *self_p)
 
 #define DEPTH_MAX 100
 
+#define ANSI_COLOR_GREEN "\x1b[32m"
+#define ANSI_COLOR_CYAN  "\x1b[36m"
+#define ANSI_RESET       "\x1b[0m"
+
+#define COLOR(color, ...) ANSI_RESET ANSI_COLOR_##color __VA_ARGS__ ANSI_RESET
+
 static void *fixaddr(void *address_p)
 {
     return ((void *)(((uintptr_t)address_p) - 1));
 }
 
-char *nala_traceback_format(const char *prefix_p, void **buffer_pp, int depth)
+static bool is_nala_traceback_line(const char *line_p)
+{
+    if (strncmp(line_p, "nala_traceback_print at ", 19) == 0) {
+        return (true);
+    }
+
+    if (strncmp(line_p, "nala_traceback_string at ", 20) == 0) {
+        return (true);
+    }
+
+    return (false);
+}
+
+static char *strip_discriminator(char *line_p)
+{
+    char *discriminator_p;
+
+    discriminator_p = strstr(line_p, " (discriminator");
+
+    if (discriminator_p != NULL) {
+        discriminator_p[0] = '\n';
+        discriminator_p[1] = '\0';
+    }
+
+    return (line_p);
+}
+
+static void print_line(FILE *stream_p, const char *prefix_p, char *line_p)
+{
+    char *at_p;
+    char *function_p;
+    char *location_p;
+
+    function_p = line_p;
+    at_p = strstr(line_p, " at ");
+
+    if (at_p == NULL) {
+        fprintf(stream_p, "%s  %s", prefix_p, line_p);
+        return;
+    }
+
+    at_p[0] = '\0';
+    location_p = &at_p[4];
+
+    fprintf(stream_p,
+            "%s  " COLOR(GREEN, "%s") " at " COLOR(CYAN, "%s"),
+            prefix_p,
+            function_p,
+            location_p);
+}
+
+char *nala_traceback_format(void **buffer_pp,
+                       int depth,
+                       const char *prefix_p,
+                       nala_traceback_skip_filter_t skip_filter,
+                       void *arg_p)
 {
     char exe[256];
     char command[384];
@@ -1520,14 +1718,26 @@ char *nala_traceback_format(const char *prefix_p, void **buffer_pp, int depth)
 
         result_p = nala_subprocess_exec_output(&command[0]);
 
-        if (result_p->exit_code == 0) {
-            fprintf(stream_p, "%s  ", prefix_p);
-            fwrite(result_p->stdout.buf_p,
-                   1,
-                   result_p->stdout.length,
-                   stream_p);
+        if (result_p->exit_code != 0) {
+            nala_subprocess_result_free(result_p);
+            continue;
         }
 
+        if (is_nala_traceback_line(result_p->stdout.buf_p)) {
+            nala_subprocess_result_free(result_p);
+            continue;
+        }
+
+        if (skip_filter != NULL) {
+            if (skip_filter(arg_p, result_p->stdout.buf_p)) {
+                nala_subprocess_result_free(result_p);
+                continue;
+            }
+        }
+
+        print_line(stream_p,
+                   prefix_p,
+                   strip_discriminator(result_p->stdout.buf_p));
         nala_subprocess_result_free(result_p);
     }
 
@@ -1536,13 +1746,31 @@ char *nala_traceback_format(const char *prefix_p, void **buffer_pp, int depth)
     return (string_p);
 }
 
-void nala_traceback_print(const char *prefix_p)
+char *nala_traceback_string(const char *prefix_p,
+                       nala_traceback_skip_filter_t skip_filter,
+                       void *arg_p)
 {
     int depth;
     void *addresses[DEPTH_MAX];
 
     depth = backtrace(&addresses[0], DEPTH_MAX);
-    printf("%s", nala_traceback_format(prefix_p, addresses, depth));
+
+    return (nala_traceback_format(addresses,
+                             depth,
+                             prefix_p,
+                             skip_filter,
+                             arg_p));
+}
+
+void nala_traceback_print(const char *prefix_p,
+                     nala_traceback_skip_filter_t skip_filter,
+                     void *arg_p)
+{
+    char *string_p;
+
+    string_p = nala_traceback_string(prefix_p, skip_filter, arg_p);
+    printf("%s", string_p);
+    free(string_p);
 }
 /*
  * The MIT License (MIT)

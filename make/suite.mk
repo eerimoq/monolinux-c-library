@@ -1,10 +1,4 @@
-TEST ?= all
-
-ifneq ($(TEST), all)
-TESTS = $(TEST:%=test_%.c)
-endif
-
-BUILD = build/$(TEST)
+BUILD = build
 EXE = $(BUILD)/suite
 CFLAGS += -fno-omit-frame-pointer
 # CFLAGS += -fsanitize=address
@@ -36,7 +30,7 @@ build:
 	$(MAKE) $(EXE)
 
 run: build
-	$(EXE)
+	$(EXE) $(ARGS)
 
 test: run
 	$(MAKE) coverage
