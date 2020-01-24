@@ -73,7 +73,7 @@ ml_shell_command_callback_t mock_get_callback(const char *name_p)
         item_p = item_p->next_p;
     }
 
-    NALA_TEST_FAILURE(
+    nala_test_failure(
         nala_format("Shell command callback not found for %s.\n",
                     name_p));
 
