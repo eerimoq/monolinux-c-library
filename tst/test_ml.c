@@ -37,7 +37,6 @@ static void init(void)
 {
     ml_open_mock_once("/dev/kmsg", O_WRONLY, 10);
     ml_init();
-    ml_open_mock_disable();
 }
 
 TEST(strip)
