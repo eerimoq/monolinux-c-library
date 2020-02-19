@@ -26,6 +26,7 @@
  * This file is part of the Monolinux C library project.
  */
 
+#include <errno.h>
 #include <stdio.h>
 #include <string.h>
 #include <fcntl.h>
@@ -101,7 +102,9 @@ static int create_device(int control_fd,
     res = ioctl(control_fd, DEV_CREATE, &ctl);
 
     if (res != 0) {
-        perror("ioctl: dm-dev-create");
+        ml_info("device-mapper: Failed to create mapping device '%s': %s",
+                mapping_name_p,
+                strerror(errno));
 
         return (res);
     }
@@ -111,7 +114,9 @@ static int create_device(int control_fd,
     res = ml_mknod(&buf[0], S_IFBLK, ctl.dev);
 
     if (res != 0) {
-        perror("mknod");
+        ml_info("device-mapper: Failed to create node for mapping device '%s': %s",
+                mapping_name_p,
+                strerror(errno));
 
         return (res);
     }
@@ -157,7 +162,10 @@ static int load_table(int control_fd,
     res = ioctl(control_fd, TABLE_LOAD, &params);
 
     if (res != 0) {
-        perror("ioctl: dm-table-load");
+        ml_info(
+            "device-mapper: Failed to load hash tree for mapping device '%s': %s",
+            mapping_name_p,
+            strerror(errno));
 
         return (res);
     }
@@ -181,7 +189,9 @@ static int suspend_device(int control_fd,
     res = ioctl(control_fd, DEV_SUSPEND, &ctl);
 
     if (res != 0) {
-        perror("ioctl: dm-dev-suspend");
+        ml_info("device-mapper: Failed to suspend mapping device '%s': %s",
+                mapping_name_p,
+                strerror(errno));
 
         return (res);
     }
@@ -204,7 +214,8 @@ int ml_device_mapper_create(const char *mapping_name_p,
     control_fd = ml_open("/dev/mapper/control", O_RDWR);
 
     if (control_fd == -1) {
-        perror("open: /dev/mapper/control");
+        ml_info("device-mapper: Failed to open file '/dev/mapper/control': %s",
+                strerror(errno));
 
         return (-1);
     }
