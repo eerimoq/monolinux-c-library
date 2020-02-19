@@ -1,7 +1,10 @@
 BUILD = build
 EXE = $(BUILD)/suite
 CFLAGS += -fno-omit-frame-pointer
-# CFLAGS += -fsanitize=address
+ifeq ($(SANITIZE), yes)
+CFLAGS += -fsanitize=address
+CFLAGS += -fsanitize=undefined
+endif
 CFLAGS += -coverage
 CFLAGS += -Wall -Wextra -std=gnu11
 CFLAGS += -g -Og

@@ -41,7 +41,10 @@ static void mock_ioctl_ifreq_ok(int fd,
                                 struct ifreq *ifreq_p)
 {
     ioctl_mock_once(fd, request, 0, "%p", ifreq_p);
-    ioctl_mock_set_va_arg_in_at(0, ifreq_p, sizeof(*ifreq_p));
+    ioctl_mock_set_va_arg_in_at(0,
+                                ifreq_p,
+                                sizeof(*ifreq_p),
+                                nala_mock_assert_in_struct_ifreq);
 }
 
 static void mock_ml_shell_register_command(const char *name_p,
@@ -139,7 +142,10 @@ static void mock_push_ioctl_get(const char *name_p,
            &ifreq_in.ifr_name,
            sizeof(ifreq_out_p->ifr_name));
     ioctl_mock_once(fd, request, res, "%p", &ifreq_in);
-    ioctl_mock_set_va_arg_in_at(0, &ifreq_in, sizeof(ifreq_in));
+    ioctl_mock_set_va_arg_in_at(0,
+                                &ifreq_in,
+                                sizeof(ifreq_in),
+                                nala_mock_assert_in_struct_ifreq);
     ioctl_mock_set_va_arg_out_at(0, ifreq_out_p, sizeof(*ifreq_out_p));
     close_mock_once(fd, 0);
 }
