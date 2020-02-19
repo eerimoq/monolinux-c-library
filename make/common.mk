@@ -1,20 +1,20 @@
 INC += $(ML_ROOT)/include $(BUILD)/root/include
 MAIN_C ?= main.c
-SRC += \
-	$(MAIN_C) \
-	$(ML_ROOT)/src/ml.c \
-	$(ML_ROOT)/src/ml_bus.c \
-	$(ML_ROOT)/src/ml_dhcp_client.c \
-	$(ML_ROOT)/src/ml_inet.c \
-	$(ML_ROOT)/src/ml_libc.c \
-	$(ML_ROOT)/src/ml_log_object.c \
-	$(ML_ROOT)/src/ml_message.c \
-	$(ML_ROOT)/src/ml_network.c \
-	$(ML_ROOT)/src/ml_queue.c \
-	$(ML_ROOT)/src/ml_rtc.c \
-	$(ML_ROOT)/src/ml_shell.c \
-	$(ML_ROOT)/src/ml_timer.c \
-	$(ML_ROOT)/src/ml_worker_pool.c
+SRC += $(MAIN_C)
+SRC += $(ML_ROOT)/src/ml.c
+SRC += $(ML_ROOT)/src/ml_bus.c
+SRC += $(ML_ROOT)/src/ml_device_mapper.c
+SRC += $(ML_ROOT)/src/ml_dhcp_client.c
+SRC += $(ML_ROOT)/src/ml_inet.c
+SRC += $(ML_ROOT)/src/ml_libc.c
+SRC += $(ML_ROOT)/src/ml_log_object.c
+SRC += $(ML_ROOT)/src/ml_message.c
+SRC += $(ML_ROOT)/src/ml_network.c
+SRC += $(ML_ROOT)/src/ml_queue.c
+SRC += $(ML_ROOT)/src/ml_rtc.c
+SRC += $(ML_ROOT)/src/ml_shell.c
+SRC += $(ML_ROOT)/src/ml_timer.c
+SRC += $(ML_ROOT)/src/ml_worker_pool.c
 OBJ = $(patsubst %,$(BUILD)%,$(abspath $(SRC:%.c=%.o)))
 CFLAGS += $(INC:%=-I%)
 CFLAGS += -ffunction-sections -fdata-sections

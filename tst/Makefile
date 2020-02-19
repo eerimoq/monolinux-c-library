@@ -1,4 +1,5 @@
 TESTS += test_bus.c
+TESTS += test_device_mapper.c
 TESTS += test_dhcp_client.c
 TESTS += test_log_object.c
 TESTS += test_message.c
