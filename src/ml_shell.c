@@ -524,6 +524,8 @@ static int command_ls(int argc, const char *argv[])
     DIR *dir_p;
     struct dirent *dirent_p;
     const char *path_p;
+    struct stat statbuf;
+    char buf[512];
 
     res = 0;
 
@@ -537,7 +539,29 @@ static int command_ls(int argc, const char *argv[])
 
     if (dir_p != NULL) {
         while ((dirent_p = readdir(dir_p)) != NULL) {
-            if (dirent_p->d_type & DT_DIR) {
+            snprintf(&buf[0], sizeof(buf), "%s/%s", path_p, dirent_p->d_name);
+
+            res = stat(&buf[0], &statbuf);
+
+            if (res != 0) {
+                break;
+            }
+
+            if (S_ISCHR(statbuf.st_mode)) {
+                printf("c ");
+            } else if (S_ISBLK(statbuf.st_mode)) {
+                printf("b ");
+            } else if (S_ISDIR(statbuf.st_mode)) {
+                printf("d ");
+            } else {
+                printf("- ");
+            }
+
+            if (S_ISCHR(statbuf.st_mode) || S_ISBLK(statbuf.st_mode)) {
+                printf("%3d, %3d ", major(statbuf.st_rdev), minor(statbuf.st_rdev));
+            }
+
+            if (S_ISDIR(statbuf.st_mode)) {
                 printf("%s/\n", dirent_p->d_name);
             } else {
                 puts(dirent_p->d_name);
@@ -703,7 +727,7 @@ static int command_mount(int argc, const char *argv[])
     res = -1;
 
     if (argc == 4) {
-        res = ml_mount(argv[1], argv[2], argv[3]);
+        res = ml_mount(argv[1], argv[2], argv[3], 0);
     }
 
     if (res != 0) {

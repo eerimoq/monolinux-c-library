@@ -1090,7 +1090,7 @@ TEST(command_mount)
     int fd;
 
     mount_mock_once("/dev/sda1", "/mnt/disk", "ext4", 0, 0);
-    mount_mock_set_data_in("", 1);
+    mount_mock_set_data_in_pointer(NULL);
 
     ml_shell_init();
 

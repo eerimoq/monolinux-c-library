@@ -331,9 +331,9 @@ TEST(ml_mount_ok)
     init();
 
     mount_mock_once("a", "b", "c", 0, 0);
-    mount_mock_set_data_in("", 1);
+    mount_mock_set_data_in_pointer(NULL);
 
-    ASSERT_EQ(ml_mount("a", "b", "c"), 0);
+    ASSERT_EQ(ml_mount("a", "b", "c", 0), 0);
 }
 
 TEST(insmod)

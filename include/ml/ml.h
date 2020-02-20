@@ -515,7 +515,8 @@ int ml_print_file_systems_space_usage(void);
 
 int ml_mount(const char *source_p,
              const char *target_p,
-             const char *type_p);
+             const char *type_p,
+             unsigned long flags);
 
 int ml_socket(int domain, int type, int protocol);
 
