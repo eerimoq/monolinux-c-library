@@ -117,11 +117,9 @@ static int create_device(int control_fd,
         ml_info("device-mapper: Failed to create node for mapping device '%s': %s",
                 mapping_name_p,
                 strerror(errno));
-
-        return (res);
     }
 
-    return (0);
+    return (res);
 }
 
 static int load_table(int control_fd,
@@ -166,11 +164,9 @@ static int load_table(int control_fd,
             "device-mapper: Failed to load hash tree for mapping device '%s': %s",
             mapping_name_p,
             strerror(errno));
-
-        return (res);
     }
 
-    return (0);
+    return (res);
 }
 
 static int suspend_device(int control_fd,
@@ -192,11 +188,9 @@ static int suspend_device(int control_fd,
         ml_info("device-mapper: Failed to suspend mapping device '%s': %s",
                 mapping_name_p,
                 strerror(errno));
-
-        return (res);
     }
 
-    return (0);
+    return (res);
 }
 
 int ml_device_mapper_create(const char *mapping_name_p,
