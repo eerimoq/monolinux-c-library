@@ -447,13 +447,12 @@ TEST(command_udp_send_open_socket_failure)
     ml_network_init();
 
     command_udp_send = mock_get_callback("udp_send");
+    socket_mock_once(AF_INET, SOCK_DGRAM, 0, -1);
 
     CAPTURE_OUTPUT(output, errput) {
-        socket_mock_once(AF_INET, SOCK_DGRAM, 0, -1);
         ASSERT_EQ(command_udp_send(membersof(argv), argv), -1);
     }
 
-    ASSERT_SUBSTRING(errput, "error: socket:");
     ASSERT_SUBSTRING(output, "udp_send <ip-address> <port> <data>\n");
 }
 
@@ -471,17 +470,17 @@ TEST(command_udp_send_sendto_failure)
 
     command_udp_send = mock_get_callback("udp_send");
     fd = 9;
+    socket_mock_once(AF_INET, SOCK_DGRAM, 0, fd);
+    memset(&other, 0, sizeof(other));
+    other.sin_family = AF_INET;
+    other.sin_port = htons(1234);
+    inet_aton("1.2.3.4", &other.sin_addr);
+    sendto_mock_once(fd, 6, 0, sizeof(other), -1);
+    sendto_mock_set_buf_in("Hello!", 6);
+    //sendto_mock_set_addr_in(&other, sizeof(other));
+    close_mock_once(fd, 0);
 
     CAPTURE_OUTPUT(output, errput) {
-        socket_mock_once(AF_INET, SOCK_DGRAM, 0, fd);
-        memset(&other, 0, sizeof(other));
-        other.sin_family = AF_INET;
-        other.sin_port = htons(1234);
-        inet_aton("1.2.3.4", &other.sin_addr);
-        sendto_mock_once(fd, 6, 0, sizeof(other), -1);
-        sendto_mock_set_buf_in("Hello!", 6);
-        //sendto_mock_set_addr_in(&other, sizeof(other));
-        close_mock_once(fd, 0);
         ASSERT_EQ(command_udp_send(membersof(argv), argv), -1);
     }
 
@@ -503,17 +502,17 @@ TEST(command_udp_send)
 
     command_udp_send = mock_get_callback("udp_send");
     fd = 9;
+    socket_mock_once(AF_INET, SOCK_DGRAM, 0, fd);
+    memset(&other, 0, sizeof(other));
+    other.sin_family = AF_INET;
+    other.sin_port = htons(1234);
+    inet_aton("1.2.3.4", &other.sin_addr);
+    sendto_mock_once(fd, 6, 0, sizeof(other), 6);
+    sendto_mock_set_buf_in("Hello!", 6);
+    //sendto_mock_set_addr_in(&other, sizeof(other));
+    close_mock_once(fd, 0);
 
     CAPTURE_OUTPUT(output, errput) {
-        socket_mock_once(AF_INET, SOCK_DGRAM, 0, fd);
-        memset(&other, 0, sizeof(other));
-        other.sin_family = AF_INET;
-        other.sin_port = htons(1234);
-        inet_aton("1.2.3.4", &other.sin_addr);
-        sendto_mock_once(fd, 6, 0, sizeof(other), 6);
-        sendto_mock_set_buf_in("Hello!", 6);
-        //sendto_mock_set_addr_in(&other, sizeof(other));
-        close_mock_once(fd, 0);
         ASSERT_EQ(command_udp_send(membersof(argv), argv), 0);
     }
 
@@ -550,12 +549,11 @@ TEST(command_udp_recv_open_socket_failure)
     ml_network_init();
 
     command_udp_recv = mock_get_callback("udp_recv");
+    socket_mock_once(AF_INET, SOCK_DGRAM, IPPROTO_UDP, -1);
 
     CAPTURE_OUTPUT(output, errput) {
-        socket_mock_once(AF_INET, SOCK_DGRAM, IPPROTO_UDP, -1);
         ASSERT_EQ(command_udp_recv(membersof(argv), argv), -1);
     }
 
-    ASSERT_SUBSTRING(errput, "error: socket:");
     ASSERT_SUBSTRING(output, "udp_recv <port> [<timeout in seconds>]\n");
 }

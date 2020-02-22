@@ -26,6 +26,7 @@
  * This file is part of the Monolinux C library project.
  */
 
+#include <errno.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -336,7 +337,11 @@ int ml_mount(const char *source_p,
     res = mount(source_p, target_p, type_p, flags, NULL);
 
     if (res == -1) {
-        perror("error: mount");
+        ml_info("Mount of '%s' on '%s' as '%s' failed with: %s.",
+                source_p,
+                target_p,
+                type_p,
+                strerror(errno));
     }
 
     return (res);
@@ -349,7 +354,7 @@ int ml_socket(int domain, int type, int protocol)
     res = socket(domain, type, protocol);
 
     if (res == -1) {
-        perror("error: socket");
+        ml_info("Socket failed with: %s.", strerror(errno));
     }
 
     return (res);
@@ -362,7 +367,7 @@ int ml_ioctl(int fd, unsigned long request, void *data_p)
     res = ioctl(fd, request, data_p);
 
     if (res == -1) {
-        perror("error: ioctl");
+        ml_info("Ioctl request 0x%lx failed with: %s.", request, strerror(errno));
     }
 
     return (res);
