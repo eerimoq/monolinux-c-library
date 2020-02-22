@@ -1,5 +1,5 @@
-INC += $(ML_ROOT)/include $(BUILD)/root/include
-MAIN_C ?= main.c
+INC += $(ML_ROOT)/include
+MAIN_C ?=
 SRC += $(MAIN_C)
 SRC += $(ML_ROOT)/src/ml.c
 SRC += $(ML_ROOT)/src/ml_bus.c
@@ -23,7 +23,7 @@ LDFLAGS += -Wl,--gc-sections -L$(BUILD)/root/lib $(LIBS:%=-l%)
 STRIP ?= no
 DEPSDIR = $(BUILD)/deps
 
-.PHONY: clean
+.PHONY: app
 
 app: $(EXE)
 
@@ -45,9 +45,3 @@ $(patsubst %.c,$(BUILD)%.o,$(abspath $1)): $1
 	gcc -MM -MT $$@ $$(CFLAGS) -o $(patsubst %.c,$(DEPSDIR)%.o.dep,$(abspath $1)) $$<
 endef
 $(foreach file,$(SRC),$(eval $(call COMPILE_template,$(file))))
-
-clean:
-	rm -rf $(BUILD) $(CLEAN)
-
-print-%:
-	@echo $($*)

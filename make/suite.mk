@@ -21,10 +21,9 @@ SRC += $(ML_ROOT)/tst/utils/utils.c
 SRC += $(BUILD)/nala_mocks.c
 SRC += $(TESTS)
 NALA = nala
-MAIN_C =
 TESTS ?= main.c
 
-.PHONY: all run build coverage
+.PHONY: all run build coverage clean
 
 all: run
 
@@ -56,5 +55,8 @@ coverage:
 	@echo
 	@echo "Code coverage report: $$(readlink -f $(BUILD)/coverage/index.html)"
 	@echo
+
+clean:
+	rm -rf $(BUILD) $(CLEAN)
 
 include $(ML_ROOT)/make/common.mk

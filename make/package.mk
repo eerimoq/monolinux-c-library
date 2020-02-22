@@ -1,8 +1,11 @@
 # A package.
 
+BUILD ?= build
 CLEAN_PATHS ?=
+LIBRARY = $(BUILD)/libml.a
+PREFIX ?= /usr/local
 
-.PHONY: test clean
+.PHONY: test clean library install
 
 run:
 	$(MAKE) -C tst run
@@ -12,7 +15,18 @@ test:
 
 clean:
 	$(MAKE) -C tst clean
-	rm -rf build $(CLEAN_PATHS)
+	rm -rf $(BUILD) $(CLEAN_PATHS)
 
-print-%:
-	@echo $($*)
+library: $(LIBRARY)
+
+include $(ML_ROOT)/make/common.mk
+
+$(LIBRARY): $(OBJ)
+	mkdir -p $(BUILD)
+	$(AR) cr $(LIBRARY) $^
+
+install:
+	mkdir -p $(PREFIX)/include/ml
+	install -m 644 include/ml/ml.h $(PREFIX)/include/ml
+	mkdir -p $(PREFIX)/lib
+	install -m 644 $(LIBRARY) $(PREFIX)/lib
