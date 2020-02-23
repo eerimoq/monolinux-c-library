@@ -163,7 +163,7 @@ TEST(create_mapping_device_ok)
     mock_push_suspend_device(control_fd, 0);
     close_mock_once(control_fd, 0);
 
-    ASSERT_EQ(ml_device_mapper_create(
+    ASSERT_EQ(ml_device_mapper_verity_create(
                   "name",
                   "00000000-1111-2222-3333-444444444444",
                   "/dev/loop0",
@@ -181,7 +181,7 @@ TEST(create_mapping_device_open_control_error)
     ml_open_mock_set_errno(EPERM);
     close_mock_none();
 
-    ASSERT_EQ(ml_device_mapper_create(
+    ASSERT_EQ(ml_device_mapper_verity_create(
                   "name",
                   "00000000-1111-2222-3333-444444444444",
                   "/dev/loop0",
@@ -202,7 +202,7 @@ TEST(create_mapping_device_error_create_device_ioctl)
     mock_push_create_device(control_fd, -1, 0);
     close_mock_once(control_fd, 0);
 
-    ASSERT_EQ(ml_device_mapper_create(
+    ASSERT_EQ(ml_device_mapper_verity_create(
                   "name",
                   "00000000-1111-2222-3333-444444444444",
                   "/dev/loop0",
@@ -223,7 +223,7 @@ TEST(create_mapping_device_error_create_device_mknod)
     mock_push_create_device(control_fd, 0, -1);
     close_mock_once(control_fd, 0);
 
-    ASSERT_EQ(ml_device_mapper_create(
+    ASSERT_EQ(ml_device_mapper_verity_create(
                   "name",
                   "00000000-1111-2222-3333-444444444444",
                   "/dev/loop0",
@@ -245,7 +245,7 @@ TEST(create_mapping_device_error_load_table)
     mock_push_load_table(control_fd, -1);
     close_mock_once(control_fd, 0);
 
-    ASSERT_EQ(ml_device_mapper_create(
+    ASSERT_EQ(ml_device_mapper_verity_create(
                   "name",
                   "00000000-1111-2222-3333-444444444444",
                   "/dev/loop0",
@@ -268,7 +268,7 @@ TEST(create_mapping_device_error_suspend_device)
     mock_push_suspend_device(control_fd, -1);
     close_mock_once(control_fd, 0);
 
-    ASSERT_EQ(ml_device_mapper_create(
+    ASSERT_EQ(ml_device_mapper_verity_create(
                   "name",
                   "00000000-1111-2222-3333-444444444444",
                   "/dev/loop0",

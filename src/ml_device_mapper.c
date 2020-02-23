@@ -75,8 +75,8 @@ struct load_table_t {
 #define IOCTL             0xfd
 
 #define DEV_CREATE    _IOWR(IOCTL, DEV_CREATE_CMD, struct ioctl_t)
-#define TABLE_LOAD    _IOWR(IOCTL, TABLE_LOAD_CMD, struct ioctl_t)
 #define DEV_SUSPEND   _IOWR(IOCTL, DEV_SUSPEND_CMD, struct ioctl_t)
+#define TABLE_LOAD    _IOWR(IOCTL, TABLE_LOAD_CMD, struct ioctl_t)
 
 #define READONLY_FLAG     (1 << 0)
 #define EXISTS_FLAG       (1 << 2)
@@ -193,14 +193,14 @@ static int suspend_device(int control_fd,
     return (res);
 }
 
-int ml_device_mapper_create(const char *mapping_name_p,
-                            const char *mapping_uuid_p,
-                            const char *data_dev_p,
-                            size_t data_size,
-                            const char *hash_tree_dev_p,
-                            size_t hash_offset,
-                            const char *root_hash_p,
-                            const char *salt_p)
+int ml_device_mapper_verity_create(const char *mapping_name_p,
+                                   const char *mapping_uuid_p,
+                                   const char *data_dev_p,
+                                   size_t data_size,
+                                   const char *hash_tree_dev_p,
+                                   size_t hash_offset,
+                                   const char *root_hash_p,
+                                   const char *salt_p)
 {
     int control_fd;
     int res;

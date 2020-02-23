@@ -586,19 +586,19 @@ int ml_rtc_get_time(const char *device_p, struct tm *tm_p);
 int ml_rtc_set_time(const char *device_p, struct tm *tm_p);
 
 /**
- * Create a mapping device for given data device using given hash tree
- * device. Data size and hash offset are in bytes. Root hash and salt
- * are hex-strings (64 characters each). Block size is hardcoded to
- * 4096 bytes.
+ * Create a verity mapping device for given data device using given
+ * hash tree device. Data size and hash offset are in bytes. Root hash
+ * and salt are hex-strings (64 characters each). Block size is
+ * hardcoded to 4096 bytes.
  */
-int ml_device_mapper_create(const char *mapping_name_p,
-                            const char *mapping_uuid_p,
-                            const char *data_dev_p,
-                            size_t data_size,
-                            const char *hash_tree_dev_p,
-                            size_t hash_offset,
-                            const char *root_hash_p,
-                            const char *salt_p);
+int ml_device_mapper_verity_create(const char *mapping_name_p,
+                                   const char *mapping_uuid_p,
+                                   const char *data_dev_p,
+                                   size_t data_size,
+                                   const char *hash_tree_dev_p,
+                                   size_t hash_offset,
+                                   const char *root_hash_p,
+                                   const char *salt_p);
 
 /* Exits on failure. Use with care. */
 
