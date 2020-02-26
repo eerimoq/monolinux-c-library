@@ -76,14 +76,14 @@ static void mock_prepare_getaddrinfo(struct addrinfo **info_pp,
     *info_pp = info_p;
 
     getaddrinfo_mock_once("foo", "123", 0);
-    getaddrinfo_mock_set___req_in(&hints, sizeof(hints));
-    getaddrinfo_mock_set___pai_out(info_pp, sizeof(info_pp));
+    getaddrinfo_mock_set_hints_in(&hints, sizeof(hints));
+    getaddrinfo_mock_set_res_out(info_pp, sizeof(info_pp));
 }
 
 static void mock_prepare_freeaddrinfo(struct addrinfo *info_p)
 {
     freeaddrinfo_mock_once();
-    freeaddrinfo_mock_set___ai_in_pointer(info_p);
+    freeaddrinfo_mock_set_res_in_pointer(info_p);
 }
 
 TEST(getaddrinfo_error)
@@ -153,7 +153,7 @@ TEST(ok)
     clock_settime_mock_once(CLOCK_REALTIME, 0);
     ts.tv_sec =  0x5e563e96;
     ts.tv_nsec =  0x18faed90;
-    clock_settime_mock_set___tp_in(&ts, sizeof(ts));
+    clock_settime_mock_set_tp_in(&ts, sizeof(ts));
     mock_prepare_freeaddrinfo(info_p);
 
     ASSERT_EQ(ml_ntp_client_sync("foo"), 0);
@@ -200,7 +200,7 @@ TEST(clock_settime_error)
     clock_settime_mock_once(CLOCK_REALTIME, -1);
     ts.tv_sec =  0x5e563e96;
     ts.tv_nsec =  0x18faed90;
-    clock_settime_mock_set___tp_in(&ts, sizeof(ts));
+    clock_settime_mock_set_tp_in(&ts, sizeof(ts));
     mock_prepare_freeaddrinfo(info_p);
 
     ASSERT_EQ(ml_ntp_client_sync("foo"), -1);
