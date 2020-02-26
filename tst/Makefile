@@ -5,6 +5,7 @@ TESTS += test_log_object.c
 TESTS += test_message.c
 TESTS += test_ml.c
 TESTS += test_network.c
+TESTS += test_ntp_client.c
 TESTS += test_queue.c
 TESTS += test_rtc.c
 TESTS += test_shell.c
