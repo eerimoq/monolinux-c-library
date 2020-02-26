@@ -62,6 +62,7 @@ static void ntp_time_to_timespec(uint8_t *time_p, struct timespec *ts_p)
     uint64_t secs;
     uint64_t nsecs;
 
+    /* Seconds. */
     secs = (uint32_t)((time_p[0] << 24)
                       | (time_p[1] << 16)
                       | (time_p[2] << 8)
@@ -73,6 +74,8 @@ static void ntp_time_to_timespec(uint8_t *time_p, struct timespec *ts_p)
 
     secs -= JAN_1900_TO_1970;
     ts_p->tv_sec = secs;
+
+    /* Nanoseconds. */
     nsecs = (uint32_t)((time_p[4] << 24)
                        | (time_p[5] << 16)
                        | (time_p[6] << 8)

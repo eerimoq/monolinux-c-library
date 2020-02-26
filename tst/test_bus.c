@@ -31,6 +31,8 @@
 #include "ml/ml.h"
 
 static ML_UID(m1);
+static ML_UID(m2);
+static ML_UID(m3);
 
 static struct ml_bus_t bus;
 static struct ml_queue_t queue_1;
@@ -62,6 +64,56 @@ TEST(broadcast_to_two_subscribers)
     /* Get message for second subscriber. */
     uid_p = ml_queue_get(&queue_2, &message_p);
     ASSERT_EQ(uid_p, &m1);
+    ASSERT_EQ(message_p, bmessage_p);
+    ml_message_free(message_p);
+}
+
+TEST(multiple_message_identifiers)
+{
+    struct ml_uid_t *uid_p;
+    void *bmessage_p;
+    void *message_p;
+
+    ml_queue_init(&queue_1, 1);
+    ml_queue_init(&queue_2, 1);
+    ml_bus_init(&bus);
+    ml_bus_subscribe(&bus, &queue_1, &m2);
+    ml_bus_subscribe(&bus, &queue_2, &m3);
+    ml_bus_subscribe(&bus, &queue_2, &m1);
+    ml_bus_subscribe(&bus, &queue_2, &m2);
+
+    /* Broadcast and get m1. */
+    bmessage_p = ml_message_alloc(&m1, 0);
+    ASSERT_NE(bmessage_p, NULL);
+    ml_bus_broadcast(&bus, bmessage_p);
+
+    uid_p = ml_queue_get(&queue_2, &message_p);
+    ASSERT_EQ(uid_p, &m1);
+    ASSERT_EQ(message_p, bmessage_p);
+    ml_message_free(message_p);
+
+    /* Broadcast and get m2. */
+    bmessage_p = ml_message_alloc(&m2, 0);
+    ASSERT_NE(bmessage_p, NULL);
+    ml_bus_broadcast(&bus, bmessage_p);
+
+    uid_p = ml_queue_get(&queue_1, &message_p);
+    ASSERT_EQ(uid_p, &m2);
+    ASSERT_EQ(message_p, bmessage_p);
+    ml_message_free(message_p);
+
+    uid_p = ml_queue_get(&queue_2, &message_p);
+    ASSERT_EQ(uid_p, &m2);
+    ASSERT_EQ(message_p, bmessage_p);
+    ml_message_free(message_p);
+
+    /* Broadcast and get m3. */
+    bmessage_p = ml_message_alloc(&m3, 0);
+    ASSERT_NE(bmessage_p, NULL);
+    ml_bus_broadcast(&bus, bmessage_p);
+
+    uid_p = ml_queue_get(&queue_2, &message_p);
+    ASSERT_EQ(uid_p, &m3);
     ASSERT_EQ(message_p, bmessage_p);
     ml_message_free(message_p);
 }
