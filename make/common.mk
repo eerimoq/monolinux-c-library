@@ -5,6 +5,7 @@ SRC += $(ML_ROOT)/src/ml.c
 SRC += $(ML_ROOT)/src/ml_bus.c
 SRC += $(ML_ROOT)/src/ml_device_mapper.c
 SRC += $(ML_ROOT)/src/ml_dhcp_client.c
+SRC += $(ML_ROOT)/src/ml_ntp_client.c
 SRC += $(ML_ROOT)/src/ml_inet.c
 SRC += $(ML_ROOT)/src/ml_libc.c
 SRC += $(ML_ROOT)/src/ml_log_object.c

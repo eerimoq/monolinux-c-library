@@ -244,6 +244,10 @@ void ml_spawn(ml_worker_pool_job_entry_t entry, void *arg_p);
  */
 void ml_log_print(int level, const char *fmt_p, ...);
 
+void ml_log_set_mask(int mask);
+
+bool ml_log_is_enabled_for(int level);
+
 /**
  * Initialize given timer in the default timer handler. Puts a message
  * with given id on given queue on expiry. Call
@@ -543,6 +547,11 @@ void ml_dhcp_client_stop(struct ml_dhcp_client_t *self_p);
  * Join given client.
  */
 int ml_dhcp_client_join(struct ml_dhcp_client_t *self_p);
+
+/**
+ * Synchronize system clock with given NTP server.
+ */
+int ml_ntp_client_sync(const char *address_p);
 
 /**
  * @return "true" or "false" strings.

@@ -436,3 +436,13 @@ void ml_log_print(int level, const char *fmt_p, ...)
     ml_log_object_vprint(&module.log_object, level, fmt_p, vlist);
     va_end(vlist);
 }
+
+void ml_log_set_mask(int mask)
+{
+    ml_log_object_set_mask(&module.log_object, mask);
+}
+
+bool ml_log_is_enabled_for(int level)
+{
+    return (ml_log_object_is_enabled_for(&module.log_object, level));
+}
