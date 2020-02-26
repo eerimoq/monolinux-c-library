@@ -150,11 +150,58 @@ TEST(ok)
     read_mock_once(fd, 68, sizeof(response));
     read_mock_set_buf_out(&response[0], sizeof(response));
     close_mock_once(fd, 0);
-    mock_prepare_freeaddrinfo(info_p);
     clock_settime_mock_once(CLOCK_REALTIME, 0);
     ts.tv_sec =  0x5e563e96;
     ts.tv_nsec =  0x18faed90;
     clock_settime_mock_set___tp_in(&ts, sizeof(ts));
+    mock_prepare_freeaddrinfo(info_p);
 
     ASSERT_EQ(ml_ntp_client_sync("foo"), 0);
+}
+
+TEST(poll_timeout)
+{
+    struct addrinfo info;
+    struct addrinfo *info_p;
+    struct sockaddr_in addr;
+    int fd;
+
+    fd = 8;
+    mock_prepare_getaddrinfo(&info_p, &info, &addr);
+    socket_mock_once(AF_INET, SOCK_DGRAM, IPPROTO_UDP, fd);
+    connect_mock_once(fd, sizeof(addr), 0);
+    write_mock_once(fd, sizeof(request), sizeof(request));
+    write_mock_set_buf_in(&request[0], sizeof(request));
+    poll_mock_once(1, 5000, 0);
+    close_mock_once(fd, 0);
+    mock_prepare_freeaddrinfo(info_p);
+
+    ASSERT_EQ(ml_ntp_client_sync("foo"), -1);
+}
+
+TEST(clock_settime_error)
+{
+    struct addrinfo info;
+    struct addrinfo *info_p;
+    struct sockaddr_in addr;
+    int fd;
+    struct timespec ts;
+
+    fd = 8;
+    mock_prepare_getaddrinfo(&info_p, &info, &addr);
+    socket_mock_once(AF_INET, SOCK_DGRAM, IPPROTO_UDP, fd);
+    connect_mock_once(fd, sizeof(addr), 0);
+    write_mock_once(fd, sizeof(request), sizeof(request));
+    write_mock_set_buf_in(&request[0], sizeof(request));
+    poll_mock_once(1, 5000, 1);
+    read_mock_once(fd, 68, sizeof(response));
+    read_mock_set_buf_out(&response[0], sizeof(response));
+    close_mock_once(fd, 0);
+    clock_settime_mock_once(CLOCK_REALTIME, -1);
+    ts.tv_sec =  0x5e563e96;
+    ts.tv_nsec =  0x18faed90;
+    clock_settime_mock_set___tp_in(&ts, sizeof(ts));
+    mock_prepare_freeaddrinfo(info_p);
+
+    ASSERT_EQ(ml_ntp_client_sync("foo"), -1);
 }
