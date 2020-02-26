@@ -77,7 +77,7 @@ static void mock_prepare_getaddrinfo(struct addrinfo **info_pp,
 
     getaddrinfo_mock_once("foo", "123", 0);
     getaddrinfo_mock_set_hints_in(&hints, sizeof(hints));
-    getaddrinfo_mock_set_res_out(info_pp, sizeof(info_pp));
+    getaddrinfo_mock_set_res_out(info_pp, sizeof(*info_pp));
 }
 
 static void mock_prepare_freeaddrinfo(struct addrinfo *info_p)
