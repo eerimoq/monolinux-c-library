@@ -205,3 +205,42 @@ TEST(clock_settime_error)
 
     ASSERT_EQ(ml_ntp_client_sync("foo"), -1);
 }
+
+TEST(send_error)
+{
+    struct addrinfo info;
+    struct addrinfo *info_p;
+    struct sockaddr_in addr;
+    int fd;
+
+    fd = 8;
+    mock_prepare_getaddrinfo(&info_p, &info, &addr);
+    socket_mock_once(AF_INET, SOCK_DGRAM, IPPROTO_UDP, fd);
+    connect_mock_once(fd, sizeof(addr), 0);
+    write_mock_once(fd, sizeof(request), -1);
+    close_mock_once(fd, 0);
+    mock_prepare_freeaddrinfo(info_p);
+
+    ASSERT_EQ(ml_ntp_client_sync("foo"), -1);
+}
+
+TEST(receive_error)
+{
+    struct addrinfo info;
+    struct addrinfo *info_p;
+    struct sockaddr_in addr;
+    int fd;
+
+    fd = 8;
+    mock_prepare_getaddrinfo(&info_p, &info, &addr);
+    socket_mock_once(AF_INET, SOCK_DGRAM, IPPROTO_UDP, fd);
+    connect_mock_once(fd, sizeof(addr), 0);
+    write_mock_once(fd, sizeof(request), sizeof(request));
+    write_mock_set_buf_in(&request[0], sizeof(request));
+    poll_mock_once(1, 5000, 1);
+    read_mock_once(fd, 68, -1);
+    close_mock_once(fd, 0);
+    mock_prepare_freeaddrinfo(info_p);
+
+    ASSERT_EQ(ml_ntp_client_sync("foo"), -1);
+}
