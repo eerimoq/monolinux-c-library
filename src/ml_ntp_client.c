@@ -143,13 +143,7 @@ static int try_sync(int sock)
         return (res);
     }
 
-    res = clock_settime(CLOCK_REALTIME, &ts);
-
-    if (res != 0) {
-        res = -1;
-    }
-
-    return (res);
+    return (clock_settime(CLOCK_REALTIME, &ts));
 }
 
 int ml_ntp_client_sync(const char *address_p)
