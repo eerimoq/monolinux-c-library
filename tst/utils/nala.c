@@ -583,7 +583,7 @@ static void print_test_failure_report_end()
 static void print_signal_failure(struct nala_test_t *test_p)
 {
     print_test_failure_report_begin();
-    printf("  Test:  " COLOR(GREEN, "%s\n"), full_test_name(current_test_p));
+    printf("  Test:  " COLOR_BOLD(CYAN, "%s\n"), full_test_name(current_test_p));
     printf("  Error: " COLOR_BOLD(RED, "Terminated by signal %d.\n"),
            test_p->signal_number);
     print_test_failure_report_end();
@@ -1129,7 +1129,7 @@ void nala_test_failure(const char *message_p)
     capture_output_destroy(&capture_stdout);
     capture_output_destroy(&capture_stderr);
     print_test_failure_report_begin();
-    printf("  Test:  " COLOR(CYAN, "%s\n"), full_test_name(current_test_p));
+    printf("  Test:  " COLOR_BOLD(CYAN, "%s\n"), full_test_name(current_test_p));
     printf("  Error: %s", message_p);
     printf("\n");
     nala_traceback_print("  ", traceback_skip_filter, NULL);
@@ -1447,7 +1447,7 @@ char *nala_mock_traceback_format(void **buffer_pp, int depth)
         break;                                                          \
                                                                         \
     default:                                                            \
-        FAIL();                                                         \
+        FAIL("Internal nala error.");                                   \
         break;                                                          \
     }
 
@@ -1572,10 +1572,13 @@ void nala_assert(bool cond)
     }
 }
 
-void nala_fail(void)
+void nala_fail(const char *message_p)
 {
     nala_reset_all_mocks();
-    nala_test_failure(nala_format("fail\n"));
+    char message[strlen(message_p) + 2];
+    strcpy(&message[0], message_p);
+    strcat(&message[0], "\n");
+    nala_test_failure(nala_format(&message[0]));
 }
 /*
  * The MIT License (MIT)
