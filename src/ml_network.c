@@ -861,5 +861,51 @@ void ml_network_filter_ipv6_log(const char *table_p)
         return;
     }
 
+    ml_info("network: ml_network_filter_ipv6_log is not implemented.");
+
     free(entries_p);
+}
+
+int ml_network_filter_ipv4_drop_all(void)
+{
+    /* replace_p = malloc(sizeof(*replace_p)); */
+
+    /* if (replace_p == NULL) { */
+    /*     return (-1); */
+    /* } */
+
+    /* strcpy(&replace_p->name[0], "filter"); */
+    /* replace_p->valid_hooks = 0; */
+    /* replace_p->num_entries = 4; */
+    /* replace_p->size = size; */
+    /* replace_p->hook_entry[NF_INET_PRE_ROUTING] = 0; */
+    /* replace_p->hook_entry[NF_INET_LOCAL_IN] = 0; */
+    /* replace_p->hook_entry[NF_INET_FORWARD] = 0; */
+    /* replace_p->hook_entry[NF_INET_LOCAL_OUT] = 0; */
+    /* replace_p->hook_entry[NF_INET_POST_ROUTING] = 0; */
+    /* replace_p->underflow[NF_INET_PRE_ROUTING] = 0; */
+    /* replace_p->underflow[NF_INET_LOCAL_IN] = 0; */
+    /* replace_p->underflow[NF_INET_FORWARD] = 0; */
+    /* replace_p->underflow[NF_INET_LOCAL_OUT] = 0; */
+    /* replace_p->underflow[NF_INET_POST_ROUTING] = 0; */
+    /* replace_p->num_counters = 4; */
+    /* replace_p->counters = NULL; */
+
+    /* entry_p = &replace_p->entries[0]; */
+    /* memset(entry_p, 0, sizeof(*entry_p)); */
+    /* entry_p->target_offset; */
+    /* entry_p->next_offset; */
+    /* entry_p->comefrom; */
+    /* entry_p->elems[0]; */
+
+    /* res = ml_network_filter_ipv4_set(replace_p); */
+
+    /* free(replace_p); */
+
+    return (-1);
+}
+
+int ml_network_filter_ipv4_accept_all(void)
+{
+    return (-1);
 }

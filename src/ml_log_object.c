@@ -39,7 +39,9 @@ struct module_t {
     int fd;
 };
 
-static struct module_t module;
+static struct module_t module = {
+    .fd = STDOUT_FILENO
+};
 
 static const char *level_to_string(int level)
 {
@@ -90,7 +92,6 @@ static const char *level_to_string(int level)
 void ml_log_object_module_init(void)
 {
     /* module.fd = ml_open("/dev/kmsg", O_WRONLY); */
-    module.fd = STDOUT_FILENO;
 }
 
 void ml_log_object_init(struct ml_log_object_t *self_p,

@@ -496,6 +496,16 @@ void ml_network_filter_ipv4_log(const char *table_p);
 void ml_network_filter_ipv6_log(const char *table_p);
 
 /**
+ * Drop all IPv4 network packets.
+ */
+int ml_network_filter_ipv4_drop_all(void);
+
+/**
+ * Accept all IPv4 network packets.
+ */
+int ml_network_filter_ipv4_accept_all(void);
+
+/**
  * Strip leading and trailing characters from given string and return
  * a pointer to the beginning of the new string.
  */

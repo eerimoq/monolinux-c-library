@@ -51,7 +51,7 @@ TEST(on_free)
     int *value_p;
 
     on_free_count = 0;
-    message_p = ml_message_alloc(&m1, sizeof(*message_p));
+    message_p = ml_message_alloc(&m1, sizeof(*value_p));
     ASSERT_NE(message_p, NULL);
     value_p = (int *)message_p;
     *value_p = 5;

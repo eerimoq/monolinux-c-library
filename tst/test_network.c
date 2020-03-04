@@ -727,3 +727,274 @@ TEST(filter_ipv4_get_get_entries_malloc_error)
     entries_p = ml_network_filter_ipv4_get("filter");
     ASSERT_EQ(entries_p, NULL);
 }
+
+struct entry_t {
+    struct ipt_entry entry;
+    struct xt_entry_target target;
+    int pos;
+};
+
+TEST(filter_ipv4_log)
+{
+    int fd;
+    struct ipt_getinfo info;
+    struct ipt_get_entries *entries_p;
+    struct ipt_entry *entry_p;
+    char *entry_table_p;
+    struct xt_entry_target *target_p;
+    int *pos_p;
+    char *message_p;
+    size_t entries_size;
+    size_t size;
+
+    /* Get info. */
+    fd = 4;
+    entries_size = 7 * (sizeof(*entry_p) + sizeof(*target_p) + 2 * sizeof(int));
+    memset(&info, 0, sizeof(info));
+    info.size = entries_size;
+    socket_mock_once(AF_INET, SOCK_RAW, IPPROTO_RAW, fd);
+    getsockopt_mock_once(fd, SOL_IP, IPT_SO_GET_INFO, 0);
+    getsockopt_mock_set___optval_out(&info, sizeof(info));
+    close_mock_once(fd, 0);
+
+    /* Get entries. */
+    fd = 5;
+    size = sizeof(*entries_p) + entries_size;
+    entries_p = malloc(size);
+    memset(entries_p, 0, size);
+    strcpy(&entries_p->name[0], "filter");
+    entries_p->size = entries_size;
+
+    /* Entry 1. */
+    entry_table_p = (char *)(&entries_p->entrytable[0]);
+    entry_p = (struct ipt_entry *)entry_table_p;
+    entry_p->ip.src.s_addr = 0x11223344;
+    entry_p->ip.smsk.s_addr = 0xffffff00;
+    entry_p->ip.dst.s_addr = 0x55667788;
+    entry_p->ip.dmsk.s_addr = 0xffff0000;
+    strcpy(&entry_p->ip.iniface[0], "");
+    strcpy(&entry_p->ip.outiface[0], "");
+    entry_p->ip.proto = 0;
+    entry_p->ip.flags = 0;
+    entry_p->ip.invflags = 0;
+    entry_p->counters.pcnt = 1;
+    entry_p->counters.bcnt = 2;
+    entry_p->nfcache = 0;
+    entry_p->target_offset = sizeof(*entry_p);
+    entry_p->next_offset = (entry_p->target_offset
+                            + sizeof(*target_p)
+                            + 2 * sizeof(int));
+    target_p = (struct xt_entry_target *)&entry_table_p[entry_p->target_offset];
+    strcpy(&target_p->u.user.name[0], "");
+    pos_p = (int *)(&target_p->data[0]);
+    *pos_p = -NF_ACCEPT - 1;
+
+    /* Entry 2. */
+    entry_table_p += entry_p->next_offset;
+    entry_p = (struct ipt_entry *)entry_table_p;
+    entry_p->ip.src.s_addr = 0x00000000;
+    entry_p->ip.smsk.s_addr = 0x00000000;
+    entry_p->ip.dst.s_addr = 0x00000000;
+    entry_p->ip.dmsk.s_addr = 0x00000000;
+    strcpy(&entry_p->ip.iniface[0], "eth1");
+    strcpy(&entry_p->ip.outiface[0], "eth2");
+    entry_p->ip.proto = 7;
+    entry_p->ip.flags = 1;
+    entry_p->ip.invflags = 2;
+    entry_p->counters.pcnt = 3;
+    entry_p->counters.bcnt = 2;
+    entry_p->nfcache = 1;
+    entry_p->target_offset = sizeof(*entry_p);
+    entry_p->next_offset = (entry_p->target_offset
+                            + sizeof(*target_p)
+                            + 2 * sizeof(int));
+    target_p = (struct xt_entry_target *)&entry_table_p[entry_p->target_offset];
+    strcpy(&target_p->u.user.name[0], "");
+    pos_p = (int *)(&target_p->data[0]);
+    *pos_p = -NF_DROP - 1;
+
+    /* Entry 3. */
+    entry_table_p += entry_p->next_offset;
+    entry_p = (struct ipt_entry *)entry_table_p;
+    entry_p->ip.src.s_addr = 0x00000000;
+    entry_p->ip.smsk.s_addr = 0xffffff00;
+    entry_p->ip.dst.s_addr = 0x00000000;
+    entry_p->ip.dmsk.s_addr = 0xffff0000;
+    strcpy(&entry_p->ip.iniface[0], "");
+    strcpy(&entry_p->ip.outiface[0], "");
+    entry_p->ip.proto = 0;
+    entry_p->ip.flags = 0;
+    entry_p->ip.invflags = 0;
+    entry_p->counters.pcnt = 1;
+    entry_p->counters.bcnt = 2;
+    entry_p->nfcache = 0;
+    entry_p->target_offset = sizeof(*entry_p);
+    entry_p->next_offset = (entry_p->target_offset
+                            + sizeof(*target_p)
+                            + 2 * sizeof(int));
+    target_p = (struct xt_entry_target *)&entry_table_p[entry_p->target_offset];
+    strcpy(&target_p->u.user.name[0], "");
+    pos_p = (int *)(&target_p->data[0]);
+    *pos_p = -NF_QUEUE - 1;
+
+    /* Entry 4. */
+    entry_table_p += entry_p->next_offset;
+    entry_p = (struct ipt_entry *)entry_table_p;
+    entry_p->ip.src.s_addr = 0x00000000;
+    entry_p->ip.smsk.s_addr = 0xffffff00;
+    entry_p->ip.dst.s_addr = 0x00000000;
+    entry_p->ip.dmsk.s_addr = 0xffff0000;
+    strcpy(&entry_p->ip.iniface[0], "");
+    strcpy(&entry_p->ip.outiface[0], "");
+    entry_p->ip.proto = 0;
+    entry_p->ip.flags = 0;
+    entry_p->ip.invflags = 0;
+    entry_p->counters.pcnt = 1;
+    entry_p->counters.bcnt = 2;
+    entry_p->nfcache = 0;
+    entry_p->target_offset = sizeof(*entry_p);
+    entry_p->next_offset = (entry_p->target_offset
+                            + sizeof(*target_p)
+                            + 2 * sizeof(int));
+    target_p = (struct xt_entry_target *)&entry_table_p[entry_p->target_offset];
+    strcpy(&target_p->u.user.name[0], "");
+    pos_p = (int *)(&target_p->data[0]);
+    *pos_p = XT_RETURN;
+
+    /* Entry 5. */
+    entry_table_p += entry_p->next_offset;
+    entry_p = (struct ipt_entry *)entry_table_p;
+    entry_p->ip.src.s_addr = 0x00000000;
+    entry_p->ip.smsk.s_addr = 0xffffff00;
+    entry_p->ip.dst.s_addr = 0x00000000;
+    entry_p->ip.dmsk.s_addr = 0xffff0000;
+    strcpy(&entry_p->ip.iniface[0], "");
+    strcpy(&entry_p->ip.outiface[0], "");
+    entry_p->ip.proto = 0;
+    entry_p->ip.flags = 0;
+    entry_p->ip.invflags = 0;
+    entry_p->counters.pcnt = 1;
+    entry_p->counters.bcnt = 2;
+    entry_p->nfcache = 0;
+    entry_p->target_offset = sizeof(*entry_p);
+    entry_p->next_offset = (entry_p->target_offset
+                            + sizeof(*target_p)
+                            + 2 * sizeof(int));
+    target_p = (struct xt_entry_target *)&entry_table_p[entry_p->target_offset];
+    strcpy(&target_p->u.user.name[0], "");
+    pos_p = (int *)(&target_p->data[0]);
+    *pos_p = -999;
+
+    /* Entry 6. */
+    entry_table_p += entry_p->next_offset;
+    entry_p = (struct ipt_entry *)entry_table_p;
+    entry_p->ip.src.s_addr = 0x00000000;
+    entry_p->ip.smsk.s_addr = 0xffffff00;
+    entry_p->ip.dst.s_addr = 0x00000000;
+    entry_p->ip.dmsk.s_addr = 0xffff0000;
+    strcpy(&entry_p->ip.iniface[0], "");
+    strcpy(&entry_p->ip.outiface[0], "");
+    entry_p->ip.proto = 0;
+    entry_p->ip.flags = 0;
+    entry_p->ip.invflags = 0;
+    entry_p->counters.pcnt = 1;
+    entry_p->counters.bcnt = 2;
+    entry_p->nfcache = 0;
+    entry_p->target_offset = sizeof(*entry_p);
+    entry_p->next_offset = (entry_p->target_offset
+                            + sizeof(*target_p)
+                            + 2 * sizeof(int));
+    target_p = (struct xt_entry_target *)&entry_table_p[entry_p->target_offset];
+    strcpy(&target_p->u.user.name[0], "");
+    pos_p = (int *)(&target_p->data[0]);
+    *pos_p = 999;
+
+    /* Entry 7. */
+    entry_table_p += entry_p->next_offset;
+    entry_p = (struct ipt_entry *)entry_table_p;
+    entry_p->ip.src.s_addr = 0x00000000;
+    entry_p->ip.smsk.s_addr = 0xffffff00;
+    entry_p->ip.dst.s_addr = 0x00000000;
+    entry_p->ip.dmsk.s_addr = 0xffff0000;
+    strcpy(&entry_p->ip.iniface[0], "");
+    strcpy(&entry_p->ip.outiface[0], "");
+    entry_p->ip.proto = 0;
+    entry_p->ip.flags = 0;
+    entry_p->ip.invflags = 0;
+    entry_p->counters.pcnt = 0;
+    entry_p->counters.bcnt = 0;
+    entry_p->nfcache = 0;
+    entry_p->target_offset = sizeof(*entry_p);
+    entry_p->next_offset = (entry_p->target_offset
+                            + sizeof(*target_p)
+                            + 2 * sizeof(int));
+    target_p = (struct xt_entry_target *)&entry_table_p[entry_p->target_offset];
+    strcpy(&target_p->u.user.name[0], "ERROR");
+    message_p = (char *)(&target_p->data[0]);
+    strcpy(message_p, "ERR");
+
+    socket_mock_once(AF_INET, SOCK_RAW, IPPROTO_RAW, fd);
+    getsockopt_mock_once(fd, SOL_IP, IPT_SO_GET_ENTRIES, 0);
+    getsockopt_mock_set___optval_out(entries_p, size);
+    close_mock_once(fd, 0);
+
+    ml_init();
+
+    CAPTURE_OUTPUT(output, errput) {
+        ml_network_filter_ipv4_log("filter");
+    }
+
+    ASSERT_SUBSTRING(output, "network: Table: 'filter'");
+    ASSERT_SUBSTRING(output, "network: Entry 1:");
+    ASSERT_SUBSTRING(output, "network:   FromIp:      17.34.51.68/255.255.255.0");
+    ASSERT_SUBSTRING(output, "network:   ToIp:        85.102.119.136/255.255.0.0");
+    ASSERT_SUBSTRING(output, "network:   FromIf:      ''");
+    ASSERT_SUBSTRING(output, "network:   ToIf:        ''");
+    ASSERT_SUBSTRING(output, "network:   Protocol:    0");
+    ASSERT_SUBSTRING(output, "network:   Flags:       0x00");
+    ASSERT_SUBSTRING(output, "network:   Invflags:    0x00");
+    ASSERT_SUBSTRING(output, "network:   NrOfPackets: 1");
+    ASSERT_SUBSTRING(output, "network:   NrOfBytes:   2");
+    ASSERT_SUBSTRING(output, "network:   Cache:       0x00000000");
+    ASSERT_SUBSTRING(output, "network:   Target:      ''");
+    ASSERT_SUBSTRING(output, "network:   Verdict:     ACCEPT");
+
+    ASSERT_SUBSTRING(output, "network: Entry 2:");
+    ASSERT_SUBSTRING(output, "network:   FromIp:      0.0.0.0/0.0.0.0");
+    ASSERT_SUBSTRING(output, "network:   ToIp:        0.0.0.0/0.0.0.0");
+    ASSERT_SUBSTRING(output, "network:   FromIf:      'eth1'");
+    ASSERT_SUBSTRING(output, "network:   ToIf:        'eth2'");
+    ASSERT_SUBSTRING(output, "network:   Protocol:    7");
+    ASSERT_SUBSTRING(output, "network:   Flags:       0x01");
+    ASSERT_SUBSTRING(output, "network:   Invflags:    0x02");
+    ASSERT_SUBSTRING(output, "network:   NrOfPackets: 3");
+    ASSERT_SUBSTRING(output, "network:   NrOfBytes:   2");
+    ASSERT_SUBSTRING(output, "network:   Cache:       0x00000001");
+    ASSERT_SUBSTRING(output, "network:   Target:      ''");
+    ASSERT_SUBSTRING(output, "network:   Verdict:     DROP");
+
+    ASSERT_SUBSTRING(output, "network: Entry 3:");
+    ASSERT_SUBSTRING(output, "network:   FromIp:      0.0.0.0/255.255.255.0");
+    ASSERT_SUBSTRING(output, "network:   ToIp:        0.0.0.0/255.255.0.0");
+    ASSERT_SUBSTRING(output, "network:   NrOfPackets: 0");
+    ASSERT_SUBSTRING(output, "network:   NrOfBytes:   0");
+    ASSERT_SUBSTRING(output, "network:   Verdict:     QUEUE");
+
+    ASSERT_SUBSTRING(output, "network: Entry 4:");
+    ASSERT_SUBSTRING(output, "network:   Verdict:     RETURN");
+
+    ASSERT_SUBSTRING(output, "network: Entry 5:");
+    ASSERT_SUBSTRING(output, "network:   Verdict:     UNKNOWN");
+
+    ASSERT_SUBSTRING(output, "network: Entry 6:");
+    ASSERT_SUBSTRING(output, "network:   Verdict:     999");
+
+    ASSERT_SUBSTRING(output, "network: Entry 7:");
+    ASSERT_SUBSTRING(output, "network:   Target:      'ERROR'");
+    ASSERT_SUBSTRING(output, "network:   Error:       'ERR'");
+
+    ASSERT_NOT_SUBSTRING(output, "network: Entry 0:");
+    ASSERT_NOT_SUBSTRING(output, "network: Entry 8:");
+
+    free(entries_p);
+}
