@@ -114,7 +114,47 @@ static int set_netmask(int netfd,
     return (ml_ioctl(netfd, SIOCSIFNETMASK, ifreq_p));
 }
 
-static int set_filter(int domain, int optname, void *buf_p, size_t size)
+static const char *ipt_set_option_as_string(int optname)
+{
+    const char *res_p;
+
+    switch (optname) {
+
+    case IPT_SO_SET_REPLACE:
+        res_p = "IPT_SO_SET_REPLACE";
+        break;
+
+    default:
+        res_p = "*** unknown ***";
+        break;
+    }
+
+    return (res_p);
+}
+
+static const char *ipt_get_option_as_string(int optname)
+{
+    const char *res_p;
+
+    switch (optname) {
+
+    case IPT_SO_GET_INFO:
+        res_p = "IPT_SO_GET_INFO";
+        break;
+
+    case IPT_SO_GET_ENTRIES:
+        res_p = "IPT_SO_GET_ENTRIES";
+        break;
+
+    default:
+        res_p = "*** unknown ***";
+        break;
+    }
+
+    return (res_p);
+}
+
+static int set_filter(int domain, int optname, const void *buf_p, size_t size)
 {
     int sockfd;
     int res;
@@ -127,7 +167,47 @@ static int set_filter(int domain, int optname, void *buf_p, size_t size)
         close(sockfd);
     }
 
+    if (res != 0) {
+        ml_info("network: Set filter option %s failed with: %s",
+                ipt_set_option_as_string(optname),
+                strerror(errno));
+    }
+
     return (res);
+}
+
+static int get_filter(int domain, int optname, void *buf_p, socklen_t *size_p)
+{
+    int sockfd;
+    int res;
+
+    res = -1;
+    sockfd = ml_socket(domain, SOCK_RAW, IPPROTO_RAW);
+
+    if (sockfd != -1) {
+        res = getsockopt(sockfd, SOL_IP, optname, buf_p, size_p);
+        close(sockfd);
+    }
+
+    if (res != 0) {
+        ml_info("network: Get filter option %s failed with: %s",
+                ipt_get_option_as_string(optname),
+                strerror(errno));
+    }
+
+    return (res);
+}
+
+static const char *format_ipv4(char *buf_p, uint32_t address)
+{
+    sprintf(buf_p,
+            "%u.%u.%u.%u",
+            (address >> 24) & 0xff,
+            (address >> 16) & 0xff,
+            (address >> 8) & 0xff,
+            (address >> 0) & 0xff);
+
+    return (buf_p);
 }
 
 static int command_ifconfig_print(const char *name_p)
@@ -607,7 +687,7 @@ int ml_network_interface_add_route(const char *name_p,
     return (res);
 }
 
-int ml_network_filter_ipv4_set(struct ipt_replace *filter_p)
+int ml_network_filter_ipv4_set(const struct ipt_replace *filter_p)
 {
     return (set_filter(AF_INET,
                        IPT_SO_SET_REPLACE,
@@ -615,10 +695,171 @@ int ml_network_filter_ipv4_set(struct ipt_replace *filter_p)
                        filter_p->size));
 }
 
-int ml_network_filter_ipv6_set(struct ip6t_replace *filter_p)
+int ml_network_filter_ipv6_set(const struct ip6t_replace *filter_p)
 {
     return (set_filter(AF_INET6,
                        IP6T_SO_SET_REPLACE,
                        filter_p,
                        filter_p->size));
+}
+
+struct ipt_get_entries *ml_network_filter_ipv4_get(const char *table_p)
+{
+    int res;
+    struct ipt_getinfo info;
+    struct ipt_get_entries *entries_p;
+    socklen_t size;
+
+    strcpy(&info.name[0], table_p);
+    size = sizeof(info);
+
+    res = get_filter(AF_INET, IPT_SO_GET_INFO, &info, &size);
+
+    if (res != 0) {
+        return (NULL);
+    }
+
+    size = sizeof(*entries_p) + info.size;
+    entries_p = malloc(size);
+
+    if (entries_p == NULL) {
+        return (NULL);
+    }
+
+    strcpy(&entries_p->name[0], table_p);
+    entries_p->size = info.size;
+    res = get_filter(AF_INET, IPT_SO_GET_ENTRIES, entries_p, &size);
+
+    if (res != 0) {
+        free(entries_p);
+        entries_p = NULL;
+    }
+
+    return (entries_p);
+}
+
+struct ip6t_get_entries *ml_network_filter_ipv6_get(const char *table_p)
+{
+    int res;
+    struct ip6t_getinfo info;
+    struct ip6t_get_entries *entries_p;
+    socklen_t size;
+
+    strcpy(&info.name[0], table_p);
+    size = sizeof(info);
+
+    res = get_filter(AF_INET6, IP6T_SO_GET_INFO, &info, &size);
+
+    if (res != 0) {
+        return (NULL);
+    }
+
+    size = sizeof(*entries_p) + info.size;
+    entries_p = malloc(size);
+
+    if (entries_p == NULL) {
+        return (NULL);
+    }
+
+    strcpy(&entries_p->name[0], table_p);
+    entries_p->size = info.size;
+    res = get_filter(AF_INET6, IP6T_SO_GET_ENTRIES, entries_p, &size);
+
+    if (res != 0) {
+        free(entries_p);
+        entries_p = NULL;
+    }
+
+    return (entries_p);
+}
+
+void ml_network_filter_ipv4_log(const char *table_p)
+{
+    struct ipt_get_entries *entries_p;
+    int i;
+    char address[32];
+    char mask[32];
+    struct ipt_entry *entry_p;
+    char *entry_table_p;
+    size_t offset;
+    struct xt_entry_target *target_p;
+    const unsigned char *data_p;
+    int pos;
+
+    entries_p = ml_network_filter_ipv4_get(table_p);
+
+    if (entries_p == NULL) {
+        return;
+    }
+
+    ml_info("network: Table: '%s'", &entries_p->name[0]);
+
+    i = 1;
+    offset = 0;
+    entry_table_p = (char *)(&entries_p->entrytable[0]);
+
+    while (offset < entries_p->size) {
+        entry_p = (struct ipt_entry *)(&entry_table_p[offset]);
+        target_p = ipt_get_target(entry_p);
+
+        ml_info("network: Entry %d:", i);
+        ml_info("network:   FromIp:      %s/%s",
+                format_ipv4(&address[0], entry_p->ip.src.s_addr),
+                format_ipv4(&mask[0], entry_p->ip.smsk.s_addr));
+        ml_info("network:   ToIp:        %s/%s",
+                format_ipv4(&address[0], entry_p->ip.dst.s_addr),
+                format_ipv4(&mask[0], entry_p->ip.dmsk.s_addr));
+        ml_info("network:   FromIf:      '%s'", &entry_p->ip.iniface[0]);
+        ml_info("network:   ToIf:        '%s'", &entry_p->ip.outiface[0]);
+        ml_info("network:   Protocol:    %u", entry_p->ip.proto);
+        ml_info("network:   Flags:       0x%02x", entry_p->ip.flags);
+        ml_info("network:   Invflags:    0x%02x", entry_p->ip.invflags);
+        ml_info("network:   NrOfPackets: %llu",
+                (unsigned long long)entry_p->counters.pcnt);
+        ml_info("network:   NrOfBytes:   %llu",
+                (unsigned long long)entry_p->counters.bcnt);
+        ml_info("network:   Cache:       0x%08x", entry_p->nfcache);
+        ml_info("network:   Target:      '%s'", &target_p->u.user.name[0]);
+
+        if (strcmp(&target_p->u.user.name[0], XT_STANDARD_TARGET) == 0) {
+            data_p = &target_p->data[0];
+            pos = *(const int *)data_p;
+
+            if (pos < 0) {
+                if (pos == -NF_ACCEPT - 1) {
+                    ml_info("network:   Verdict:     ACCEPT");
+                } else if (pos == -NF_DROP - 1) {
+                    ml_info("network:   Verdict:     DROP");
+                } else if (pos == -NF_QUEUE - 1) {
+                    ml_info("network:   Verdict:     QUEUE");
+                } else if (pos == XT_RETURN) {
+                    ml_info("network:   Verdict:     RETURN");
+                } else {
+                    ml_info("network:   Verdict:     UNKNOWN");
+                }
+            } else {
+                ml_info("network:   Verdict:     %d", pos);
+            }
+        } else if (strcmp(&target_p->u.user.name[0], XT_ERROR_TARGET) == 0) {
+            ml_info("network:   Error:       '%s'", &target_p->data[0]);
+        }
+
+        offset += entry_p->next_offset;
+        i++;
+    }
+
+    free(entries_p);
+}
+
+void ml_network_filter_ipv6_log(const char *table_p)
+{
+    struct ip6t_get_entries *entries_p;
+
+    entries_p = ml_network_filter_ipv6_get(table_p);
+
+    if (entries_p == NULL) {
+        return;
+    }
+
+    free(entries_p);
 }

@@ -468,12 +468,32 @@ int ml_network_interface_add_route(const char *name_p,
 /**
  * Set IPv4 network filter.
  */
-int ml_network_filter_ipv4_set(struct ipt_replace *filter_p);
+int ml_network_filter_ipv4_set(const struct ipt_replace *filter_p);
 
 /**
  * Set IPv6 network filter.
  */
-int ml_network_filter_ipv6_set(struct ip6t_replace *filter_p);
+int ml_network_filter_ipv6_set(const struct ip6t_replace *filter_p);
+
+/**
+ * Get IPv4 network filter.
+ */
+struct ipt_get_entries *ml_network_filter_ipv4_get(const char *table_p);
+
+/**
+ * Get IPv6 network filter.
+ */
+struct ip6t_get_entries *ml_network_filter_ipv6_get(const char *table_p);
+
+/**
+ * Log IPv4 network filter.
+ */
+void ml_network_filter_ipv4_log(const char *table_p);
+
+/**
+ * Log IPv6 network filter.
+ */
+void ml_network_filter_ipv6_log(const char *table_p);
 
 /**
  * Strip leading and trailing characters from given string and return

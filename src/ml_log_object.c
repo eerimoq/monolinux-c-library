@@ -36,7 +36,7 @@
 #include "internal.h"
 
 struct module_t {
-    int kmsg_fd;
+    int fd;
 };
 
 static struct module_t module;
@@ -89,7 +89,8 @@ static const char *level_to_string(int level)
 
 void ml_log_object_module_init(void)
 {
-    module.kmsg_fd = ml_open("/dev/kmsg", O_WRONLY);
+    /* module.fd = ml_open("/dev/kmsg", O_WRONLY); */
+    module.fd = STDOUT_FILENO;
 }
 
 void ml_log_object_init(struct ml_log_object_t *self_p,
@@ -143,7 +144,7 @@ void ml_log_object_vprint(struct ml_log_object_t *self_p,
     }
 
     buf[length++] = '\n';
-    written = write(module.kmsg_fd, &buf[0], length);
+    written = write(module.fd, &buf[0], length);
     (void)written;
 }
 

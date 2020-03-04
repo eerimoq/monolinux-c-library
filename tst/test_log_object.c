@@ -36,7 +36,6 @@ TEST(format)
 {
     struct ml_log_object_t log_object;
 
-    ml_open_mock_once("/dev/kmsg", O_WRONLY, STDOUT_FILENO);
     ml_log_object_module_init();
 
     ml_log_object_init(&log_object, "foo", ML_LOG_UPTO(DEBUG));
@@ -102,7 +101,6 @@ TEST(enable_disable)
 {
     struct ml_log_object_t log_object;
 
-    ml_open_mock_once("/dev/kmsg", O_WRONLY, STDOUT_FILENO);
     ml_log_object_module_init();
 
     /* Only debug, no info. */

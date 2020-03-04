@@ -41,7 +41,6 @@ TEST(single_shot)
     struct ml_uid_t *uid_p;
     struct ml_timer_timeout_message_t *message_p;
 
-    ml_open_mock_once("/dev/kmsg", O_WRONLY, 10);
     ml_init();
     ml_queue_init(&queue, 1);
     ml_timer_init(&timer, &timeout, &queue);
@@ -60,7 +59,6 @@ TEST(periodic)
     struct ml_timer_timeout_message_t *message_p;
     int i;
 
-    ml_open_mock_once("/dev/kmsg", O_WRONLY, 10);
     ml_init();
     ml_queue_init(&queue, 1);
     ml_timer_init(&timer, &timeout, &queue);
@@ -83,7 +81,6 @@ TEST(is_message_valid)
     struct ml_uid_t *uid_p;
     struct ml_timer_timeout_message_t *message_p;
 
-    ml_open_mock_once("/dev/kmsg", O_WRONLY, 10);
     ml_init();
     ml_queue_init(&queue, 1);
     ml_timer_init(&timer, &timeout, &queue);
@@ -105,7 +102,6 @@ TEST(restart_after_timeout)
     struct ml_uid_t *uid_p;
     struct ml_timer_timeout_message_t *message_p;
 
-    ml_open_mock_once("/dev/kmsg", O_WRONLY, 10);
     ml_init();
     ml_queue_init(&queue, 1);
     ml_timer_init(&timer, &timeout, &queue);
@@ -130,7 +126,6 @@ TEST(restart_after_stop)
     struct ml_timer_t timer;
     struct ml_queue_t queue;
 
-    ml_open_mock_once("/dev/kmsg", O_WRONLY, 10);
     ml_init();
     ml_queue_init(&queue, 1);
     ml_timer_init(&timer, &timeout, &queue);
@@ -151,7 +146,6 @@ TEST(restart_without_stop)
     struct ml_uid_t *uid_p;
     struct ml_timer_timeout_message_t *message_p;
 
-    ml_open_mock_once("/dev/kmsg", O_WRONLY, 10);
     ml_init();
     ml_queue_init(&queue, 1);
     ml_timer_init(&timer, &timeout, &queue);
@@ -175,7 +169,6 @@ TEST(multiple_timers)
     struct ml_timer_timeout_message_t *message_p;
     int i;
 
-    ml_open_mock_once("/dev/kmsg", O_WRONLY, 10);
     ml_init();
 
     for (i = 0; i < 10; i++) {

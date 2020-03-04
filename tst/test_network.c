@@ -615,3 +615,115 @@ TEST(filter_set_socket_error)
 
     ASSERT_EQ(ml_network_filter_ipv4_set(&filter), -1);
 }
+
+TEST(filter_ipv4_get_ok)
+{
+    int fd;
+    struct ipt_getinfo info;
+    struct ipt_get_entries entries;
+    struct ipt_get_entries *entries_p;
+
+    /* Get info. */
+    fd = 4;
+    memset(&info, 0, sizeof(info));
+    info.size = sizeof(entries);
+    socket_mock_once(AF_INET, SOCK_RAW, IPPROTO_RAW, fd);
+    getsockopt_mock_once(fd, SOL_IP, IPT_SO_GET_INFO, 0);
+    getsockopt_mock_set___optval_out(&info, sizeof(info));
+    close_mock_once(fd, 0);
+
+    /* Get entries. */
+    fd = 5;
+    memset(&entries, 0, sizeof(entries));
+    socket_mock_once(AF_INET, SOCK_RAW, IPPROTO_RAW, fd);
+    getsockopt_mock_once(fd, SOL_IP, IPT_SO_GET_ENTRIES, 0);
+    getsockopt_mock_set___optval_out(&entries, sizeof(entries));
+    close_mock_once(fd, 0);
+
+    entries_p = ml_network_filter_ipv4_get("filter");
+    ASSERT_NE(entries_p, NULL);
+    free(entries_p);
+}
+
+TEST(filter_ipv6_get_ok)
+{
+    int fd;
+    struct ip6t_getinfo info;
+    struct ip6t_get_entries entries;
+    struct ip6t_get_entries *entries_p;
+
+    /* Get info. */
+    fd = 4;
+    memset(&info, 0, sizeof(info));
+    info.size = sizeof(entries);
+    socket_mock_once(AF_INET6, SOCK_RAW, IPPROTO_RAW, fd);
+    getsockopt_mock_once(fd, SOL_IP, IP6T_SO_GET_INFO, 0);
+    getsockopt_mock_set___optval_out(&info, sizeof(info));
+    close_mock_once(fd, 0);
+
+    /* Get entries. */
+    fd = 5;
+    memset(&entries, 0, sizeof(entries));
+    socket_mock_once(AF_INET6, SOCK_RAW, IPPROTO_RAW, fd);
+    getsockopt_mock_once(fd, SOL_IP, IP6T_SO_GET_ENTRIES, 0);
+    getsockopt_mock_set___optval_out(&entries, sizeof(entries));
+    close_mock_once(fd, 0);
+
+    entries_p = ml_network_filter_ipv6_get("filter");
+    ASSERT_NE(entries_p, NULL);
+    free(entries_p);
+}
+
+TEST(filter_ipv4_get_get_info_socket_error)
+{
+    struct ipt_get_entries *entries_p;
+
+    socket_mock_once(AF_INET, SOCK_RAW, IPPROTO_RAW, -1);
+    close_mock_none();
+
+    entries_p = ml_network_filter_ipv4_get("filter");
+    ASSERT_EQ(entries_p, NULL);
+}
+
+TEST(filter_ipv4_get_get_entries_socket_error)
+{
+    int fd;
+    struct ipt_getinfo info;
+    struct ipt_get_entries *entries_p;
+
+    /* Get info. */
+    fd = 4;
+    memset(&info, 0, sizeof(info));
+    info.size = sizeof(*entries_p);
+    socket_mock_once(AF_INET, SOCK_RAW, IPPROTO_RAW, fd);
+    getsockopt_mock_once(fd, SOL_IP, IPT_SO_GET_INFO, 0);
+    getsockopt_mock_set___optval_out(&info, sizeof(info));
+    close_mock_once(fd, 0);
+
+    /* Get entries. */
+    socket_mock_once(AF_INET, SOCK_RAW, IPPROTO_RAW, -1);
+
+    entries_p = ml_network_filter_ipv4_get("filter");
+    ASSERT_EQ(entries_p, NULL);
+}
+
+TEST(filter_ipv4_get_get_entries_malloc_error)
+{
+    int fd;
+    struct ipt_getinfo info;
+    struct ipt_get_entries *entries_p;
+
+    /* Get info. */
+    fd = 4;
+    memset(&info, 0, sizeof(info));
+    socket_mock_once(AF_INET, SOCK_RAW, IPPROTO_RAW, fd);
+    getsockopt_mock_once(fd, SOL_IP, IPT_SO_GET_INFO, 0);
+    getsockopt_mock_set___optval_out(&info, sizeof(info));
+    close_mock_once(fd, 0);
+
+    /* Malloc fails. */
+    malloc_mock_once(sizeof(*entries_p), NULL);
+
+    entries_p = ml_network_filter_ipv4_get("filter");
+    ASSERT_EQ(entries_p, NULL);
+}
