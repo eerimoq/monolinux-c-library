@@ -945,56 +945,56 @@ TEST(filter_ipv4_log)
     }
 
     ASSERT_SUBSTRING(output, "network: Table: 'filter'");
-    ASSERT_SUBSTRING(output, "network: Entry 1:");
-    ASSERT_SUBSTRING(output, "network:   FromIp:      17.34.51.68/255.255.255.0");
-    ASSERT_SUBSTRING(output, "network:   ToIp:        85.102.119.136/255.255.0.0");
-    ASSERT_SUBSTRING(output, "network:   FromIf:      ''");
-    ASSERT_SUBSTRING(output, "network:   ToIf:        ''");
-    ASSERT_SUBSTRING(output, "network:   Protocol:    0");
-    ASSERT_SUBSTRING(output, "network:   Flags:       0x00");
-    ASSERT_SUBSTRING(output, "network:   Invflags:    0x00");
-    ASSERT_SUBSTRING(output, "network:   NrOfPackets: 1");
-    ASSERT_SUBSTRING(output, "network:   NrOfBytes:   2");
-    ASSERT_SUBSTRING(output, "network:   Cache:       0x00000000");
-    ASSERT_SUBSTRING(output, "network:   Target:      ''");
-    ASSERT_SUBSTRING(output, "network:   Verdict:     ACCEPT");
+    ASSERT_SUBSTRING(output, "network:   Entry 1:");
+    ASSERT_SUBSTRING(output, "network:     FromIp:      17.34.51.68/255.255.255.0");
+    ASSERT_SUBSTRING(output, "network:     ToIp:        85.102.119.136/255.255.0.0");
+    ASSERT_SUBSTRING(output, "network:     FromIf:      ''");
+    ASSERT_SUBSTRING(output, "network:     ToIf:        ''");
+    ASSERT_SUBSTRING(output, "network:     Protocol:    0");
+    ASSERT_SUBSTRING(output, "network:     Flags:       0x00");
+    ASSERT_SUBSTRING(output, "network:     Invflags:    0x00");
+    ASSERT_SUBSTRING(output, "network:     NrOfPackets: 1");
+    ASSERT_SUBSTRING(output, "network:     NrOfBytes:   2");
+    ASSERT_SUBSTRING(output, "network:     Cache:       0x00000000");
+    ASSERT_SUBSTRING(output, "network:     Target:      ''");
+    ASSERT_SUBSTRING(output, "network:     Verdict:     ACCEPT");
 
-    ASSERT_SUBSTRING(output, "network: Entry 2:");
-    ASSERT_SUBSTRING(output, "network:   FromIp:      0.0.0.0/0.0.0.0");
-    ASSERT_SUBSTRING(output, "network:   ToIp:        0.0.0.0/0.0.0.0");
-    ASSERT_SUBSTRING(output, "network:   FromIf:      'eth1'");
-    ASSERT_SUBSTRING(output, "network:   ToIf:        'eth2'");
-    ASSERT_SUBSTRING(output, "network:   Protocol:    7");
-    ASSERT_SUBSTRING(output, "network:   Flags:       0x01");
-    ASSERT_SUBSTRING(output, "network:   Invflags:    0x02");
-    ASSERT_SUBSTRING(output, "network:   NrOfPackets: 3");
-    ASSERT_SUBSTRING(output, "network:   NrOfBytes:   2");
-    ASSERT_SUBSTRING(output, "network:   Cache:       0x00000001");
-    ASSERT_SUBSTRING(output, "network:   Target:      ''");
-    ASSERT_SUBSTRING(output, "network:   Verdict:     DROP");
+    ASSERT_SUBSTRING(output, "network:   Entry 2:");
+    ASSERT_SUBSTRING(output, "network:     FromIp:      0.0.0.0/0.0.0.0");
+    ASSERT_SUBSTRING(output, "network:     ToIp:        0.0.0.0/0.0.0.0");
+    ASSERT_SUBSTRING(output, "network:     FromIf:      'eth1'");
+    ASSERT_SUBSTRING(output, "network:     ToIf:        'eth2'");
+    ASSERT_SUBSTRING(output, "network:     Protocol:    7");
+    ASSERT_SUBSTRING(output, "network:     Flags:       0x01");
+    ASSERT_SUBSTRING(output, "network:     Invflags:    0x02");
+    ASSERT_SUBSTRING(output, "network:     NrOfPackets: 3");
+    ASSERT_SUBSTRING(output, "network:     NrOfBytes:   2");
+    ASSERT_SUBSTRING(output, "network:     Cache:       0x00000001");
+    ASSERT_SUBSTRING(output, "network:     Target:      ''");
+    ASSERT_SUBSTRING(output, "network:     Verdict:     DROP");
 
-    ASSERT_SUBSTRING(output, "network: Entry 3:");
-    ASSERT_SUBSTRING(output, "network:   FromIp:      0.0.0.0/255.255.255.0");
-    ASSERT_SUBSTRING(output, "network:   ToIp:        0.0.0.0/255.255.0.0");
-    ASSERT_SUBSTRING(output, "network:   NrOfPackets: 0");
-    ASSERT_SUBSTRING(output, "network:   NrOfBytes:   0");
-    ASSERT_SUBSTRING(output, "network:   Verdict:     QUEUE");
+    ASSERT_SUBSTRING(output, "network:   Entry 3:");
+    ASSERT_SUBSTRING(output, "network:     FromIp:      0.0.0.0/255.255.255.0");
+    ASSERT_SUBSTRING(output, "network:     ToIp:        0.0.0.0/255.255.0.0");
+    ASSERT_SUBSTRING(output, "network:     NrOfPackets: 0");
+    ASSERT_SUBSTRING(output, "network:     NrOfBytes:   0");
+    ASSERT_SUBSTRING(output, "network:     Verdict:     QUEUE");
 
-    ASSERT_SUBSTRING(output, "network: Entry 4:");
-    ASSERT_SUBSTRING(output, "network:   Verdict:     RETURN");
+    ASSERT_SUBSTRING(output, "network:   Entry 4:");
+    ASSERT_SUBSTRING(output, "network:     Verdict:     RETURN");
 
-    ASSERT_SUBSTRING(output, "network: Entry 5:");
-    ASSERT_SUBSTRING(output, "network:   Verdict:     UNKNOWN");
+    ASSERT_SUBSTRING(output, "network:   Entry 5:");
+    ASSERT_SUBSTRING(output, "network:     Verdict:     UNKNOWN");
 
-    ASSERT_SUBSTRING(output, "network: Entry 6:");
-    ASSERT_SUBSTRING(output, "network:   Verdict:     999");
+    ASSERT_SUBSTRING(output, "network:   Entry 6:");
+    ASSERT_SUBSTRING(output, "network:     Verdict:     999");
 
-    ASSERT_SUBSTRING(output, "network: Entry 7:");
-    ASSERT_SUBSTRING(output, "network:   Target:      'ERROR'");
-    ASSERT_SUBSTRING(output, "network:   Error:       'ERR'");
+    ASSERT_SUBSTRING(output, "network:   Entry 7:");
+    ASSERT_SUBSTRING(output, "network:     Target:      'ERROR'");
+    ASSERT_SUBSTRING(output, "network:     Error:       'ERR'");
 
-    ASSERT_NOT_SUBSTRING(output, "network: Entry 0:");
-    ASSERT_NOT_SUBSTRING(output, "network: Entry 8:");
+    ASSERT_NOT_SUBSTRING(output, "network:   Entry 0:");
+    ASSERT_NOT_SUBSTRING(output, "network:   Entry 8:");
 
     free(entries_p);
 }

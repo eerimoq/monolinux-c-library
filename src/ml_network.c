@@ -26,6 +26,7 @@
  * This file is part of the Monolinux C library project.
  */
 
+#include <stddef.h>
 #include <string.h>
 #include <stdlib.h>
 #include <net/route.h>
@@ -36,6 +37,22 @@
 #include <poll.h>
 #include <errno.h>
 #include "ml/ml.h"
+
+struct standard_entry_t {
+    struct ipt_entry entry;
+    struct xt_standard_target standard;
+};
+
+struct error_entry_t {
+    struct ipt_entry entry;
+    struct xt_error_target error;
+};
+
+struct replace_t {
+    struct ipt_replace header;
+    struct standard_entry_t standard[3];
+    struct error_entry_t error;
+};
 
 static int net_open(const char *name_p,
                     struct ifreq *ifreq_p)
@@ -517,6 +534,41 @@ static int command_tcp_send(int argc, const char *argv[])
     return (res);
 }
 
+static void init_replace(struct replace_t *replace_p)
+{
+    struct ipt_replace *header_p;
+
+    memset(replace_p, 0, sizeof(*replace_p));
+    header_p = &replace_p->header;
+    strcpy(&header_p->name[0], "filter");
+    header_p->valid_hooks = 0x0e;
+    header_p->num_entries = 4;
+    header_p->size = sizeof(*replace_p) - sizeof(replace_p->header);
+    /* From get info? */
+    header_p->hook_entry[NF_INET_FORWARD] = 0x98;
+    header_p->hook_entry[NF_INET_LOCAL_OUT] = 0x130;
+    header_p->underflow[NF_INET_FORWARD] = 0x98;
+    header_p->underflow[NF_INET_LOCAL_OUT] = 0x130;
+    header_p->num_counters = 4;
+}
+
+static void fill_standard_entry(struct standard_entry_t *entry_p, int verdict)
+{
+    entry_p->entry.target_offset = offsetof(struct standard_entry_t, standard);
+    entry_p->entry.next_offset = sizeof(*entry_p);
+    entry_p->standard.target.u.target_size = sizeof(entry_p->standard);
+    entry_p->standard.verdict = verdict;
+}
+
+static void fill_error_entry(struct error_entry_t *entry_p)
+{
+    entry_p->entry.target_offset = offsetof(struct error_entry_t, error);
+    entry_p->entry.next_offset = sizeof(*entry_p);
+    entry_p->error.target.u.user.target_size = sizeof(entry_p->error);
+    strcpy(&entry_p->error.target.u.user.name[0], "ERROR");
+    strcpy(&entry_p->error.errorname[0], "ERROR");
+}
+
 void ml_network_init(void)
 {
     ml_shell_register_command("ifconfig",
@@ -692,7 +744,7 @@ int ml_network_filter_ipv4_set(const struct ipt_replace *filter_p)
     return (set_filter(AF_INET,
                        IPT_SO_SET_REPLACE,
                        filter_p,
-                       filter_p->size));
+                       filter_p->size + sizeof(*filter_p)));
 }
 
 int ml_network_filter_ipv6_set(const struct ip6t_replace *filter_p)
@@ -700,7 +752,7 @@ int ml_network_filter_ipv6_set(const struct ip6t_replace *filter_p)
     return (set_filter(AF_INET6,
                        IP6T_SO_SET_REPLACE,
                        filter_p,
-                       filter_p->size));
+                       filter_p->size + sizeof(*filter_p)));
 }
 
 struct ipt_get_entries *ml_network_filter_ipv4_get(const char *table_p)
@@ -784,7 +836,7 @@ void ml_network_filter_ipv4_log(const char *table_p)
     size_t offset;
     struct xt_entry_target *target_p;
     const unsigned char *data_p;
-    int pos;
+    int verdict;
 
     entries_p = ml_network_filter_ipv4_get(table_p);
 
@@ -802,46 +854,46 @@ void ml_network_filter_ipv4_log(const char *table_p)
         entry_p = (struct ipt_entry *)(&entry_table_p[offset]);
         target_p = ipt_get_target(entry_p);
 
-        ml_info("network: Entry %d:", i);
-        ml_info("network:   FromIp:      %s/%s",
+        ml_info("network:   Entry %d:", i);
+        ml_info("network:     FromIp:      %s/%s",
                 format_ipv4(&address[0], entry_p->ip.src.s_addr),
                 format_ipv4(&mask[0], entry_p->ip.smsk.s_addr));
-        ml_info("network:   ToIp:        %s/%s",
+        ml_info("network:     ToIp:        %s/%s",
                 format_ipv4(&address[0], entry_p->ip.dst.s_addr),
                 format_ipv4(&mask[0], entry_p->ip.dmsk.s_addr));
-        ml_info("network:   FromIf:      '%s'", &entry_p->ip.iniface[0]);
-        ml_info("network:   ToIf:        '%s'", &entry_p->ip.outiface[0]);
-        ml_info("network:   Protocol:    %u", entry_p->ip.proto);
-        ml_info("network:   Flags:       0x%02x", entry_p->ip.flags);
-        ml_info("network:   Invflags:    0x%02x", entry_p->ip.invflags);
-        ml_info("network:   NrOfPackets: %llu",
+        ml_info("network:     FromIf:      '%s'", &entry_p->ip.iniface[0]);
+        ml_info("network:     ToIf:        '%s'", &entry_p->ip.outiface[0]);
+        ml_info("network:     Protocol:    %u", entry_p->ip.proto);
+        ml_info("network:     Flags:       0x%02x", entry_p->ip.flags);
+        ml_info("network:     Invflags:    0x%02x", entry_p->ip.invflags);
+        ml_info("network:     NrOfPackets: %llu",
                 (unsigned long long)entry_p->counters.pcnt);
-        ml_info("network:   NrOfBytes:   %llu",
+        ml_info("network:     NrOfBytes:   %llu",
                 (unsigned long long)entry_p->counters.bcnt);
-        ml_info("network:   Cache:       0x%08x", entry_p->nfcache);
-        ml_info("network:   Target:      '%s'", &target_p->u.user.name[0]);
+        ml_info("network:     Cache:       0x%08x", entry_p->nfcache);
+        ml_info("network:     Target:      '%s'", &target_p->u.user.name[0]);
 
         if (strcmp(&target_p->u.user.name[0], XT_STANDARD_TARGET) == 0) {
             data_p = &target_p->data[0];
-            pos = *(const int *)data_p;
+            verdict = *(const int *)data_p;
 
-            if (pos < 0) {
-                if (pos == -NF_ACCEPT - 1) {
-                    ml_info("network:   Verdict:     ACCEPT");
-                } else if (pos == -NF_DROP - 1) {
-                    ml_info("network:   Verdict:     DROP");
-                } else if (pos == -NF_QUEUE - 1) {
-                    ml_info("network:   Verdict:     QUEUE");
-                } else if (pos == XT_RETURN) {
-                    ml_info("network:   Verdict:     RETURN");
+            if (verdict < 0) {
+                if (verdict == -NF_ACCEPT - 1) {
+                    ml_info("network:     Verdict:     ACCEPT");
+                } else if (verdict == -NF_DROP - 1) {
+                    ml_info("network:     Verdict:     DROP");
+                } else if (verdict == -NF_QUEUE - 1) {
+                    ml_info("network:     Verdict:     QUEUE");
+                } else if (verdict == XT_RETURN) {
+                    ml_info("network:     Verdict:     RETURN");
                 } else {
-                    ml_info("network:   Verdict:     UNKNOWN");
+                    ml_info("network:     Verdict:     UNKNOWN");
                 }
             } else {
-                ml_info("network:   Verdict:     %d", pos);
+                ml_info("network:     Verdict:     %d", verdict);
             }
         } else if (strcmp(&target_p->u.user.name[0], XT_ERROR_TARGET) == 0) {
-            ml_info("network:   Error:       '%s'", &target_p->data[0]);
+            ml_info("network:     Error:       '%s'", &target_p->data[0]);
         }
 
         offset += entry_p->next_offset;
@@ -868,44 +920,26 @@ void ml_network_filter_ipv6_log(const char *table_p)
 
 int ml_network_filter_ipv4_drop_all(void)
 {
-    /* replace_p = malloc(sizeof(*replace_p)); */
+    struct replace_t replace;
 
-    /* if (replace_p == NULL) { */
-    /*     return (-1); */
-    /* } */
+    init_replace(&replace);
+    fill_standard_entry(&replace.standard[0], -NF_DROP - 1);
+    fill_standard_entry(&replace.standard[1], -NF_DROP - 1);
+    fill_standard_entry(&replace.standard[2], -NF_DROP - 1);
+    fill_error_entry(&replace.error);
 
-    /* strcpy(&replace_p->name[0], "filter"); */
-    /* replace_p->valid_hooks = 0; */
-    /* replace_p->num_entries = 4; */
-    /* replace_p->size = size; */
-    /* replace_p->hook_entry[NF_INET_PRE_ROUTING] = 0; */
-    /* replace_p->hook_entry[NF_INET_LOCAL_IN] = 0; */
-    /* replace_p->hook_entry[NF_INET_FORWARD] = 0; */
-    /* replace_p->hook_entry[NF_INET_LOCAL_OUT] = 0; */
-    /* replace_p->hook_entry[NF_INET_POST_ROUTING] = 0; */
-    /* replace_p->underflow[NF_INET_PRE_ROUTING] = 0; */
-    /* replace_p->underflow[NF_INET_LOCAL_IN] = 0; */
-    /* replace_p->underflow[NF_INET_FORWARD] = 0; */
-    /* replace_p->underflow[NF_INET_LOCAL_OUT] = 0; */
-    /* replace_p->underflow[NF_INET_POST_ROUTING] = 0; */
-    /* replace_p->num_counters = 4; */
-    /* replace_p->counters = NULL; */
-
-    /* entry_p = &replace_p->entries[0]; */
-    /* memset(entry_p, 0, sizeof(*entry_p)); */
-    /* entry_p->target_offset; */
-    /* entry_p->next_offset; */
-    /* entry_p->comefrom; */
-    /* entry_p->elems[0]; */
-
-    /* res = ml_network_filter_ipv4_set(replace_p); */
-
-    /* free(replace_p); */
-
-    return (-1);
+    return (ml_network_filter_ipv4_set(&replace.header));
 }
 
 int ml_network_filter_ipv4_accept_all(void)
 {
-    return (-1);
+    struct replace_t replace;
+
+    init_replace(&replace);
+    fill_standard_entry(&replace.standard[0], -NF_ACCEPT - 1);
+    fill_standard_entry(&replace.standard[1], -NF_ACCEPT - 1);
+    fill_standard_entry(&replace.standard[2], -NF_ACCEPT - 1);
+    fill_error_entry(&replace.error);
+
+    return (ml_network_filter_ipv4_set(&replace.header));
 }
