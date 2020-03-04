@@ -36,6 +36,9 @@
 #include <stdint.h>
 #include <pthread.h>
 #include <poll.h>
+#include <net/if.h>
+#include <linux/netfilter_ipv4/ip_tables.h>
+#include <linux/netfilter_ipv6/ip6_tables.h>
 
 #define ML_VERSION "0.7.0"
 
@@ -461,6 +464,16 @@ int ml_network_interface_ip_address(const char *name_p,
  */
 int ml_network_interface_add_route(const char *name_p,
                                    const char *ip_address_p);
+
+/**
+ * Set IPv4 network filter.
+ */
+int ml_network_filter_ipv4_set(struct ipt_replace *filter_p);
+
+/**
+ * Set IPv6 network filter.
+ */
+int ml_network_filter_ipv6_set(struct ip6t_replace *filter_p);
 
 /**
  * Strip leading and trailing characters from given string and return

@@ -557,3 +557,61 @@ TEST(command_udp_recv_open_socket_failure)
 
     ASSERT_SUBSTRING(output, "udp_recv <port> [<timeout in seconds>]\n");
 }
+
+TEST(filter_ipv4_set_ok)
+{
+    int fd;
+    struct ipt_replace filter;
+
+    fd = 4;
+    memset(&filter, 0, sizeof(filter));
+    socket_mock_once(AF_INET, SOCK_RAW, IPPROTO_RAW, fd);
+    setsockopt_mock_once(fd, SOL_IP, IPT_SO_SET_REPLACE, 0, 0);
+    setsockopt_mock_set_optval_in_pointer(&filter);
+    setsockopt_mock_ignore_optlen_in();
+    close_mock_once(fd, 0);
+
+    ASSERT_EQ(ml_network_filter_ipv4_set(&filter), 0);
+}
+
+TEST(filter_ipv6_set_ok)
+{
+    int fd;
+    struct ip6t_replace filter;
+
+    fd = 5;
+    memset(&filter, 0, sizeof(filter));
+    socket_mock_once(AF_INET6, SOCK_RAW, IPPROTO_RAW, fd);
+    setsockopt_mock_once(fd, SOL_IP, IP6T_SO_SET_REPLACE, 0, 0);
+    setsockopt_mock_set_optval_in_pointer(&filter);
+    setsockopt_mock_ignore_optlen_in();
+    close_mock_once(fd, 0);
+
+    ASSERT_EQ(ml_network_filter_ipv6_set(&filter), 0);
+}
+
+TEST(filter_set_setsockopt_error)
+{
+    int fd;
+    struct ipt_replace filter;
+
+    fd = 6;
+    memset(&filter, 0, sizeof(filter));
+    socket_mock_once(AF_INET, SOCK_RAW, IPPROTO_RAW, fd);
+    setsockopt_mock_once(fd, SOL_IP, IPT_SO_SET_REPLACE, 0, -1);
+    setsockopt_mock_ignore_optlen_in();
+    close_mock_once(fd, 0);
+
+    ASSERT_EQ(ml_network_filter_ipv4_set(&filter), -1);
+}
+
+TEST(filter_set_socket_error)
+{
+    struct ipt_replace filter;
+
+    memset(&filter, 0, sizeof(filter));
+    socket_mock_once(AF_INET, SOCK_RAW, IPPROTO_RAW, -1);
+    close_mock_none();
+
+    ASSERT_EQ(ml_network_filter_ipv4_set(&filter), -1);
+}

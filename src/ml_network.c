@@ -114,6 +114,22 @@ static int set_netmask(int netfd,
     return (ml_ioctl(netfd, SIOCSIFNETMASK, ifreq_p));
 }
 
+static int set_filter(int domain, int optname, void *buf_p, size_t size)
+{
+    int sockfd;
+    int res;
+
+    res = -1;
+    sockfd = ml_socket(domain, SOCK_RAW, IPPROTO_RAW);
+
+    if (sockfd != -1) {
+        res = setsockopt(sockfd, SOL_IP, optname, buf_p, size);
+        close(sockfd);
+    }
+
+    return (res);
+}
+
 static int command_ifconfig_print(const char *name_p)
 {
     int res;
@@ -589,4 +605,20 @@ int ml_network_interface_add_route(const char *name_p,
     }
 
     return (res);
+}
+
+int ml_network_filter_ipv4_set(struct ipt_replace *filter_p)
+{
+    return (set_filter(AF_INET,
+                       IPT_SO_SET_REPLACE,
+                       filter_p,
+                       filter_p->size));
+}
+
+int ml_network_filter_ipv6_set(struct ip6t_replace *filter_p)
+{
+    return (set_filter(AF_INET6,
+                       IP6T_SO_SET_REPLACE,
+                       filter_p,
+                       filter_p->size));
 }
