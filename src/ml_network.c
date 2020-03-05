@@ -247,7 +247,9 @@ static void init_replace(struct replace_t *replace_p,
     memset(replace_p, 0, sizeof(*replace_p));
     header_p = &replace_p->header;
     strcpy(&header_p->name[0], "filter");
-    header_p->valid_hooks = info_p->valid_hooks;
+    header_p->valid_hooks = ((1 << NF_IP_LOCAL_IN)
+                             | (1 << NF_IP_FORWARD)
+                             | (1 << NF_IP_LOCAL_OUT));
     header_p->num_entries = 4;
     header_p->size = sizeof(*replace_p) - sizeof(replace_p->header);
     header_p->hook_entry[NF_INET_LOCAL_IN] = 0;
