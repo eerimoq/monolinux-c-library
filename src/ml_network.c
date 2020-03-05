@@ -219,6 +219,84 @@ static int get_filter(int domain, int optname, void *buf_p, socklen_t *size_p)
     return (res);
 }
 
+static int get_info(const char *table_p, struct ipt_getinfo *info_p)
+{
+    socklen_t size;
+
+    strcpy(&info_p->name[0], table_p);
+    size = sizeof(*info_p);
+
+    return (get_filter(AF_INET, IPT_SO_GET_INFO, info_p, &size));
+}
+
+static int get_info_ipv6(const char *table_p, struct ip6t_getinfo *info_p)
+{
+    socklen_t size;
+
+    strcpy(&info_p->name[0], table_p);
+    size = sizeof(*info_p);
+
+    return (get_filter(AF_INET6, IP6T_SO_GET_INFO, info_p, &size));
+}
+
+static void init_replace(struct replace_t *replace_p,
+                         struct ipt_getinfo *info_p)
+{
+    struct ipt_replace *header_p;
+
+    memset(replace_p, 0, sizeof(*replace_p));
+    header_p = &replace_p->header;
+    strcpy(&header_p->name[0], "filter");
+    header_p->valid_hooks = info_p->valid_hooks;
+    header_p->num_entries = 4;
+    header_p->size = sizeof(*replace_p) - sizeof(replace_p->header);
+    header_p->hook_entry[NF_INET_LOCAL_IN] = 0;
+    header_p->hook_entry[NF_INET_FORWARD] = sizeof(replace_p->standard[0]);
+    header_p->hook_entry[NF_INET_LOCAL_OUT] = 2 * sizeof(replace_p->standard[0]);
+    header_p->underflow[NF_INET_LOCAL_IN] = 0;
+    header_p->underflow[NF_INET_FORWARD] = sizeof(replace_p->standard[0]);
+    header_p->underflow[NF_INET_LOCAL_OUT] = 2 * sizeof(replace_p->standard[0]);
+    header_p->num_counters = info_p->num_entries;
+}
+
+static void fill_standard_entry(struct standard_entry_t *entry_p, int verdict)
+{
+    entry_p->entry.target_offset = offsetof(struct standard_entry_t, standard);
+    entry_p->entry.next_offset = sizeof(*entry_p);
+    entry_p->standard.target.u.target_size = sizeof(entry_p->standard);
+    entry_p->standard.verdict = verdict;
+}
+
+static void fill_error_entry(struct error_entry_t *entry_p)
+{
+    entry_p->entry.target_offset = offsetof(struct error_entry_t, error);
+    entry_p->entry.next_offset = sizeof(*entry_p);
+    entry_p->error.target.u.user.target_size = sizeof(entry_p->error);
+    strcpy(&entry_p->error.target.u.user.name[0], "ERROR");
+    strcpy(&entry_p->error.errorname[0], "ERROR");
+}
+
+static int filter_apply_all(int verdict)
+{
+    int res;
+    struct ipt_getinfo info;
+    struct replace_t replace;
+
+    res = get_info("filter", &info);
+
+    if (res != 0) {
+        return (res);
+    }
+
+    init_replace(&replace, &info);
+    fill_standard_entry(&replace.standard[0], verdict);
+    fill_standard_entry(&replace.standard[1], verdict);
+    fill_standard_entry(&replace.standard[2], verdict);
+    fill_error_entry(&replace.error);
+
+    return (ml_network_filter_ipv4_set(&replace.header));
+}
+
 static const char *format_ipv4(char *buf_p, uint32_t address)
 {
     sprintf(buf_p,
@@ -538,44 +616,6 @@ static int command_tcp_send(int argc, const char *argv[])
     return (res);
 }
 
-static void init_replace(struct replace_t *replace_p)
-{
-    struct ipt_replace *header_p;
-
-    memset(replace_p, 0, sizeof(*replace_p));
-    header_p = &replace_p->header;
-    strcpy(&header_p->name[0], "filter");
-    header_p->valid_hooks = (1 << NF_IP_LOCAL_IN
-                             | 1 << NF_IP_FORWARD
-                             | 1 << NF_IP_LOCAL_OUT);
-    header_p->num_entries = 4;
-    header_p->size = sizeof(*replace_p) - sizeof(replace_p->header);
-    header_p->hook_entry[NF_INET_LOCAL_IN] = 0;
-    header_p->hook_entry[NF_INET_FORWARD] = sizeof(replace_p->standard[0]);
-    header_p->hook_entry[NF_INET_LOCAL_OUT] = 2 * sizeof(replace_p->standard[0]);
-    header_p->underflow[NF_INET_LOCAL_IN] = 0;
-    header_p->underflow[NF_INET_FORWARD] = sizeof(replace_p->standard[0]);
-    header_p->underflow[NF_INET_LOCAL_OUT] = 2 * sizeof(replace_p->standard[0]);
-    header_p->num_counters = 4;
-}
-
-static void fill_standard_entry(struct standard_entry_t *entry_p, int verdict)
-{
-    entry_p->entry.target_offset = offsetof(struct standard_entry_t, standard);
-    entry_p->entry.next_offset = sizeof(*entry_p);
-    entry_p->standard.target.u.target_size = sizeof(entry_p->standard);
-    entry_p->standard.verdict = verdict;
-}
-
-static void fill_error_entry(struct error_entry_t *entry_p)
-{
-    entry_p->entry.target_offset = offsetof(struct error_entry_t, error);
-    entry_p->entry.next_offset = sizeof(*entry_p);
-    entry_p->error.target.u.user.target_size = sizeof(entry_p->error);
-    strcpy(&entry_p->error.target.u.user.name[0], "ERROR");
-    strcpy(&entry_p->error.errorname[0], "ERROR");
-}
-
 void ml_network_init(void)
 {
     ml_shell_register_command("ifconfig",
@@ -769,10 +809,7 @@ struct ipt_get_entries *ml_network_filter_ipv4_get(const char *table_p)
     struct ipt_get_entries *entries_p;
     socklen_t size;
 
-    strcpy(&info.name[0], table_p);
-    size = sizeof(info);
-
-    res = get_filter(AF_INET, IPT_SO_GET_INFO, &info, &size);
+    res = get_info(table_p, &info);
 
     if (res != 0) {
         return (NULL);
@@ -804,10 +841,7 @@ struct ip6t_get_entries *ml_network_filter_ipv6_get(const char *table_p)
     struct ip6t_get_entries *entries_p;
     socklen_t size;
 
-    strcpy(&info.name[0], table_p);
-    size = sizeof(info);
-
-    res = get_filter(AF_INET6, IP6T_SO_GET_INFO, &info, &size);
+    res = get_info_ipv6(table_p, &info);
 
     if (res != 0) {
         return (NULL);
@@ -925,28 +959,12 @@ void ml_network_filter_ipv6_log(const char *table_p)
     free(entries_p);
 }
 
-int ml_network_filter_ipv4_drop_all(void)
-{
-    struct replace_t replace;
-
-    init_replace(&replace);
-    fill_standard_entry(&replace.standard[0], VERDICT_DROP);
-    fill_standard_entry(&replace.standard[1], VERDICT_DROP);
-    fill_standard_entry(&replace.standard[2], VERDICT_DROP);
-    fill_error_entry(&replace.error);
-
-    return (ml_network_filter_ipv4_set(&replace.header));
-}
-
 int ml_network_filter_ipv4_accept_all(void)
 {
-    struct replace_t replace;
+    return (filter_apply_all(VERDICT_ACCEPT));
+}
 
-    init_replace(&replace);
-    fill_standard_entry(&replace.standard[0], VERDICT_ACCEPT);
-    fill_standard_entry(&replace.standard[1], VERDICT_ACCEPT);
-    fill_standard_entry(&replace.standard[2], VERDICT_ACCEPT);
-    fill_error_entry(&replace.error);
-
-    return (ml_network_filter_ipv4_set(&replace.header));
+int ml_network_filter_ipv4_drop_all(void)
+{
+    return (filter_apply_all(VERDICT_DROP));
 }
