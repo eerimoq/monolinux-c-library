@@ -565,7 +565,7 @@ static void mock_prepare_get_info(struct ipt_getinfo *info_p)
     fd = 4;
     socket_mock_once(AF_INET, SOCK_RAW, IPPROTO_RAW, fd);
     getsockopt_mock_once(fd, SOL_IP, IPT_SO_GET_INFO, 0);
-    getsockopt_mock_set___optval_out(info_p, sizeof(*info_p));
+    getsockopt_mock_set_optval_out(info_p, sizeof(*info_p));
     close_mock_once(fd, 0);
 }
 
@@ -644,7 +644,7 @@ TEST(filter_ipv4_get_ok)
     memset(&entries, 0, sizeof(entries));
     socket_mock_once(AF_INET, SOCK_RAW, IPPROTO_RAW, fd);
     getsockopt_mock_once(fd, SOL_IP, IPT_SO_GET_ENTRIES, 0);
-    getsockopt_mock_set___optval_out(&entries, sizeof(entries));
+    getsockopt_mock_set_optval_out(&entries, sizeof(entries));
     close_mock_once(fd, 0);
 
     entries_p = ml_network_filter_ipv4_get("filter");
@@ -665,7 +665,7 @@ TEST(filter_ipv6_get_ok)
     info.size = sizeof(entries);
     socket_mock_once(AF_INET6, SOCK_RAW, IPPROTO_RAW, fd);
     getsockopt_mock_once(fd, SOL_IP, IP6T_SO_GET_INFO, 0);
-    getsockopt_mock_set___optval_out(&info, sizeof(info));
+    getsockopt_mock_set_optval_out(&info, sizeof(info));
     close_mock_once(fd, 0);
 
     /* Get entries. */
@@ -673,7 +673,7 @@ TEST(filter_ipv6_get_ok)
     memset(&entries, 0, sizeof(entries));
     socket_mock_once(AF_INET6, SOCK_RAW, IPPROTO_RAW, fd);
     getsockopt_mock_once(fd, SOL_IP, IP6T_SO_GET_ENTRIES, 0);
-    getsockopt_mock_set___optval_out(&entries, sizeof(entries));
+    getsockopt_mock_set_optval_out(&entries, sizeof(entries));
     close_mock_once(fd, 0);
 
     entries_p = ml_network_filter_ipv6_get("filter");
@@ -928,7 +928,7 @@ TEST(filter_ipv4_log)
 
     socket_mock_once(AF_INET, SOCK_RAW, IPPROTO_RAW, fd);
     getsockopt_mock_once(fd, SOL_IP, IPT_SO_GET_ENTRIES, 0);
-    getsockopt_mock_set___optval_out(entries_p, size);
+    getsockopt_mock_set_optval_out(entries_p, size);
     close_mock_once(fd, 0);
 
     ml_init();
