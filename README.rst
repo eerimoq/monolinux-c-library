@@ -48,7 +48,7 @@ Execute one test suite.
 
 .. code-block:: shell
 
-   $ make -s -j4 TEST=bus
+   $ make -s -j4 ARGS=bus
    ...
 
 .. |buildstatus| image:: https://travis-ci.org/eerimoq/monolinux-c-library.svg

@@ -558,6 +558,17 @@ TEST(command_udp_recv_open_socket_failure)
     ASSERT_SUBSTRING(output, "udp_recv <port> [<timeout in seconds>]\n");
 }
 
+static void mock_prepare_get_info(struct ipt_getinfo *info_p)
+{
+    int fd;
+
+    fd = 4;
+    socket_mock_once(AF_INET, SOCK_RAW, IPPROTO_RAW, fd);
+    getsockopt_mock_once(fd, SOL_IP, IPT_SO_GET_INFO, 0);
+    getsockopt_mock_set___optval_out(info_p, sizeof(*info_p));
+    close_mock_once(fd, 0);
+}
+
 TEST(filter_ipv4_set_ok)
 {
     int fd;
@@ -624,13 +635,9 @@ TEST(filter_ipv4_get_ok)
     struct ipt_get_entries *entries_p;
 
     /* Get info. */
-    fd = 4;
     memset(&info, 0, sizeof(info));
     info.size = sizeof(entries);
-    socket_mock_once(AF_INET, SOCK_RAW, IPPROTO_RAW, fd);
-    getsockopt_mock_once(fd, SOL_IP, IPT_SO_GET_INFO, 0);
-    getsockopt_mock_set___optval_out(&info, sizeof(info));
-    close_mock_once(fd, 0);
+    mock_prepare_get_info(&info);
 
     /* Get entries. */
     fd = 5;
@@ -687,18 +694,13 @@ TEST(filter_ipv4_get_get_info_socket_error)
 
 TEST(filter_ipv4_get_get_entries_socket_error)
 {
-    int fd;
     struct ipt_getinfo info;
     struct ipt_get_entries *entries_p;
 
     /* Get info. */
-    fd = 4;
     memset(&info, 0, sizeof(info));
     info.size = sizeof(*entries_p);
-    socket_mock_once(AF_INET, SOCK_RAW, IPPROTO_RAW, fd);
-    getsockopt_mock_once(fd, SOL_IP, IPT_SO_GET_INFO, 0);
-    getsockopt_mock_set___optval_out(&info, sizeof(info));
-    close_mock_once(fd, 0);
+    mock_prepare_get_info(&info);
 
     /* Get entries. */
     socket_mock_once(AF_INET, SOCK_RAW, IPPROTO_RAW, -1);
@@ -709,17 +711,12 @@ TEST(filter_ipv4_get_get_entries_socket_error)
 
 TEST(filter_ipv4_get_get_entries_malloc_error)
 {
-    int fd;
     struct ipt_getinfo info;
     struct ipt_get_entries *entries_p;
 
     /* Get info. */
-    fd = 4;
     memset(&info, 0, sizeof(info));
-    socket_mock_once(AF_INET, SOCK_RAW, IPPROTO_RAW, fd);
-    getsockopt_mock_once(fd, SOL_IP, IPT_SO_GET_INFO, 0);
-    getsockopt_mock_set___optval_out(&info, sizeof(info));
-    close_mock_once(fd, 0);
+    mock_prepare_get_info(&info);
 
     /* Malloc fails. */
     malloc_mock_once(sizeof(*entries_p), NULL);
@@ -748,14 +745,10 @@ TEST(filter_ipv4_log)
     size_t size;
 
     /* Get info. */
-    fd = 4;
     entries_size = 7 * (sizeof(*entry_p) + sizeof(*target_p) + 2 * sizeof(int));
     memset(&info, 0, sizeof(info));
     info.size = entries_size;
-    socket_mock_once(AF_INET, SOCK_RAW, IPPROTO_RAW, fd);
-    getsockopt_mock_once(fd, SOL_IP, IPT_SO_GET_INFO, 0);
-    getsockopt_mock_set___optval_out(&info, sizeof(info));
-    close_mock_once(fd, 0);
+    mock_prepare_get_info(&info);
 
     /* Get entries. */
     fd = 5;
@@ -997,4 +990,104 @@ TEST(filter_ipv4_log)
     ASSERT_NOT_SUBSTRING(output, "network:   Entry 8:");
 
     free(entries_p);
+}
+
+struct standard_entry_t {
+    struct ipt_entry entry;
+    struct xt_standard_target standard;
+};
+
+struct error_entry_t {
+    struct ipt_entry entry;
+    struct xt_error_target error;
+};
+
+struct replace_t {
+    struct ipt_replace header;
+    struct standard_entry_t standard[3];
+    struct error_entry_t error;
+};
+
+static void mock_prepare_apply_all(int verdict)
+{
+    int fd;
+    struct replace_t replace;
+    struct ipt_getinfo info;
+    struct standard_entry_t *standard_p;
+    struct error_entry_t *error_p;
+
+    /* Get info with 6 entries. */
+    memset(&info, 0, sizeof(info));
+    info.size = (5 * sizeof(struct standard_entry_t)
+                 + sizeof(struct error_entry_t));
+    info.num_entries = 6;
+    mock_prepare_get_info(&info);
+
+    /* Accept all should set 4 entries (input, forward, output and
+       error). */
+    memset(&replace, 0, sizeof(replace));
+
+    strcpy(&replace.header.name[0], "filter");
+    replace.header.valid_hooks = 0x0e;
+    replace.header.num_entries = 4;
+    replace.header.size = sizeof(replace) - sizeof(replace.header);
+    replace.header.hook_entry[NF_INET_LOCAL_IN] = 0;
+    replace.header.hook_entry[NF_INET_FORWARD] = sizeof(replace.standard[0]);
+    replace.header.hook_entry[NF_INET_LOCAL_OUT] = 2 * sizeof(replace.standard[0]);
+    replace.header.underflow[NF_INET_LOCAL_IN] = 0;
+    replace.header.underflow[NF_INET_FORWARD] = sizeof(replace.standard[0]);
+    replace.header.underflow[NF_INET_LOCAL_OUT] = 2 * sizeof(replace.standard[0]);
+    replace.header.num_counters = 6;
+
+    standard_p = &replace.standard[0];
+    standard_p->entry.target_offset = offsetof(struct standard_entry_t, standard);
+    standard_p->entry.next_offset = sizeof(*standard_p);
+    standard_p->standard.target.u.target_size = sizeof(standard_p->standard);
+    standard_p->standard.verdict = verdict;
+
+    standard_p = &replace.standard[1];
+    standard_p->entry.target_offset = offsetof(struct standard_entry_t, standard);
+    standard_p->entry.next_offset = sizeof(*standard_p);
+    standard_p->standard.target.u.target_size = sizeof(standard_p->standard);
+    standard_p->standard.verdict = verdict;
+
+    standard_p = &replace.standard[2];
+    standard_p->entry.target_offset = offsetof(struct standard_entry_t, standard);
+    standard_p->entry.next_offset = sizeof(*standard_p);
+    standard_p->standard.target.u.target_size = sizeof(standard_p->standard);
+    standard_p->standard.verdict = verdict;
+
+    error_p = &replace.error;
+    error_p->entry.target_offset = offsetof(struct error_entry_t, error);
+    error_p->entry.next_offset = sizeof(*error_p);
+    error_p->error.target.u.user.target_size = sizeof(error_p->error);
+    strcpy(&error_p->error.target.u.user.name[0], "ERROR");
+    strcpy(&error_p->error.errorname[0], "ERROR");
+
+    fd = 9;
+    socket_mock_once(AF_INET, SOCK_RAW, IPPROTO_RAW, fd);
+    setsockopt_mock_once(fd, SOL_IP, IPT_SO_SET_REPLACE, sizeof(replace), 0);
+    setsockopt_mock_set_optval_in(&replace, sizeof(replace));
+    close_mock_once(fd, 0);
+}
+
+TEST(filter_ipv4_accept_all)
+{
+    mock_prepare_apply_all(-NF_ACCEPT - 1);
+
+    ASSERT_EQ(ml_network_filter_ipv4_accept_all(), 0);
+}
+
+TEST(filter_ipv4_accept_all_get_info_socket_error)
+{
+    socket_mock_once(AF_INET, SOCK_RAW, IPPROTO_RAW, -1);
+
+    ASSERT_EQ(ml_network_filter_ipv4_accept_all(), -1);
+}
+
+TEST(filter_ipv4_drop_all)
+{
+    mock_prepare_apply_all(-NF_DROP - 1);
+
+    ASSERT_EQ(ml_network_filter_ipv4_drop_all(), 0);
 }
