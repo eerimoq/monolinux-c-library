@@ -460,52 +460,54 @@ int ml_network_interface_ip_address(const char *name_p,
                                     struct in_addr *in_addr_p);
 
 /**
- * Add a route.
+ * Add given route.
  */
 int ml_network_interface_add_route(const char *name_p,
                                    const char *ip_address_p);
 
 /**
- * Set IPv4 network filter.
+ * Set given IPv4 network filter. Replaces the current filter, if any.
  */
 int ml_network_filter_ipv4_set(const struct ipt_replace *filter_p);
 
 /**
- * Set IPv6 network filter.
+ * Set given IPv6 network filter. Replaces the current filter, if any.
  */
 int ml_network_filter_ipv6_set(const struct ip6t_replace *filter_p);
 
 /**
- * Get IPv4 network filter entries and general information. Returns
- * NULL on failure. Free the returned memory with free().
+ * Get current IPv4 network filter entries and general
+ * information. Returns NULL on failure. Free the returned memory with
+ * free().
  */
 struct ipt_get_entries *ml_network_filter_ipv4_get(const char *table_p,
                                                    struct ipt_getinfo *info_p);
 
 /**
- * Get IPv6 network filter entries and general information. Returns
- * NULL on failure. Free the returned memory with free().
+ * Get current IPv6 network filter entries and general
+ * information. Returns NULL on failure. Free the returned memory with
+ * free().
  */
 struct ip6t_get_entries *ml_network_filter_ipv6_get(const char *table_p,
                                                     struct ip6t_getinfo *info_p);
 
 /**
- * Log IPv4 network filter.
+ * Log the IPv4 network filter for given table.
  */
 void ml_network_filter_ipv4_log(const char *table_p);
 
 /**
- * Log IPv6 network filter.
+ * Log the IPv6 network filter for given table.
  */
 void ml_network_filter_ipv6_log(const char *table_p);
 
 /**
- * Accept all IPv4 network packets.
+ * Accept all IPv4 network packets. Only filter table for now.
  */
 int ml_network_filter_ipv4_accept_all(void);
 
 /**
- * Drop all IPv4 network packets.
+ * Drop all IPv4 network packets. Only filter table for now.
  */
 int ml_network_filter_ipv4_drop_all(void);
 
