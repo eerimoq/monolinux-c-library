@@ -476,14 +476,18 @@ int ml_network_filter_ipv4_set(const struct ipt_replace *filter_p);
 int ml_network_filter_ipv6_set(const struct ip6t_replace *filter_p);
 
 /**
- * Get IPv4 network filter.
+ * Get IPv4 network filter entries and general information. Returns
+ * NULL on failure. Free the returned memory with free().
  */
-struct ipt_get_entries *ml_network_filter_ipv4_get(const char *table_p);
+struct ipt_get_entries *ml_network_filter_ipv4_get(const char *table_p,
+                                                   struct ipt_getinfo *info_p);
 
 /**
- * Get IPv6 network filter.
+ * Get IPv6 network filter entries and general information. Returns
+ * NULL on failure. Free the returned memory with free().
  */
-struct ip6t_get_entries *ml_network_filter_ipv6_get(const char *table_p);
+struct ip6t_get_entries *ml_network_filter_ipv6_get(const char *table_p,
+                                                    struct ip6t_getinfo *info_p);
 
 /**
  * Log IPv4 network filter.

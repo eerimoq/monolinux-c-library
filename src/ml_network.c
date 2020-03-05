@@ -804,20 +804,20 @@ int ml_network_filter_ipv6_set(const struct ip6t_replace *filter_p)
                        filter_p->size + sizeof(*filter_p)));
 }
 
-struct ipt_get_entries *ml_network_filter_ipv4_get(const char *table_p)
+struct ipt_get_entries *ml_network_filter_ipv4_get(const char *table_p,
+                                                   struct ipt_getinfo *info_p)
 {
     int res;
-    struct ipt_getinfo info;
     struct ipt_get_entries *entries_p;
     socklen_t size;
 
-    res = get_info(table_p, &info);
+    res = get_info(table_p, info_p);
 
     if (res != 0) {
         return (NULL);
     }
 
-    size = sizeof(*entries_p) + info.size;
+    size = sizeof(*entries_p) + info_p->size;
     entries_p = malloc(size);
 
     if (entries_p == NULL) {
@@ -825,7 +825,7 @@ struct ipt_get_entries *ml_network_filter_ipv4_get(const char *table_p)
     }
 
     strcpy(&entries_p->name[0], table_p);
-    entries_p->size = info.size;
+    entries_p->size = info_p->size;
     res = get_filter(AF_INET, IPT_SO_GET_ENTRIES, entries_p, &size);
 
     if (res != 0) {
@@ -836,20 +836,20 @@ struct ipt_get_entries *ml_network_filter_ipv4_get(const char *table_p)
     return (entries_p);
 }
 
-struct ip6t_get_entries *ml_network_filter_ipv6_get(const char *table_p)
+struct ip6t_get_entries *ml_network_filter_ipv6_get(const char *table_p,
+                                                    struct ip6t_getinfo *info_p)
 {
     int res;
-    struct ip6t_getinfo info;
     struct ip6t_get_entries *entries_p;
     socklen_t size;
 
-    res = get_info_ipv6(table_p, &info);
+    res = get_info_ipv6(table_p, info_p);
 
     if (res != 0) {
         return (NULL);
     }
 
-    size = sizeof(*entries_p) + info.size;
+    size = sizeof(*entries_p) + info_p->size;
     entries_p = malloc(size);
 
     if (entries_p == NULL) {
@@ -857,7 +857,7 @@ struct ip6t_get_entries *ml_network_filter_ipv6_get(const char *table_p)
     }
 
     strcpy(&entries_p->name[0], table_p);
-    entries_p->size = info.size;
+    entries_p->size = info_p->size;
     res = get_filter(AF_INET6, IP6T_SO_GET_ENTRIES, entries_p, &size);
 
     if (res != 0) {
@@ -880,8 +880,9 @@ void ml_network_filter_ipv4_log(const char *table_p)
     struct xt_entry_target *target_p;
     const unsigned char *data_p;
     int verdict;
+    struct ipt_getinfo info;
 
-    entries_p = ml_network_filter_ipv4_get(table_p);
+    entries_p = ml_network_filter_ipv4_get(table_p, &info);
 
     if (entries_p == NULL) {
         return;
@@ -949,8 +950,9 @@ void ml_network_filter_ipv4_log(const char *table_p)
 void ml_network_filter_ipv6_log(const char *table_p)
 {
     struct ip6t_get_entries *entries_p;
+    struct ip6t_getinfo info;
 
-    entries_p = ml_network_filter_ipv6_get(table_p);
+    entries_p = ml_network_filter_ipv6_get(table_p, &info);
 
     if (entries_p == NULL) {
         return;
