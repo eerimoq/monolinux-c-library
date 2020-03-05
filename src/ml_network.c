@@ -878,7 +878,6 @@ void ml_network_filter_ipv4_log(const char *table_p)
     char *entry_table_p;
     size_t offset;
     struct xt_entry_target *target_p;
-    const unsigned char *data_p;
     int verdict;
     struct ipt_getinfo info;
 
@@ -918,8 +917,7 @@ void ml_network_filter_ipv4_log(const char *table_p)
         ml_info("network:     Target:      '%s'", &target_p->u.user.name[0]);
 
         if (strcmp(&target_p->u.user.name[0], XT_STANDARD_TARGET) == 0) {
-            data_p = &target_p->data[0];
-            verdict = *(const int *)data_p;
+            verdict = ((struct xt_standard_target *)target_p)->verdict;
 
             if (verdict < 0) {
                 if (verdict == VERDICT_ACCEPT) {
@@ -937,7 +935,8 @@ void ml_network_filter_ipv4_log(const char *table_p)
                 ml_info("network:     Verdict:     %d", verdict);
             }
         } else if (strcmp(&target_p->u.user.name[0], XT_ERROR_TARGET) == 0) {
-            ml_info("network:     Error:       '%s'", &target_p->data[0]);
+            ml_info("network:     Error:       '%s'",
+                    &((struct xt_error_target *)target_p)->errorname[0]);
         }
 
         offset += entry_p->next_offset;
