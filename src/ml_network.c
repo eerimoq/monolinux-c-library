@@ -38,6 +38,10 @@
 #include <errno.h>
 #include "ml/ml.h"
 
+#define VERDICT_ACCEPT  (-NF_ACCEPT - 1)
+#define VERDICT_DROP    (-NF_DROP - 1)
+#define VERDICT_QUEUE   (-NF_QUEUE - 1)
+
 struct standard_entry_t {
     struct ipt_entry entry;
     struct xt_standard_target standard;
@@ -541,14 +545,17 @@ static void init_replace(struct replace_t *replace_p)
     memset(replace_p, 0, sizeof(*replace_p));
     header_p = &replace_p->header;
     strcpy(&header_p->name[0], "filter");
-    header_p->valid_hooks = 0x0e;
+    header_p->valid_hooks = (1 << NF_IP_LOCAL_IN
+                             | 1 << NF_IP_FORWARD
+                             | 1 << NF_IP_LOCAL_OUT);
     header_p->num_entries = 4;
     header_p->size = sizeof(*replace_p) - sizeof(replace_p->header);
-    /* From get info? */
-    header_p->hook_entry[NF_INET_FORWARD] = 0x98;
-    header_p->hook_entry[NF_INET_LOCAL_OUT] = 0x130;
-    header_p->underflow[NF_INET_FORWARD] = 0x98;
-    header_p->underflow[NF_INET_LOCAL_OUT] = 0x130;
+    header_p->hook_entry[NF_INET_LOCAL_IN] = 0;
+    header_p->hook_entry[NF_INET_FORWARD] = sizeof(replace_p->standard[0]);
+    header_p->hook_entry[NF_INET_LOCAL_OUT] = 2 * sizeof(replace_p->standard[0]);
+    header_p->underflow[NF_INET_LOCAL_IN] = 0;
+    header_p->underflow[NF_INET_FORWARD] = sizeof(replace_p->standard[0]);
+    header_p->underflow[NF_INET_LOCAL_OUT] = 2 * sizeof(replace_p->standard[0]);
     header_p->num_counters = 4;
 }
 
@@ -878,11 +885,11 @@ void ml_network_filter_ipv4_log(const char *table_p)
             verdict = *(const int *)data_p;
 
             if (verdict < 0) {
-                if (verdict == -NF_ACCEPT - 1) {
+                if (verdict == VERDICT_ACCEPT) {
                     ml_info("network:     Verdict:     ACCEPT");
-                } else if (verdict == -NF_DROP - 1) {
+                } else if (verdict == VERDICT_DROP) {
                     ml_info("network:     Verdict:     DROP");
-                } else if (verdict == -NF_QUEUE - 1) {
+                } else if (verdict == VERDICT_QUEUE) {
                     ml_info("network:     Verdict:     QUEUE");
                 } else if (verdict == XT_RETURN) {
                     ml_info("network:     Verdict:     RETURN");
@@ -923,9 +930,9 @@ int ml_network_filter_ipv4_drop_all(void)
     struct replace_t replace;
 
     init_replace(&replace);
-    fill_standard_entry(&replace.standard[0], -NF_DROP - 1);
-    fill_standard_entry(&replace.standard[1], -NF_DROP - 1);
-    fill_standard_entry(&replace.standard[2], -NF_DROP - 1);
+    fill_standard_entry(&replace.standard[0], VERDICT_DROP);
+    fill_standard_entry(&replace.standard[1], VERDICT_DROP);
+    fill_standard_entry(&replace.standard[2], VERDICT_DROP);
     fill_error_entry(&replace.error);
 
     return (ml_network_filter_ipv4_set(&replace.header));
@@ -936,9 +943,9 @@ int ml_network_filter_ipv4_accept_all(void)
     struct replace_t replace;
 
     init_replace(&replace);
-    fill_standard_entry(&replace.standard[0], -NF_ACCEPT - 1);
-    fill_standard_entry(&replace.standard[1], -NF_ACCEPT - 1);
-    fill_standard_entry(&replace.standard[2], -NF_ACCEPT - 1);
+    fill_standard_entry(&replace.standard[0], VERDICT_ACCEPT);
+    fill_standard_entry(&replace.standard[1], VERDICT_ACCEPT);
+    fill_standard_entry(&replace.standard[2], VERDICT_ACCEPT);
     fill_error_entry(&replace.error);
 
     return (ml_network_filter_ipv4_set(&replace.header));
