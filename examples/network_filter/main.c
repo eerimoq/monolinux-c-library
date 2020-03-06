@@ -45,17 +45,17 @@ struct http_entry_t {
     struct ipt_entry entry;
     struct match_tcp_t tcp;
     struct match_conntrack_t conntrack;
-    struct xt_standard_target standard;
+    struct xt_standard_target target;
 };
 
 struct standard_entry_t {
     struct ipt_entry entry;
-    struct xt_standard_target standard;
+    struct xt_standard_target target;
 };
 
 struct error_entry_t {
     struct ipt_entry entry;
-    struct xt_error_target error;
+    struct xt_error_target target;
 };
 
 struct replace_t {
@@ -110,21 +110,21 @@ static void drop_http()
 
     /* Input. */
     standard_p = &replace.input;
-    standard_p->entry.target_offset = offsetof(struct standard_entry_t, standard);
+    standard_p->entry.target_offset = offsetof(struct standard_entry_t, target);
     standard_p->entry.next_offset = sizeof(*standard_p);
-    standard_p->standard.target.u.target_size = sizeof(standard_p->standard);
-    standard_p->standard.verdict = -NF_ACCEPT - 1;
+    standard_p->target.target.u.target_size = sizeof(standard_p->target);
+    standard_p->target.verdict = -NF_ACCEPT - 1;
 
     /* Forward. */
     standard_p = &replace.forward;
-    standard_p->entry.target_offset = offsetof(struct standard_entry_t, standard);
+    standard_p->entry.target_offset = offsetof(struct standard_entry_t, target);
     standard_p->entry.next_offset = sizeof(*standard_p);
-    standard_p->standard.target.u.target_size = sizeof(standard_p->standard);
-    standard_p->standard.verdict = -NF_ACCEPT - 1;
+    standard_p->target.target.u.target_size = sizeof(standard_p->target);
+    standard_p->target.verdict = -NF_ACCEPT - 1;
 
     /* Http output. */
     http_p = &replace.http;
-    http_p->entry.target_offset = offsetof(struct http_entry_t, standard);
+    http_p->entry.target_offset = offsetof(struct http_entry_t, target);
     http_p->entry.next_offset = sizeof(*http_p);
     http_p->entry.ip.proto = IPPROTO_TCP;
     http_p->tcp.match.u.user.match_size = sizeof(http_p->tcp);
@@ -139,23 +139,23 @@ static void drop_http()
     http_p->conntrack.mtinfo3.match_flags = (XT_CONNTRACK_STATE
                                              | XT_CONNTRACK_STATE_ALIAS);
     http_p->conntrack.mtinfo3.state_mask = NF_CT_STATE_BIT(IP_CT_NEW);
-    http_p->standard.target.u.target_size = sizeof(http_p->standard);
-    http_p->standard.verdict = -NF_DROP - 1;
+    http_p->target.target.u.target_size = sizeof(http_p->target);
+    http_p->target.verdict = -NF_DROP - 1;
 
     /* Output. */
     standard_p = &replace.output;
-    standard_p->entry.target_offset = offsetof(struct standard_entry_t, standard);
+    standard_p->entry.target_offset = offsetof(struct standard_entry_t, target);
     standard_p->entry.next_offset = sizeof(*standard_p);
-    standard_p->standard.target.u.target_size = sizeof(standard_p->standard);
-    standard_p->standard.verdict = -NF_ACCEPT - 1;
+    standard_p->target.target.u.target_size = sizeof(standard_p->target);
+    standard_p->target.verdict = -NF_ACCEPT - 1;
 
     /* Error. */
     error_p = &replace.error;
-    error_p->entry.target_offset = offsetof(struct error_entry_t, error);
+    error_p->entry.target_offset = offsetof(struct error_entry_t, target);
     error_p->entry.next_offset = sizeof(*error_p);
-    error_p->error.target.u.user.target_size = sizeof(error_p->error);
-    strcpy(&error_p->error.target.u.user.name[0], "ERROR");
-    strcpy(&error_p->error.errorname[0], "ERROR");
+    error_p->target.target.u.user.target_size = sizeof(error_p->target);
+    strcpy(&error_p->target.target.u.user.name[0], "ERROR");
+    strcpy(&error_p->target.errorname[0], "ERROR");
 
     ml_network_filter_ipv4_set(&replace.header);
 }
