@@ -12,9 +12,15 @@ Features:
 
 - A simple shell.
 
-- Network configuration.
-
 - Timers.
+
+- Network management.
+
+- DHCP and NTP clients.
+
+- RTC management.
+
+- Device-mapper verity target.
 
 Requires POSIX and currently Linux.
 

@@ -29,6 +29,7 @@
 #include <stddef.h>
 #include <string.h>
 #include "ml/ml.h"
+#include <linux/netfilter/nf_conntrack_common.h>
 #include <linux/netfilter/xt_conntrack.h>
 
 struct match_tcp_t {
