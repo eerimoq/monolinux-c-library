@@ -578,7 +578,8 @@ int ml_mount(const char *source_p,
              unsigned long flags);
 
 /**
- * Get CPU satistics.
+ * Get CPU satistics. First entry is total, the rest are per
+ * CPU. Returns the number of read stats.
  */
 int ml_get_cpus_stats(struct ml_cpu_stats_t *stats_p, int length);
 

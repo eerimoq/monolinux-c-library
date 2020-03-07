@@ -1238,3 +1238,68 @@ TEST(command_sync)
               "OK\n"
               "$ exit\n");
 }
+
+static void mock_prepare_read_cpus_stats(char **lines_pp, int length)
+{
+    int i;
+    FILE file;
+
+    fopen_mock_once("/proc/stat", "r", &file);
+
+    for (i = 0; i < length; i++) {
+        fgets_mock_once(NULL, 128, lines_pp[i]);
+        fgets_mock_set___stream_in_pointer(&file);
+        fgets_mock_ignore___s_in();
+        fgets_mock_set___s_out(lines_pp[i], strlen(lines_pp[i]) + 1);
+    }
+
+    fclose_mock_once(0);
+    fclose_mock_set_stream_in_pointer(&file);
+}
+
+TEST(command_status)
+{
+    int fd;
+    char *lines[2][6] = {
+        {
+            "cpu  9315241 7265 1323811 111314353 59144 0 334241 0 0 0\n",
+            "cpu0 2464444 770 322927 27697262 20463 0 99753 0 0 0\n",
+            "cpu1 2280832 1324 334732 27883573 13928 0 104802 0 0 0\n",
+            "cpu2 2302634 2912 331600 27858568 12988 0 55300 0 0 0\n",
+            "cpu3 2267331 2258 334550 27874949 11762 0 74385 0 0 0\n",
+            "intr ...\n"
+        },
+        {
+            "cpu  9315258 7265 1323812 111314374 59144 0 334241 0 0 0\n",
+            "cpu0 2464448 770 322928 27697268 20463 0 99753 0 0 0\n",
+            "cpu1 2280838 1324 334732 27883576 13928 0 104802 0 0 0\n",
+            "cpu2 2302636 2912 331600 27858574 12988 0 55300 0 0 0\n",
+            "cpu3 2267335 2258 334550 27874954 11762 0 74385 0 0 0\n"
+        }
+    };
+
+    ml_shell_init();
+
+    mock_prepare_read_cpus_stats(&lines[0][0], 6);
+    usleep_mock_once(100000, 0);
+    mock_prepare_read_cpus_stats(&lines[1][0], 5);
+
+    CAPTURE_OUTPUT(output, errput) {
+        fd = stdin_pipe();
+        ml_shell_start();
+        input(fd, "status\n");
+        input(fd, "exit\n");
+        ml_shell_join();
+    }
+
+    ASSERT_EQ(output,
+              "status\n"
+              "CPU  USER  SYSTEM  IDLE\n"
+              "all   43%      2%   53%\n"
+              "1     36%      9%   54%\n"
+              "2     66%      0%   33%\n"
+              "3     25%      0%   75%\n"
+              "4     44%      0%   55%\n"
+              "OK\n"
+              "$ exit\n");
+}

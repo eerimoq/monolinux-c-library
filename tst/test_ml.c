@@ -369,3 +369,118 @@ TEST(spawn)
               &test_spawn_message_id);
     ml_message_free(message_p);
 }
+
+static void mock_prepare_read_cpus_stats(char **lines_pp, int length)
+{
+    int i;
+    FILE file;
+
+    fopen_mock_once("/proc/stat", "r", &file);
+
+    for (i = 0; i < length; i++) {
+        fgets_mock_once(NULL, 128, lines_pp[i]);
+        fgets_mock_set___stream_in_pointer(&file);
+        fgets_mock_ignore___s_in();
+        fgets_mock_set___s_out(lines_pp[i], strlen(lines_pp[i]) + 1);
+    }
+
+    fclose_mock_once(0);
+    fclose_mock_set_stream_in_pointer(&file);
+}
+
+TEST(get_cpus_stats_4_cpus)
+{
+    struct ml_cpu_stats_t stats[6];
+    char *lines[2][6] = {
+        {
+            "cpu  9315241 7265 1323811 111314353 59144 0 334241 0 0 0\n",
+            "cpu0 2464444 770 322927 27697262 20463 0 99753 0 0 0\n",
+            "cpu1 2280832 1324 334732 27883573 13928 0 104802 0 0 0\n",
+            "cpu2 2302634 2912 331600 27858568 12988 0 55300 0 0 0\n",
+            "cpu3 2267331 2258 334550 27874949 11762 0 74385 0 0 0\n",
+            "intr ...\n"
+        },
+        {
+            "cpu  9315258 7265 1323812 111314374 59144 0 334241 0 0 0\n",
+            "cpu0 2464448 770 322928 27697268 20463 0 99753 0 0 0\n",
+            "cpu1 2280838 1324 334732 27883576 13928 0 104802 0 0 0\n",
+            "cpu2 2302636 2912 331600 27858574 12988 0 55300 0 0 0\n",
+            "cpu3 2267335 2258 334550 27874954 11762 0 74385 0 0 0\n"
+        }
+    };
+
+    mock_prepare_read_cpus_stats(&lines[0][0], 6);
+    usleep_mock_once(100000, 0);
+    mock_prepare_read_cpus_stats(&lines[1][0], 5);
+
+    ASSERT_EQ(ml_get_cpus_stats(&stats[0], membersof(stats)), 5);
+
+    ASSERT_EQ(stats[0].user, 43);
+    ASSERT_EQ(stats[0].system, 2);
+    ASSERT_EQ(stats[0].idle, 53);
+    ASSERT_EQ(stats[1].user, 36);
+    ASSERT_EQ(stats[1].system, 9);
+    ASSERT_EQ(stats[1].idle, 54);
+    ASSERT_EQ(stats[2].user, 66);
+    ASSERT_EQ(stats[2].system, 0);
+    ASSERT_EQ(stats[2].idle, 33);
+    ASSERT_EQ(stats[3].user, 25);
+    ASSERT_EQ(stats[3].system, 0);
+    ASSERT_EQ(stats[3].idle, 75);
+    ASSERT_EQ(stats[4].user, 44);
+    ASSERT_EQ(stats[4].system, 0);
+    ASSERT_EQ(stats[4].idle, 55);
+}
+
+TEST(get_cpus_stats_4_cpus_get_one)
+{
+    struct ml_cpu_stats_t stats;
+    char *lines[2][6] = {
+        {
+            "cpu  9315241 7265 1323811 111314353 59144 0 334241 0 0 0\n",
+            "cpu0 2464444 770 322927 27697262 20463 0 99753 0 0 0\n",
+            "cpu1 2280832 1324 334732 27883573 13928 0 104802 0 0 0\n",
+            "cpu2 2302634 2912 331600 27858568 12988 0 55300 0 0 0\n",
+            "cpu3 2267331 2258 334550 27874949 11762 0 74385 0 0 0\n",
+            "intr ...\n"
+        },
+        {
+            "cpu  9315258 7265 1323812 111314374 59144 0 334241 0 0 0\n",
+            "cpu0 2464448 770 322928 27697268 20463 0 99753 0 0 0\n",
+            "cpu1 2280838 1324 334732 27883576 13928 0 104802 0 0 0\n",
+            "cpu2 2302636 2912 331600 27858574 12988 0 55300 0 0 0\n",
+            "cpu3 2267335 2258 334550 27874954 11762 0 74385 0 0 0\n"
+        }
+    };
+
+    mock_prepare_read_cpus_stats(&lines[0][0], 1);
+    usleep_mock_once(100000, 0);
+    mock_prepare_read_cpus_stats(&lines[1][0], 1);
+
+    ASSERT_EQ(ml_get_cpus_stats(&stats, 1), 1);
+
+    ASSERT_EQ(stats.user, 43);
+    ASSERT_EQ(stats.system, 2);
+    ASSERT_EQ(stats.idle, 53);
+}
+
+TEST(get_cpus_stats_4_cpus_fopen_error)
+{
+    struct ml_cpu_stats_t stats;
+
+    fopen_mock_once("/proc/stat", "r", NULL);
+    fclose_mock_none();
+
+    ASSERT_EQ(ml_get_cpus_stats(&stats, 1), -1);
+}
+
+TEST(get_cpus_stats_bad_proc_stat_contents)
+{
+    struct ml_cpu_stats_t stats;
+    char *lines[1] = { "Something unexpected\n" };
+
+    mock_prepare_read_cpus_stats(&lines[0], 1);
+    usleep_mock_none();
+
+    ASSERT_EQ(ml_get_cpus_stats(&stats, 1), -1);
+}

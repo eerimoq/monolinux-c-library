@@ -908,8 +908,11 @@ static int command_sync(int argc, const char *argv[])
 
 static int command_status(int argc, const char *argv[])
 {
-    int res;
-    struct ml_cpu_stats_t stats[1];
+    (void)argv;
+
+    int length;
+    struct ml_cpu_stats_t stats[16];
+    int i;
 
     if (argc != 1) {
         printf("Usage: status\n");
@@ -917,16 +920,25 @@ static int command_status(int argc, const char *argv[])
         return (-1);
     }
 
-    res = ml_get_cpus_stats(&stats[0], 1);
+    length = ml_get_cpus_stats(&stats[0], membersof(stats));
 
-    if (res != 0) {
-        return (res);
+    if (length <= 0) {
+        return (-1);
     }
 
-    printf("CPU load:\n");
-    printf("  User:   %3llu %%\n", stats[0].user);
-    printf("  System: %3llu %%\n", stats[0].system);
-    printf("  Idle:   %3llu %%\n", stats[0].idle);
+    printf("CPU  USER  SYSTEM  IDLE\n");
+    printf("all  %3u%%    %3u%%  %3u%%\n",
+           stats[0].user,
+           stats[0].system,
+           stats[0].idle);
+
+    for (i = 1; i < length; i++) {
+        printf("%-3d  %3u%%    %3u%%  %3u%%\n",
+               i,
+               stats[i].user,
+               stats[i].system,
+               stats[i].idle);
+    }
 
     return (0);
 }

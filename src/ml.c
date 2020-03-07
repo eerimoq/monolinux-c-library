@@ -367,8 +367,12 @@ static int read_cpu_stats(FILE *file_p, struct cpu_stats_t *stats_p)
         return (-1);
     }
 
+    if (strncmp("intr", &line[0], 4) == 0) {
+        return (1);
+    }
+
     res = sscanf(&line[0],
-                 "cpu %llu %llu %llu %llu %llu %llu %llu",
+                 "cp%*s %llu %llu %llu %llu %llu %llu %llu",
                  &stats_p->user,
                  &stats_p->nice,
                  &stats_p->system,
@@ -415,7 +419,7 @@ static int read_cpus_stats(struct cpu_stats_t *stats_p, int length)
 
     fclose(file_p);
 
-    return (res);
+    return (res < 0 ? res : i);
 }
 
 int ml_get_cpus_stats(struct ml_cpu_stats_t *stats_p, int length)
@@ -426,10 +430,10 @@ int ml_get_cpus_stats(struct ml_cpu_stats_t *stats_p, int length)
     unsigned long long total_diff;
     unsigned long long diff;
 
-    res = read_cpus_stats(&stats[0][0], length);
+    length = read_cpus_stats(&stats[0][0], length);
 
-    if (res != 0) {
-        return (-1);
+    if (length < 0) {
+        return (length);
     }
 
     /* Measure over 100 ms. */
@@ -437,7 +441,11 @@ int ml_get_cpus_stats(struct ml_cpu_stats_t *stats_p, int length)
 
     res = read_cpus_stats(&stats[1][0], length);
 
-    if (res != 0) {
+    if (res < 0) {
+        return (res);
+    }
+
+    if (res != length) {
         return (-1);
     }
 
@@ -451,7 +459,7 @@ int ml_get_cpus_stats(struct ml_cpu_stats_t *stats_p, int length)
         stats_p[i].idle = (100 * diff) / total_diff;
     }
 
-    return (0);
+    return (length);
 }
 
 int ml_socket(int domain, int type, int protocol)

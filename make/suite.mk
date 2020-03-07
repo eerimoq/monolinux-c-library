@@ -6,7 +6,7 @@ CFLAGS += -fsanitize=address
 CFLAGS += -fsanitize=undefined
 endif
 CFLAGS += -coverage
-CFLAGS += -Wall -Wextra -std=gnu11
+CFLAGS += -Wall -Wextra -std=gnu11 -Werror
 CFLAGS += -g -O0
 CFLAGS += -DUNIT_TEST
 CFLAGS += -no-pie
