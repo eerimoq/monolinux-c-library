@@ -379,9 +379,9 @@ static void mock_prepare_read_cpus_stats(char **lines_pp, int length)
 
     for (i = 0; i < length; i++) {
         fgets_mock_once(NULL, 128, lines_pp[i]);
-        fgets_mock_set___stream_in_pointer(&file);
-        fgets_mock_ignore___s_in();
-        fgets_mock_set___s_out(lines_pp[i], strlen(lines_pp[i]) + 1);
+        fgets_mock_set_stream_in_pointer(&file);
+        fgets_mock_ignore_s_in();
+        fgets_mock_set_s_out(lines_pp[i], strlen(lines_pp[i]) + 1);
     }
 
     fclose_mock_once(0);
