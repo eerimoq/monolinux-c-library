@@ -122,6 +122,7 @@ TEST(various_commands)
               "        mount   Mount a filesystem.\n"
               "        print   Print to file.\n"
               "       reboot   Reboot.\n"
+              "       status   System status.\n"
               "      suicide   Process suicide.\n"
               "         sync   Synchronize cached writes to persistent storage.\n"
               "OK\n"
@@ -174,7 +175,7 @@ TEST(command_cat)
     ASSERT_EQ(
         output,
         "cat\n"
-        "No file given\n"
+        "Usage: cat <file>\n"
         "ERROR(-1)\n"
         "$ cat hexdump.in\n"
         "0123456789012345678901234567890123456789"

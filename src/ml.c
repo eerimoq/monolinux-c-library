@@ -40,6 +40,17 @@
 #include "ml/ml.h"
 #include "internal.h"
 
+struct cpu_stats_t {
+    unsigned long long user;
+    unsigned long long nice;
+    unsigned long long system;
+    unsigned long long idle;
+    unsigned long long iowait;
+    unsigned long long irq;
+    unsigned long long softirq;
+    unsigned long long total;
+};
+
 struct module_t {
     struct ml_bus_t bus;
     struct ml_worker_pool_t worker_pool;
@@ -345,6 +356,102 @@ int ml_mount(const char *source_p,
     }
 
     return (res);
+}
+
+static int read_cpu_stats(FILE *file_p, struct cpu_stats_t *stats_p)
+{
+    char line[128];
+    int res;
+
+    if (fgets(&line[0], sizeof(line), file_p) == NULL) {
+        return (-1);
+    }
+
+    res = sscanf(&line[0],
+                 "cpu %llu %llu %llu %llu %llu %llu %llu",
+                 &stats_p->user,
+                 &stats_p->nice,
+                 &stats_p->system,
+                 &stats_p->idle,
+                 &stats_p->iowait,
+                 &stats_p->irq,
+                 &stats_p->softirq);
+
+    if (res != 7) {
+        return (-1);
+    }
+
+    stats_p->total = 0;
+    stats_p->total += stats_p->user;
+    stats_p->total += stats_p->nice;
+    stats_p->total += stats_p->system;
+    stats_p->total += stats_p->idle;
+    stats_p->total += stats_p->iowait;
+    stats_p->total += stats_p->irq;
+    stats_p->total += stats_p->softirq;
+
+    return (0);
+}
+
+static int read_cpus_stats(struct cpu_stats_t *stats_p, int length)
+{
+    FILE *file_p;
+    int res;
+    int i;
+
+    file_p = fopen("/proc/stat", "r");
+
+    if (file_p == NULL) {
+        return (-1);
+    }
+
+    for (i = 0; i < length; i++) {
+        res = read_cpu_stats(file_p, &stats_p[i]);
+
+        if (res != 0) {
+            break;
+        }
+    }
+
+    fclose(file_p);
+
+    return (res);
+}
+
+int ml_get_cpus_stats(struct ml_cpu_stats_t *stats_p, int length)
+{
+    int res;
+    struct cpu_stats_t stats[2][length];
+    int i;
+    unsigned long long total_diff;
+    unsigned long long diff;
+
+    res = read_cpus_stats(&stats[0][0], length);
+
+    if (res != 0) {
+        return (-1);
+    }
+
+    /* Measure over 100 ms. */
+    usleep(100000);
+
+    res = read_cpus_stats(&stats[1][0], length);
+
+    if (res != 0) {
+        return (-1);
+    }
+
+    for (i = 0; i < length; i++) {
+        total_diff = stats[1][i].total - stats[0][i].total;
+        diff = stats[1][i].user - stats[0][i].user;
+        stats_p[i].user = (100 * diff) / total_diff;
+        diff = stats[1][i].system - stats[0][i].system;
+        stats_p[i].system = (100 * diff) / total_diff;
+        diff = stats[1][i].idle - stats[0][i].idle;
+        stats_p[i].idle = (100 * diff) / total_diff;
+    }
+
+    return (0);
 }
 
 int ml_socket(int domain, int type, int protocol)

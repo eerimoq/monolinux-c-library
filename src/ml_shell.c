@@ -586,7 +586,7 @@ static int command_cat(int argc, const char *argv[])
     res = 0;
 
     if (argc != 2) {
-        printf("No file given\n");
+        printf("Usage: cat <file>\n");
 
         return (-1);
     }
@@ -902,6 +902,31 @@ static int command_sync(int argc, const char *argv[])
     (void)argv;
 
     sync();
+
+    return (0);
+}
+
+static int command_status(int argc, const char *argv[])
+{
+    int res;
+    struct ml_cpu_stats_t stats[1];
+
+    if (argc != 1) {
+        printf("Usage: status\n");
+
+        return (-1);
+    }
+
+    res = ml_get_cpus_stats(&stats[0], 1);
+
+    if (res != 0) {
+        return (res);
+    }
+
+    printf("CPU load:\n");
+    printf("  User:   %3llu %%\n", stats[0].user);
+    printf("  System: %3llu %%\n", stats[0].system);
+    printf("  Idle:   %3llu %%\n", stats[0].idle);
 
     return (0);
 }
@@ -1683,6 +1708,9 @@ void ml_shell_init(void)
     ml_shell_register_command("sync",
                               "Synchronize cached writes to persistent storage.",
                               command_sync);
+    ml_shell_register_command("status",
+                              "System status.",
+                              command_status);
 }
 
 void ml_shell_start(void)

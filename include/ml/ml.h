@@ -216,6 +216,12 @@ struct ml_timer_handler_t {
     pthread_mutex_t mutex;
 };
 
+struct ml_cpu_stats_t {
+    unsigned user;
+    unsigned system;
+    unsigned idle;
+};
+
 /**
  * Initialize the Monolinux module. This must be called before any
  * other function in this module.
@@ -570,6 +576,11 @@ int ml_mount(const char *source_p,
              const char *target_p,
              const char *type_p,
              unsigned long flags);
+
+/**
+ * Get CPU satistics.
+ */
+int ml_get_cpus_stats(struct ml_cpu_stats_t *stats_p, int length);
 
 int ml_socket(int domain, int type, int protocol);
 
