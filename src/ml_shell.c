@@ -745,7 +745,7 @@ static int command_df(int argc, const char *argv[])
     return (ml_print_file_systems_space_usage());
 }
 
-static int print_info(const char *fpath,
+static int print_info(const char *fpath_p,
                       const struct stat *stat_p,
                       const int tflag,
                       struct FTW *ftwbuf_p)
@@ -753,10 +753,10 @@ static int print_info(const char *fpath,
     (void)tflag;
     (void)ftwbuf_p;
 
-    if (stat_p->st_mode & S_IFDIR) {
-        printf("%s/\n", fpath);
+    if (S_ISDIR(stat_p->st_mode)) {
+        printf("%s/\n", fpath_p);
     } else {
-        puts(fpath);
+        puts(fpath_p);
     }
 
     return (0);
