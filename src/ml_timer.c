@@ -141,6 +141,8 @@ static void *handler_main(struct ml_timer_handler_t *handler_p)
     uint64_t value;
     ssize_t res;
 
+    pthread_setname_np(pthread_self(), "ml_timer_handler");
+
     handler_p->fd = timerfd_create(CLOCK_REALTIME, 0);
 
     if (handler_p->fd == -1) {

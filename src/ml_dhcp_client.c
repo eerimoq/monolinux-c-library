@@ -1298,6 +1298,8 @@ static void *client_main(void *arg_p)
 
     self_p = (struct ml_dhcp_client_t *)arg_p;
 
+    pthread_setname_np(pthread_self(), "ml_dhcp_client");
+
     while (true) {
         res = poll(&self_p->fds[0], membersof(self_p->fds), WAIT_FOREVER);
 

@@ -1633,6 +1633,8 @@ void *shell_main(void *arg_p)
           sizeof(*module.commands_p),
           compare_qsort);
 
+    pthread_setname_np(pthread_self(), "ml_shell");
+
     while (true) {
         /* Read command.*/
         res = read_command();

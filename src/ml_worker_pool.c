@@ -42,6 +42,8 @@ static void *worker_pool_main(void *arg_p)
 
     self_p = (struct ml_worker_pool_t *)arg_p;
 
+    pthread_setname_np(pthread_self(), "ml_worker_pool");
+
     while (true) {
         (void)ml_queue_get(&self_p->jobs, (void **)&message_p);
         message_p->entry(message_p->arg_p);
