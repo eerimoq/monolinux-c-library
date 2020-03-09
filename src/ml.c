@@ -412,11 +412,12 @@ int ml_print_file_systems_space_usage(void)
 int ml_mount(const char *source_p,
              const char *target_p,
              const char *type_p,
-             unsigned long flags)
+             unsigned long flags,
+             const char *options_p)
 {
     int res;
 
-    res = mount(source_p, target_p, type_p, flags, NULL);
+    res = mount(source_p, target_p, type_p, flags, options_p);
 
     if (res == -1) {
         ml_info("Mount of '%s' on '%s' as '%s' failed with: %s.",

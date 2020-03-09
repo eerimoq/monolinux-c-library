@@ -1065,15 +1065,64 @@ TEST(command_mknod_block)
               "$ exit\n");
 }
 
-TEST(command_mount_no_args)
+TEST(command_mount_usage)
 {
     int fd;
 
     ml_shell_init();
+    fd = stdin_pipe();
+    ml_shell_start();
 
     CAPTURE_OUTPUT(output, errput) {
-        fd = stdin_pipe();
-        ml_shell_start();
+        input(fd, "mount -h\n");
+        input(fd, "exit\n");
+        ml_shell_join();
+    }
+
+    ASSERT_EQ(output,
+              "mount -h\n"
+              "mount [<device> <dir> <type> [<options>]]\n"
+              "ERROR(-1)\n"
+              "$ exit\n");
+}
+
+TEST(command_mount_list)
+{
+    int fd;
+    FILE *f_p;
+    struct mntent *mntent_root_p;
+    struct mntent *mntent_disk_p;
+
+    f_p = (FILE *)1;
+    setmntent_mock_once("/proc/mounts", "r", f_p);
+
+    /* /. */
+    mntent_root_p = xmalloc(sizeof(*mntent_root_p));
+    mntent_root_p->mnt_dir = "/";
+    mntent_root_p->mnt_fsname = "none";
+    mntent_root_p->mnt_type = "rootfs";
+    getmntent_mock_once(mntent_root_p);
+    getmntent_mock_set_stream_in_pointer(f_p);
+
+    /* /mnt/disk. */
+    mntent_disk_p = xmalloc(sizeof(*mntent_disk_p));
+    mntent_disk_p->mnt_dir = "/mnt/disk";
+    mntent_disk_p->mnt_fsname = "/dev/sda1";
+    mntent_disk_p->mnt_type = "ext4";
+    getmntent_mock_once(mntent_disk_p);
+    getmntent_mock_set_stream_in_pointer(f_p);
+
+    /* No more mounted file systems. */
+    getmntent_mock_once(NULL);
+    getmntent_mock_set_stream_in_pointer(f_p);
+    endmntent_mock_once(0);
+    endmntent_mock_set_streamp_in_pointer(f_p);
+
+    ml_shell_init();
+    fd = stdin_pipe();
+    ml_shell_start();
+
+    CAPTURE_OUTPUT(output, errput) {
         input(fd, "mount\n");
         input(fd, "exit\n");
         ml_shell_join();
@@ -1081,9 +1130,14 @@ TEST(command_mount_no_args)
 
     ASSERT_EQ(output,
               "mount\n"
-              "mount <device> <dir> <type>\n"
-              "ERROR(-1)\n"
+              "MOUNTED ON            TYPE        FILESYSTEM\n"
+              "/                     rootfs      none\n"
+              "/mnt/disk             ext4        /dev/sda1\n"
+              "OK\n"
               "$ exit\n");
+
+    free(mntent_root_p);
+    free(mntent_disk_p);
 }
 
 TEST(command_mount)
@@ -1105,6 +1159,29 @@ TEST(command_mount)
 
     ASSERT_EQ(output,
               "mount /dev/sda1 /mnt/disk ext4\n"
+              "OK\n"
+              "$ exit\n");
+}
+
+TEST(command_mount_with_options)
+{
+    int fd;
+
+    mount_mock_once("/dev/sda1", "/mnt/disk", "ext4", 0, 0);
+    mount_mock_set_data_in("size=1024k", 11);
+
+    ml_shell_init();
+    fd = stdin_pipe();
+    ml_shell_start();
+
+    CAPTURE_OUTPUT(output, errput) {
+        input(fd, "mount /dev/sda1 /mnt/disk ext4 size=1024k\n");
+        input(fd, "exit\n");
+        ml_shell_join();
+    }
+
+    ASSERT_EQ(output,
+              "mount /dev/sda1 /mnt/disk ext4 size=1024k\n"
               "OK\n"
               "$ exit\n");
 }
