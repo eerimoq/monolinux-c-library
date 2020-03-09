@@ -373,9 +373,9 @@ static int command_ifconfig(int argc, const char *argv[])
     }
 
     if (res != 0) {
-        printf("ifconfig <interface>\n"
-               "ifconfig <interface> up/down\n"
-               "ifconfig <interface> <ip-address> <netmask>\n");
+        printf("Usage: ifconfig <interface>\n"
+               "       ifconfig <interface> up/down\n"
+               "       ifconfig <interface> <ip-address> <netmask>\n");
     }
 
     return (res);
@@ -392,7 +392,7 @@ static int command_route(int argc, const char *argv[])
     }
 
     if (res != 0) {
-        printf("route <interface> <ip-address>\n");
+        printf("Usage: route <interface> <ip-address>\n");
     }
 
     return (res);
@@ -530,7 +530,7 @@ static int command_udp_send(int argc, const char *argv[])
     }
 
     if (res != 0) {
-        printf("udp_send <ip-address> <port> <data>\n");
+        printf("Usage: udp_send <ip-address> <port> <data>\n");
     }
 
     return (res);
@@ -554,7 +554,7 @@ static int command_udp_recv(int argc, const char *argv[])
     }
 
     if (res != 0) {
-        printf("udp_recv <port> [<timeout in seconds>]\n");
+        printf("Usage: udp_recv <port> [<timeout in seconds>]\n");
     }
 
     return (res);
@@ -612,7 +612,7 @@ static int command_tcp_send(int argc, const char *argv[])
     }
 
     if (res != 0) {
-        printf("tcp_send <ip-address> <port> <data>\n");
+        printf("Usage: tcp_send <ip-address> <port> <data>\n");
     }
 
     return (res);

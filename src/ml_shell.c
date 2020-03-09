@@ -513,7 +513,7 @@ static int command_suicide(int argc, const char *argv[])
     }
 
     if (res != 0) {
-        printf("suicide {exit,segfault}\n");
+        printf("Usage: suicide {exit,segfault}\n");
     }
 
     return (res);
@@ -658,7 +658,7 @@ static int command_hexdump(int argc, const char *argv[])
     }
 
     if (res != 0) {
-        printf("hexdump [[<offset>] <size>] <file>\n");
+        printf("Usage: hexdump [[<offset>] <size>] <file>\n");
     }
 
     return (res);
@@ -685,7 +685,7 @@ static int command_insmod(int argc, const char *argv[])
     }
 
     if (res != 0) {
-        printf("insmod <file> [<params>]\n");
+        printf("Usage: insmod <file> [<params>]\n");
     }
 
     return (res);
@@ -715,7 +715,7 @@ static int command_mknod(int argc, const char *argv[])
     }
 
     if (res != 0) {
-        printf("mknod <path> <type> [<major>] [<minor>]\n");
+        printf("Usage: mknod <path> <type> [<major>] [<minor>]\n");
     }
 
     return (res);
@@ -734,7 +734,7 @@ static int command_mount(int argc, const char *argv[])
     }
 
     if (res != 0) {
-        printf("mount [<device> <dir> <type> [<options>]]\n");
+        printf("Usage: mount [<device> <dir> <type> [<options>]]\n");
     }
 
     return (res);
@@ -778,7 +778,7 @@ static int command_find(int argc, const char *argv[])
     }
 
     if (res != 0) {
-        printf("find [<path>]\n");
+        printf("Usage: find [<path>]\n");
     }
 
     return (res);

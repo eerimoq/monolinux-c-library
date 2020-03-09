@@ -238,9 +238,9 @@ TEST(command_ifconfig_no_args)
     }
 
     ASSERT_EQ(output,
-              "ifconfig <interface>\n"
-              "ifconfig <interface> up/down\n"
-              "ifconfig <interface> <ip-address> <netmask>\n");
+              "Usage: ifconfig <interface>\n"
+              "       ifconfig <interface> up/down\n"
+              "       ifconfig <interface> <ip-address> <netmask>\n");
 }
 
 TEST(command_ifconfig_configure)
@@ -323,9 +323,9 @@ TEST(command_ifconfig_foobar)
     }
 
     ASSERT_EQ(output,
-              "ifconfig <interface>\n"
-              "ifconfig <interface> up/down\n"
-              "ifconfig <interface> <ip-address> <netmask>\n");
+              "Usage: ifconfig <interface>\n"
+              "       ifconfig <interface> up/down\n"
+              "       ifconfig <interface> <ip-address> <netmask>\n");
 }
 
 TEST(command_ifconfig_print)
@@ -414,7 +414,7 @@ TEST(command_udp_send_no_args)
         ASSERT_EQ(command_udp_send(membersof(argv), argv), -1);
     }
 
-    ASSERT_EQ(output, "udp_send <ip-address> <port> <data>\n");
+    ASSERT_EQ(output, "Usage: udp_send <ip-address> <port> <data>\n");
 }
 
 TEST(command_udp_send_bad_ip_address)
@@ -535,7 +535,7 @@ TEST(command_udp_recv_no_args)
         ASSERT_EQ(command_udp_recv(membersof(argv), argv), -1);
     }
 
-    ASSERT_EQ(output, "udp_recv <port> [<timeout in seconds>]\n");
+    ASSERT_EQ(output, "Usage: udp_recv <port> [<timeout in seconds>]\n");
 }
 
 TEST(command_udp_recv_open_socket_failure)

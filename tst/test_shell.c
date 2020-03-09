@@ -206,7 +206,7 @@ TEST(command_hexdump)
     ASSERT_EQ(
         output,
         "hexdump\n"
-        "hexdump [[<offset>] <size>] <file>\n"
+        "Usage: hexdump [[<offset>] <size>] <file>\n"
         "ERROR(-1)\n"
         "$ hexdump hexdump.in\n"
         "00000000: 30 31 32 33 34 35 36 37 38 39 30 31 32 33 34 35 '0123456789012345'\n"
@@ -710,7 +710,7 @@ TEST(command_insmod)
 
     ASSERT_EQ(output,
               "insmod\n"
-              "insmod <file> [<params>]\n"
+              "Usage: insmod <file> [<params>]\n"
               "ERROR(-1)\n"
               "$ insmod foo.ko\n"
               "OK\n"
@@ -818,7 +818,7 @@ TEST(command_suicide_no_args)
 
     ASSERT_EQ(output,
               "suicide\n"
-              "suicide {exit,segfault}\n"
+              "Usage: suicide {exit,segfault}\n"
               "ERROR(-1)\n"
               "$ exit\n");
 }
@@ -839,7 +839,7 @@ TEST(command_find_too_many_args)
 
     ASSERT_EQ(output,
               "find a b\n"
-              "find [<path>]\n"
+              "Usage: find [<path>]\n"
               "ERROR(-1)\n"
               "$ exit\n");
 }
@@ -952,7 +952,7 @@ TEST(command_mknod_no_args)
 
     ASSERT_EQ(output,
               "mknod\n"
-              "mknod <path> <type> [<major>] [<minor>]\n"
+              "Usage: mknod <path> <type> [<major>] [<minor>]\n"
               "ERROR(-1)\n"
               "$ exit\n");
 }
@@ -973,7 +973,7 @@ TEST(command_mknod_bad_type)
 
     ASSERT_EQ(output,
               "mknod /dev/foo g\n"
-              "mknod <path> <type> [<major>] [<minor>]\n"
+              "Usage: mknod <path> <type> [<major>] [<minor>]\n"
               "ERROR(-1)\n"
               "$ exit\n");
 }
@@ -1038,7 +1038,7 @@ TEST(command_mknod_char_no_minor)
 
     ASSERT_EQ(output,
               "mknod /dev/bar c 5\n"
-              "mknod <path> <type> [<major>] [<minor>]\n"
+              "Usage: mknod <path> <type> [<major>] [<minor>]\n"
               "ERROR(-1)\n"
               "$ exit\n");
 }
@@ -1081,7 +1081,7 @@ TEST(command_mount_usage)
 
     ASSERT_EQ(output,
               "mount -h\n"
-              "mount [<device> <dir> <type> [<options>]]\n"
+              "Usage: mount [<device> <dir> <type> [<options>]]\n"
               "ERROR(-1)\n"
               "$ exit\n");
 }
