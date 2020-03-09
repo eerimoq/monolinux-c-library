@@ -721,41 +721,13 @@ static int command_mknod(int argc, const char *argv[])
     return (res);
 }
 
-static int print_mounted(void)
-{
-    FILE *fin_p;
-    struct mntent *mntent_p;
-
-    /* Find all mounted file systems. */
-    fin_p = setmntent("/proc/mounts", "r");
-
-    if (fin_p == NULL) {
-        return (-1);
-    }
-
-    printf("MOUNTED ON            TYPE        FILESYSTEM\n");
-
-    while ((mntent_p = getmntent(fin_p)) != NULL) {
-        printf("%-20s  %-10s  %s\n",
-               mntent_p->mnt_dir,
-               mntent_p->mnt_type,
-               mntent_p->mnt_fsname);
-    }
-
-    endmntent(fin_p);
-
-    return (0);
-}
-
 static int command_mount(int argc, const char *argv[])
 {
     int res;
 
     res = -1;
 
-    if (argc == 1) {
-        res = print_mounted();
-    } else if (argc == 4) {
+    if (argc == 4) {
         res = ml_mount(argv[1], argv[2], argv[3], 0, NULL);
     } else if (argc == 5) {
         res = ml_mount(argv[1], argv[2], argv[3], 0, argv[4]);
