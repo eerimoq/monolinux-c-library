@@ -91,7 +91,22 @@ static const char *level_to_string(int level)
 
 void ml_log_object_module_init(void)
 {
-    /* module.fd = ml_open("/dev/kmsg", O_WRONLY); */
+#ifndef UNIT_TEST
+    FILE *file_p;
+
+    /* Use /dev/kmsg without rate limiting. */
+    file_p = fopen("/proc/sys/kernel/printk_devkmsg", "w");
+
+    if (file_p == NULL) {
+        return;
+    }
+
+    if (fwrite("on\n", 3, 1, file_p) == 1) {
+        module.fd = ml_open("/dev/kmsg", O_WRONLY);
+    }
+
+    fclose(file_p);
+#endif
 }
 
 void ml_log_object_init(struct ml_log_object_t *self_p,
