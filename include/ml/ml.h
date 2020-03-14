@@ -671,6 +671,12 @@ int ml_device_mapper_verity_create(const char *mapping_name_p,
                                    const char *root_hash_p,
                                    const char *salt_p);
 
+/**
+ * Write given string to given file. Creates the file if it does not
+ * exist. Returns true on success, false otherwise.
+ */
+bool ml_file_write_string(const char *path_p, const char *data_p);
+
 /* Exits on failure. Use with care. */
 
 void *xmalloc(size_t size);
