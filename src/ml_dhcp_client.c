@@ -708,22 +708,26 @@ static void configure_interface(struct ml_dhcp_client_t *self_p)
     char ip_address[16];
     char subnet_mask[16];
     char gateway[16];
+    int mtu;
 
     strcpy(&ip_address[0], inet_ntoa(self_p->ip_address));
     strcpy(&subnet_mask[0], inet_ntoa(self_p->subnet_mask));
     strcpy(&gateway[0], inet_ntoa(self_p->gateway));
+    mtu = 1500;
 
     ML_INFO(
         "Configuring interface '%s' with ip address %s, "
-        "subnet mask %s and gateway %s.",
+        "subnet mask %s, gateway %s and mtu %d.",
         self_p->interface.name_p,
         &ip_address[0],
         &subnet_mask[0],
-        &gateway[0]);
+        &gateway[0],
+        mtu);
 
     res = ml_network_interface_configure(self_p->interface.name_p,
                                          &ip_address[0],
-                                         &subnet_mask[0]);
+                                         &subnet_mask[0],
+                                         mtu);
 
     if (res != 0) {
         ML_WARNING("Failed to configure '%s' with ip address '%s'.",

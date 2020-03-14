@@ -538,6 +538,7 @@ static void mock_push_requesting_to_bound(void)
     ml_network_interface_configure_mock_once("eth0",
                                              "192.168.0.3",
                                              "255.255.255.0",
+                                             1500,
                                              0);
     ml_network_interface_add_route_mock_once("eth0",
                                              "192.168.0.1",
@@ -578,6 +579,7 @@ static void mock_push_renewing_to_bound(void)
     ml_network_interface_configure_mock_once("eth0",
                                              "192.168.0.3",
                                              "255.255.255.0",
+                                             1500,
                                              0);
     ml_network_interface_add_route_mock_once("eth0",
                                              "192.168.0.1",

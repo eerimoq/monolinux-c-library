@@ -94,6 +94,8 @@ static void mock_push_configure(const char *name_p)
     mock_ioctl_ifreq_ok(fd, SIOCSIFADDR, &ifreq);
     create_address_request(&ifreq, "255.255.255.0");
     mock_ioctl_ifreq_ok(fd, SIOCSIFNETMASK, &ifreq);
+    ifreq.ifr_ifru.ifru_mtu = 1500;
+    mock_ioctl_ifreq_ok(fd, SIOCSIFMTU, &ifreq);
     close_mock_once(fd, 0);
 }
 
@@ -172,6 +174,17 @@ static void mock_push_ml_network_interface_mac_address(const char *name_p,
     mock_push_ioctl_get(name_p, SIOCGIFHWADDR, &ifreq_out, res);
 }
 
+static void mock_push_ml_network_interface_mtu(const char *name_p,
+                                               int mtu,
+                                               int res)
+{
+    struct ifreq ifreq_out;
+
+    memset(&ifreq_out, 0, sizeof(ifreq_out));
+    ifreq_out.ifr_ifru.ifru_mtu = mtu;
+    mock_push_ioctl_get(name_p, SIOCGIFMTU, &ifreq_out, res);
+}
+
 static void mock_push_ml_network_interface_ip_address(const char *name_p,
                                                       struct in_addr *ip_address_p,
                                                       int res)
@@ -194,7 +207,8 @@ TEST(network_interface_configure)
 
     ASSERT_EQ(ml_network_interface_configure("eth0",
                                              "192.168.0.4",
-                                             "255.255.255.0"), 0);
+                                             "255.255.255.0",
+                                             1500), 0);
 }
 
 TEST(network_interface_up)
@@ -240,13 +254,15 @@ TEST(command_ifconfig_no_args)
     ASSERT_EQ(output,
               "Usage: ifconfig <interface>\n"
               "       ifconfig <interface> up/down\n"
-              "       ifconfig <interface> <ip-address> <netmask>\n");
+              "       ifconfig <interface> <ip-address> <netmask> <mtu>\n");
 }
 
 TEST(command_ifconfig_configure)
 {
     ml_shell_command_callback_t command_ifconfig;
-    const char *argv[] = { "ifconfig", "eth2", "192.168.0.4", "255.255.255.0" };
+    const char *argv[] = {
+        "ifconfig", "eth2", "192.168.0.4", "255.255.255.0", "1500"
+    };
 
     ml_shell_init();
 
@@ -325,7 +341,7 @@ TEST(command_ifconfig_foobar)
     ASSERT_EQ(output,
               "Usage: ifconfig <interface>\n"
               "       ifconfig <interface> up/down\n"
-              "       ifconfig <interface> <ip-address> <netmask>\n");
+              "       ifconfig <interface> <ip-address> <netmask> <mtu>\n");
 }
 
 TEST(command_ifconfig_print)
@@ -351,6 +367,7 @@ TEST(command_ifconfig_print)
     mac_address[4] = 9;
     mac_address[5] = 10;
     mock_push_ml_network_interface_mac_address("eth1", &mac_address[0], 0);
+    mock_push_ml_network_interface_mtu("eth1", 1500, 0);
     mock_push_ml_network_interface_index("eth1", 5, 0);
 
     CAPTURE_OUTPUT(output, errput) {
@@ -360,10 +377,11 @@ TEST(command_ifconfig_print)
     ASSERT_EQ(output,
               "IP Address:  1.2.3.5\n"
               "MAC Address: 05:06:07:08:09:0a\n"
+              "MTU:         1500\n"
               "Index:       5\n");
 }
 
-TEST(command_ifconfig_print_ip_failure)
+TEST(command_ifconfig_print_failures)
 {
     ml_shell_command_callback_t command_ifconfig;
     const char *argv[] = { "ifconfig", "eth1" };
@@ -385,8 +403,9 @@ TEST(command_ifconfig_print_ip_failure)
     mac_address[3] = 8;
     mac_address[4] = 9;
     mac_address[5] = 10;
-    mock_push_ml_network_interface_mac_address("eth1", &mac_address[0], 0);
-    mock_push_ml_network_interface_index("eth1", 5, 0);
+    mock_push_ml_network_interface_mac_address("eth1", &mac_address[0], -1);
+    mock_push_ml_network_interface_mtu("eth1", 1500, -1);
+    mock_push_ml_network_interface_index("eth1", 5, -1);
 
     CAPTURE_OUTPUT(output, errput) {
         ASSERT_EQ(command_ifconfig(membersof(argv), argv), 0);
@@ -394,8 +413,9 @@ TEST(command_ifconfig_print_ip_failure)
 
     ASSERT_EQ(output,
               "IP Address:  failure\n"
-              "MAC Address: 05:06:07:08:09:0a\n"
-              "Index:       5\n");
+              "MAC Address: failure\n"
+              "MTU:         failure\n"
+              "Index:       failure\n");
 }
 
 TEST(command_udp_send_no_args)

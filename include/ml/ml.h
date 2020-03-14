@@ -436,7 +436,8 @@ void ml_network_init(void);
  */
 int ml_network_interface_configure(const char *name_p,
                                    const char *ipv4_address_p,
-                                   const char *ipv4_netmask_p);
+                                   const char *ipv4_netmask_p,
+                                   int mtu);
 
 /**
  * Bring up given network interface.
@@ -464,6 +465,11 @@ int ml_network_interface_mac_address(const char *name_p,
  */
 int ml_network_interface_ip_address(const char *name_p,
                                     struct in_addr *in_addr_p);
+
+/**
+ * Network interface MTU.
+ */
+int ml_network_interface_mtu(const char *name_p);
 
 /**
  * Add given route.
