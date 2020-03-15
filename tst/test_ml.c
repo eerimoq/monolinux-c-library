@@ -484,3 +484,35 @@ TEST(get_cpus_stats_bad_proc_stat_contents)
 
     ASSERT_EQ(ml_get_cpus_stats(&stats, 1), -1);
 }
+
+TEST(file_write_string)
+{
+    FILE file;
+
+    fopen_mock_once("foo.txt", "w", &file);
+    fwrite_mock_once(3, 1, 1);
+    fwrite_mock_set_ptr_in("bar", 3);
+    fclose_mock_once(0);
+
+    ASSERT(ml_file_write_string("foo.txt", "bar"));
+}
+
+TEST(file_write_string_open_failure)
+{
+    fopen_mock_once("foo.txt", "w", NULL);
+    fclose_mock_none();
+
+    ASSERT(!ml_file_write_string("foo.txt", "bar"));
+}
+
+TEST(file_write_string_write_failure)
+{
+    FILE file;
+
+    fopen_mock_once("foo.txt", "w", &file);
+    fwrite_mock_once(3, 1, 0);
+    fwrite_mock_set_ptr_in("bar", 3);
+    fclose_mock_once(0);
+
+    ASSERT(!ml_file_write_string("foo.txt", "bar"));
+}
