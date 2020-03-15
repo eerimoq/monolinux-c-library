@@ -410,11 +410,11 @@ static int unpack_all_options(struct ml_dhcp_client_t *self_p,
     ML_INFO("Options:");
 
     if (options_p->message_type.valid) {
-        ML_INFO("  Message Type:      %u", options_p->message_type.value);
+        ML_INFO("  MessageType:      %u", options_p->message_type.value);
     }
 
     if (options_p->subnet_mask.valid) {
-        ML_INFO("  Subnet Mask:       %s",
+        ML_INFO("  SubnetMask:       %s",
                 inet_ntoa(options_p->subnet_mask.value));
     }
 
@@ -427,19 +427,19 @@ static int unpack_all_options(struct ml_dhcp_client_t *self_p,
     }
 
     if (options_p->lease_time.valid) {
-        ML_INFO("  Lease Time:        %u", options_p->lease_time.value);
+        ML_INFO("  LeaseTime:        %u", options_p->lease_time.value);
     }
 
     if (options_p->renewal_time.valid) {
-        ML_INFO("  Renewal Time:      %u", options_p->renewal_time.value);
+        ML_INFO("  RenewalTime:      %u", options_p->renewal_time.value);
     }
 
     if (options_p->rebinding_time.valid) {
-        ML_INFO("  Rebinding Time:    %u", options_p->rebinding_time.value);
+        ML_INFO("  RebindingTime:    %u", options_p->rebinding_time.value);
     }
 
     if (options_p->server_ip_address.valid) {
-        ML_INFO("  Server IP Address: %s",
+        ML_INFO("  ServerIPAddress: %s",
                 inet_ntoa(options_p->server_ip_address.value));
     }
 
@@ -1198,14 +1198,14 @@ static int init(struct ml_dhcp_client_t *self_p)
     }
 
     ML_INFO("Interface information:");
-    ML_INFO("  MAC Address: %02x:%02x:%02x:%02x:%02x:%02x",
+    ML_INFO("  MACAddress: %02x:%02x:%02x:%02x:%02x:%02x",
             self_p->interface.mac_address[0],
             self_p->interface.mac_address[1],
             self_p->interface.mac_address[2],
             self_p->interface.mac_address[3],
             self_p->interface.mac_address[4],
             self_p->interface.mac_address[5]);
-    ML_INFO("  Index:       %d", self_p->interface.index);
+    ML_INFO("  Index:      %d", self_p->interface.index);
 
     res = setup_packet_socket(self_p);
 

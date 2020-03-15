@@ -345,7 +345,7 @@ static int command_ifconfig_print(const char *name_p)
     int index;
     struct in_addr in_addr;
 
-    printf("IP Address:  ");
+    printf("IPAddress:  ");
     res = ml_network_interface_ip_address(name_p, &in_addr);
 
     if (res == 0) {
@@ -354,7 +354,7 @@ static int command_ifconfig_print(const char *name_p)
         printf("failure\n");
     }
 
-    printf("MAC Address: ");
+    printf("MACAddress: ");
     res = ml_network_interface_mac_address(name_p, &mac_address[0]);
 
     if (res == 0) {
@@ -369,7 +369,7 @@ static int command_ifconfig_print(const char *name_p)
         printf("failure\n");
     }
 
-    printf("MTU:         ");
+    printf("MTU:        ");
     res = ml_network_interface_mtu(name_p);
 
     if (res > 0) {
@@ -378,7 +378,7 @@ static int command_ifconfig_print(const char *name_p)
         printf("failure\n");
     }
 
-    printf("Index:       ");
+    printf("Index:      ");
     res = ml_network_interface_index(name_p, &index);
 
     if (res == 0) {

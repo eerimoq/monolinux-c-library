@@ -375,10 +375,10 @@ TEST(command_ifconfig_print)
     }
 
     ASSERT_EQ(output,
-              "IP Address:  1.2.3.5\n"
-              "MAC Address: 05:06:07:08:09:0a\n"
-              "MTU:         1500\n"
-              "Index:       5\n");
+              "IPAddress:  1.2.3.5\n"
+              "MACAddress: 05:06:07:08:09:0a\n"
+              "MTU:        1500\n"
+              "Index:      5\n");
 }
 
 TEST(command_ifconfig_print_failures)
@@ -412,10 +412,10 @@ TEST(command_ifconfig_print_failures)
     }
 
     ASSERT_EQ(output,
-              "IP Address:  failure\n"
-              "MAC Address: failure\n"
-              "MTU:         failure\n"
-              "Index:       failure\n");
+              "IPAddress:  failure\n"
+              "MACAddress: failure\n"
+              "MTU:        failure\n"
+              "Index:      failure\n");
 }
 
 TEST(command_udp_send_no_args)
