@@ -137,7 +137,7 @@ void ml_log_object_vprint(struct ml_log_object_t *self_p,
     now = time(NULL);
     gmtime_r(&now, &tm);
 
-    length = strftime(&buf[0], sizeof(buf), "%b %e %T", &tm);
+    length = strftime(&buf[0], sizeof(buf), "%F %T", &tm);
     length += snprintf(&buf[length],
                        sizeof(buf) - length,
                        " %s %s ",
