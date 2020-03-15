@@ -146,10 +146,33 @@ static int try_sync(int sock)
     return (clock_settime(CLOCK_REALTIME, &ts));
 }
 
-int ml_ntp_client_sync(const char *address_p)
+static int try_sync_with_server(struct addrinfo *info_p)
 {
     int res;
     int sock;
+
+    sock = socket(info_p->ai_family,
+                  info_p->ai_socktype,
+                  info_p->ai_protocol);
+
+    if (sock == -1) {
+        return (-1);
+    }
+
+    res = connect(sock, info_p->ai_addr, info_p->ai_addrlen);
+
+    if (res == 0) {
+        res = try_sync(sock);
+    }
+
+    close(sock);
+
+    return (res);
+}
+
+int ml_ntp_client_sync(const char *address_p)
+{
+    int res;
     struct addrinfo hints;
     struct addrinfo *infolist_p;
     struct addrinfo *info_p;
@@ -168,24 +191,7 @@ int ml_ntp_client_sync(const char *address_p)
     res = -1;
 
     for (info_p = infolist_p; info_p != NULL; info_p = info_p->ai_next) {
-        sock = socket(info_p->ai_family,
-                      info_p->ai_socktype,
-                      info_p->ai_protocol);
-
-        if (sock == -1) {
-            continue;
-        }
-
-        res = connect(sock, info_p->ai_addr, info_p->ai_addrlen);
-
-        if (res == -1) {
-            close(sock);
-
-            continue;
-        }
-
-        res = try_sync(sock);
-        close(sock);
+        res = try_sync_with_server(info_p);
 
         if (res == 0) {
             break;
