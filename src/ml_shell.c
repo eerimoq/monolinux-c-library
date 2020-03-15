@@ -786,18 +786,25 @@ static int command_find(int argc, const char *argv[])
 
 static int command_date(int argc, const char *argv[])
 {
-    (void)argc;
-    (void)argv;
-
     int res;
     time_t now;
+    struct timespec ts;
 
     res = -1;
-    now = time(NULL);
 
-    if (now != (time_t)(-1)) {
-        printf("%s", asctime(gmtime(&now)));
-        res = 0;
+    if (argc == 1) {
+        now = time(NULL);
+
+        if (now != (time_t)(-1)) {
+            printf("%s", asctime(gmtime(&now)));
+            res = 0;
+        }
+    } else if (argc == 2) {
+        ts.tv_sec = atoi(argv[1]);
+        ts.tv_nsec = 0;
+        res = clock_settime(CLOCK_REALTIME, &ts);
+    } else {
+        printf("Usage: date [<unix-time>]\n");
     }
 
     return (res);

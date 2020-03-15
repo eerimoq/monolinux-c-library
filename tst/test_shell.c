@@ -1132,17 +1132,17 @@ TEST(command_mount_with_options)
               "$ exit\n");
 }
 
-TEST(command_date)
+TEST(command_date_get)
 {
     int fd;
 
     time_mock_once(1574845540);
 
     ml_shell_init();
+    fd = stdin_pipe();
+    ml_shell_start();
 
     CAPTURE_OUTPUT(output, errput) {
-        fd = stdin_pipe();
-        ml_shell_start();
         input(fd, "date\n");
         input(fd, "exit\n");
         ml_shell_join();
@@ -1152,6 +1152,53 @@ TEST(command_date)
               "date\n"
               "Wed Nov 27 09:05:40 2019\n"
               "OK\n"
+              "$ exit\n");
+}
+
+TEST(command_date_set)
+{
+    int fd;
+    struct timespec ts;
+
+    ts.tv_sec = 3600;
+    ts.tv_nsec = 0;
+    clock_settime_mock_once(CLOCK_REALTIME, 0);
+    clock_settime_mock_set_tp_in(&ts, sizeof(ts));
+
+    ml_shell_init();
+    fd = stdin_pipe();
+    ml_shell_start();
+
+    CAPTURE_OUTPUT(output, errput) {
+        input(fd, "date 3600\n");
+        input(fd, "exit\n");
+        ml_shell_join();
+    }
+
+    ASSERT_EQ(output,
+              "date 3600\n"
+              "OK\n"
+              "$ exit\n");
+}
+
+TEST(command_date_too_many_args)
+{
+    int fd;
+
+    ml_shell_init();
+    fd = stdin_pipe();
+    ml_shell_start();
+
+    CAPTURE_OUTPUT(output, errput) {
+        input(fd, "date 1 2\n");
+        input(fd, "exit\n");
+        ml_shell_join();
+    }
+
+    ASSERT_EQ(output,
+              "date 1 2\n"
+              "Usage: date [<unix-time>]\n"
+              "ERROR(-1)\n"
               "$ exit\n");
 }
 
