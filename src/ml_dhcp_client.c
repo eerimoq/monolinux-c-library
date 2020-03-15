@@ -410,32 +410,32 @@ static int unpack_all_options(struct ml_dhcp_client_t *self_p,
     ML_INFO("Options:");
 
     if (options_p->message_type.valid) {
-        ML_INFO("  MessageType:      %u", options_p->message_type.value);
+        ML_INFO("  MessageType:     %u", options_p->message_type.value);
     }
 
     if (options_p->subnet_mask.valid) {
-        ML_INFO("  SubnetMask:       %s",
+        ML_INFO("  SubnetMask:      %s",
                 inet_ntoa(options_p->subnet_mask.value));
     }
 
     if (options_p->gateway.valid) {
-        ML_INFO("  Gateway:           %s", inet_ntoa(options_p->gateway.value));
+        ML_INFO("  Gateway:         %s", inet_ntoa(options_p->gateway.value));
     }
 
     if (options_p->dns.valid) {
-        ML_INFO("  DNS:               %s", inet_ntoa(options_p->dns.value));
+        ML_INFO("  DNS:             %s", inet_ntoa(options_p->dns.value));
     }
 
     if (options_p->lease_time.valid) {
-        ML_INFO("  LeaseTime:        %u", options_p->lease_time.value);
+        ML_INFO("  LeaseTime:       %u", options_p->lease_time.value);
     }
 
     if (options_p->renewal_time.valid) {
-        ML_INFO("  RenewalTime:      %u", options_p->renewal_time.value);
+        ML_INFO("  RenewalTime:     %u", options_p->renewal_time.value);
     }
 
     if (options_p->rebinding_time.valid) {
-        ML_INFO("  RebindingTime:    %u", options_p->rebinding_time.value);
+        ML_INFO("  RebindingTime:   %u", options_p->rebinding_time.value);
     }
 
     if (options_p->server_ip_address.valid) {
