@@ -296,7 +296,7 @@ static int execute_command(char *line_p)
         res = command_p->callback(argc, &argv[0]);
     } else {
         printf("%s: command not found\n", name_p);
-        res = -1;
+        res = -EINVAL;
     }
 
     return (res);
@@ -589,7 +589,7 @@ static int command_cat(int argc, const char *argv[])
     if (argc != 2) {
         printf("Usage: cat <file>\n");
 
-        return (-1);
+        return (-EINVAL);
     }
 
     file_p = fopen(argv[1], "rb");
@@ -597,14 +597,14 @@ static int command_cat(int argc, const char *argv[])
     if (file_p != NULL) {
         while ((size = fread(&buf[0], 1, membersof(buf), file_p)) > 0) {
             if (fwrite(&buf[0], 1, size, stdout) != size) {
-                res = -2;
+                res = -errno;
                 break;
             }
         }
 
         fclose(file_p);
     } else {
-        res = -1;
+        res = -errno;
     }
 
     return (res);
@@ -634,7 +634,7 @@ static int command_hexdump(int argc, const char *argv[])
     ssize_t offset;
     ssize_t size;
 
-    res = -1;
+    res = -EINVAL;
 
     if (argc == 2) {
         res = hexdump(argv[1], 0, -1);
@@ -644,7 +644,7 @@ static int command_hexdump(int argc, const char *argv[])
         if (size >= 0) {
             res = hexdump(argv[2], 0, size);
         } else {
-            res = -1;
+            res = -EINVAL;
         }
     } else if (argc == 4) {
         offset = atoi(argv[1]);
@@ -653,7 +653,7 @@ static int command_hexdump(int argc, const char *argv[])
         if ((offset >= 0 ) && (size >= 0)) {
             res = hexdump(argv[3], offset, size);
         } else {
-            res = -1;
+            res = -EINVAL;
         }
     }
 
@@ -676,7 +676,7 @@ static int command_insmod(int argc, const char *argv[])
 {
     int res;
 
-    res = -1;
+    res = -EINVAL;
 
     if (argc == 2) {
         res = ml_insert_module(argv[1], "");
@@ -803,6 +803,10 @@ static int command_date(int argc, const char *argv[])
         ts.tv_sec = atoi(argv[1]);
         ts.tv_nsec = 0;
         res = clock_settime(CLOCK_REALTIME, &ts);
+
+        if (res == -1) {
+            res = -errno;
+        }
     } else {
         printf("Usage: date [<unix-time>]\n");
     }
@@ -1662,7 +1666,7 @@ void *shell_main(void *arg_p)
                 if (res == 0) {
                     printf("OK\n");
                 } else {
-                    printf("ERROR(%d)\n", res);
+                    printf("ERROR(%d: %s)\n", res, strerror(-res));
                 }
             }
         }
