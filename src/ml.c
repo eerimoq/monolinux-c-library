@@ -169,6 +169,8 @@ static int read_cpus_stats(struct cpu_stats_t *stats_p, int length)
         return (-1);
     }
 
+    res = -1;
+
     for (i = 0; i < length; i++) {
         res = read_cpu_stats(file_p, &stats_p[i]);
 
