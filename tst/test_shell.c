@@ -120,6 +120,7 @@ TEST(various_commands)
               "           ls   List directory contents.\n"
               "        mknod   Create a node.\n"
               "        mount   Mount a filesystem.\n"
+              "     ntp_sync   NTP time sync.\n"
               "        print   Print to file.\n"
               "       reboot   Reboot.\n"
               "       status   System status.\n"

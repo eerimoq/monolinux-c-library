@@ -856,7 +856,6 @@ static int command_print(int argc, const char *argv[])
 
 static int command_ntp_sync(int argc, const char *argv[])
 {
-    int res;
     const char *server_p;
 
     if (argc == 1) {
