@@ -105,20 +105,22 @@ static int receive_response(int sock, struct timespec *ts_p)
 
     size = read(sock, &buf[0], sizeof(buf));
 
-    if (size < NTP_PACKET_MIN) {
-        return (-1);
+    if (size == -1) {
+        return (-errno);
+    } else if (size < NTP_PACKET_MIN) {
+        return (-EPROTO);
     }
 
     mode = (buf[0] & 0x07);
 
     if (mode != NTP_MODE_SERVER) {
-        return (-1);
+        return (-EPROTO);
     }
 
     version = ((buf[0] >> 3) & 0x07);
 
     if (version != NTP_VERSION) {
-        return (-1);
+        return (-EPROTO);
     }
 
     ntp_time_to_timespec(&buf[32], ts_p);
@@ -156,7 +158,7 @@ static int try_sync_with_server(struct addrinfo *info_p)
                   info_p->ai_protocol);
 
     if (sock == -1) {
-        return (-1);
+        return (-errno);
     }
 
     res = connect(sock, info_p->ai_addr, info_p->ai_addrlen);

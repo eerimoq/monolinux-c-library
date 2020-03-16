@@ -51,6 +51,22 @@ static uint8_t response[48] = {
     0xe2, 0x00, 0xbd, 0x16, 0x6b, 0x4f, 0x7a, 0xf4
 };
 
+static uint8_t response_mode_client[48] = {
+    0x23, 0x03, 0x00, 0xe6, 0x00, 0x00, 0x00, 0x4b, 0x00, 0x00,
+    0x00, 0x12, 0x0a, 0x41, 0x08, 0x04, 0xe2, 0x00, 0xbc, 0xa8,
+    0xf9, 0xe3, 0xeb, 0xb3, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0xe2, 0x00, 0xbd, 0x16, 0x6b, 0x4a, 0x01, 0xac,
+    0xe2, 0x00, 0xbd, 0x16, 0x6b, 0x4f, 0x7a, 0xf4
+};
+
+static uint8_t response_version_1[48] = {
+    0x0c, 0x03, 0x00, 0xe6, 0x00, 0x00, 0x00, 0x4b, 0x00, 0x00,
+    0x00, 0x12, 0x0a, 0x41, 0x08, 0x04, 0xe2, 0x00, 0xbc, 0xa8,
+    0xf9, 0xe3, 0xeb, 0xb3, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0xe2, 0x00, 0xbd, 0x16, 0x6b, 0x4a, 0x01, 0xac,
+    0xe2, 0x00, 0xbd, 0x16, 0x6b, 0x4f, 0x7a, 0xf4
+};
+
 static void mock_prepare_getaddrinfo(struct addrinfo **info_pp,
                                      struct addrinfo *info_p,
                                      struct sockaddr_in *addr_p)
@@ -86,6 +102,16 @@ static void mock_prepare_freeaddrinfo(struct addrinfo *info_p)
     freeaddrinfo_mock_set_res_in_pointer(info_p);
 }
 
+static void mock_prepare_connect_request(int fd)
+{
+    struct sockaddr_in addr;
+
+    socket_mock_once(AF_INET, SOCK_DGRAM, IPPROTO_UDP, fd);
+    connect_mock_once(fd, sizeof(addr), 0);
+    write_mock_once(fd, sizeof(request), sizeof(request));
+    write_mock_set_buf_in(&request[0], sizeof(request));
+}
+
 TEST(getaddrinfo_error)
 {
     getaddrinfo_mock_once("foo", "123", -1);
@@ -111,9 +137,10 @@ TEST(socket_error)
 
     mock_prepare_getaddrinfo(&info_p, &info, &addr);
     socket_mock_once(AF_INET, SOCK_DGRAM, IPPROTO_UDP, -1);
+    socket_mock_set_errno(EACCES);
     mock_prepare_freeaddrinfo(info_p);
 
-    ASSERT_EQ(ml_ntp_client_sync("foo"), -1);
+    ASSERT_EQ(ml_ntp_client_sync("foo"), -EACCES);
 }
 
 TEST(connect_error)
@@ -143,10 +170,7 @@ TEST(ok)
 
     fd = 8;
     mock_prepare_getaddrinfo(&info_p, &info, &addr);
-    socket_mock_once(AF_INET, SOCK_DGRAM, IPPROTO_UDP, fd);
-    connect_mock_once(fd, sizeof(addr), 0);
-    write_mock_once(fd, sizeof(request), sizeof(request));
-    write_mock_set_buf_in(&request[0], sizeof(request));
+    mock_prepare_connect_request(fd);
     poll_mock_once(1, 5000, 1);
     read_mock_once(fd, 68, sizeof(response));
     read_mock_set_buf_out(&response[0], sizeof(response));
@@ -169,10 +193,7 @@ TEST(poll_timeout)
 
     fd = 8;
     mock_prepare_getaddrinfo(&info_p, &info, &addr);
-    socket_mock_once(AF_INET, SOCK_DGRAM, IPPROTO_UDP, fd);
-    connect_mock_once(fd, sizeof(addr), 0);
-    write_mock_once(fd, sizeof(request), sizeof(request));
-    write_mock_set_buf_in(&request[0], sizeof(request));
+    mock_prepare_connect_request(fd);
     poll_mock_once(1, 5000, 0);
     poll_mock_set_errno(ETIMEDOUT);
     read_mock_none();
@@ -193,10 +214,7 @@ TEST(clock_settime_error)
 
     fd = 8;
     mock_prepare_getaddrinfo(&info_p, &info, &addr);
-    socket_mock_once(AF_INET, SOCK_DGRAM, IPPROTO_UDP, fd);
-    connect_mock_once(fd, sizeof(addr), 0);
-    write_mock_once(fd, sizeof(request), sizeof(request));
-    write_mock_set_buf_in(&request[0], sizeof(request));
+    mock_prepare_connect_request(fd);
     poll_mock_once(1, 5000, 1);
     read_mock_once(fd, 68, sizeof(response));
     read_mock_set_buf_out(&response[0], sizeof(response));
@@ -237,14 +255,50 @@ TEST(receive_error)
 
     fd = 8;
     mock_prepare_getaddrinfo(&info_p, &info, &addr);
-    socket_mock_once(AF_INET, SOCK_DGRAM, IPPROTO_UDP, fd);
-    connect_mock_once(fd, sizeof(addr), 0);
-    write_mock_once(fd, sizeof(request), sizeof(request));
-    write_mock_set_buf_in(&request[0], sizeof(request));
+    mock_prepare_connect_request(fd);
     poll_mock_once(1, 5000, 1);
     read_mock_once(fd, 68, -1);
+    read_mock_set_errno(EACCES);
     close_mock_once(fd, 0);
     mock_prepare_freeaddrinfo(info_p);
 
-    ASSERT_EQ(ml_ntp_client_sync("foo"), -1);
+    ASSERT_EQ(ml_ntp_client_sync("foo"), -EACCES);
+}
+
+TEST(receive_short_packet_error)
+{
+    struct addrinfo info;
+    struct addrinfo *info_p;
+    struct sockaddr_in addr;
+    int fd;
+
+    fd = 8;
+    mock_prepare_getaddrinfo(&info_p, &info, &addr);
+    mock_prepare_connect_request(fd);
+    poll_mock_once(1, 5000, 1);
+    read_mock_once(fd, 68, sizeof(response_mode_client));
+    read_mock_set_buf_out(&response_mode_client[0], sizeof(response_mode_client));
+    close_mock_once(fd, 0);
+    mock_prepare_freeaddrinfo(info_p);
+
+    ASSERT_EQ(ml_ntp_client_sync("foo"), -EPROTO);
+}
+
+TEST(receive_wrong_ntp_version)
+{
+    struct addrinfo info;
+    struct addrinfo *info_p;
+    struct sockaddr_in addr;
+    int fd;
+
+    fd = 8;
+    mock_prepare_getaddrinfo(&info_p, &info, &addr);
+    mock_prepare_connect_request(fd);
+    poll_mock_once(1, 5000, 1);
+    read_mock_once(fd, 68, sizeof(response_version_1));
+    read_mock_set_buf_out(&response_version_1[0], sizeof(response_version_1));
+    close_mock_once(fd, 0);
+    mock_prepare_freeaddrinfo(info_p);
+
+    ASSERT_EQ(ml_ntp_client_sync("foo"), -EPROTO);
 }
