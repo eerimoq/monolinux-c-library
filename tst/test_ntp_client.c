@@ -127,6 +127,7 @@ TEST(connect_error)
     mock_prepare_getaddrinfo(&info_p, &info, &addr);
     socket_mock_once(AF_INET, SOCK_DGRAM, IPPROTO_UDP, fd);
     connect_mock_once(fd, sizeof(addr), -1);
+    close_mock_once(6, 0);
     mock_prepare_freeaddrinfo(info_p);
 
     ASSERT_EQ(ml_ntp_client_sync("foo"), -1);
@@ -173,10 +174,13 @@ TEST(poll_timeout)
     write_mock_once(fd, sizeof(request), sizeof(request));
     write_mock_set_buf_in(&request[0], sizeof(request));
     poll_mock_once(1, 5000, 0);
+    poll_mock_set_errno(ETIMEDOUT);
+    read_mock_none();
+    clock_settime_mock_none();
     close_mock_once(fd, 0);
     mock_prepare_freeaddrinfo(info_p);
 
-    ASSERT_EQ(ml_ntp_client_sync("foo"), -1);
+    ASSERT_EQ(ml_ntp_client_sync("foo"), -ETIMEDOUT);
 }
 
 TEST(clock_settime_error)

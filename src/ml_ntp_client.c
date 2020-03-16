@@ -100,7 +100,7 @@ static int receive_response(int sock, struct timespec *ts_p)
     res = poll(&pfd[0], 1, 5000);
 
     if ((res == -1) || (res != 1)) {
-        return (res);
+        return (-errno);
     }
 
     size = read(sock, &buf[0], sizeof(buf));
