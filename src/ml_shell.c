@@ -854,6 +854,24 @@ static int command_print(int argc, const char *argv[])
     return (res);
 }
 
+static int command_ntp_sync(int argc, const char *argv[])
+{
+    int res;
+    const char *server_p;
+
+    if (argc == 1) {
+        server_p = "0.se.pool.ntp.org";
+    } else if (argc == 2) {
+        server_p = argv[1];
+    } else {
+        printf("Usage: ntp_sync [<server>]\n");
+
+        return (-1);
+    }
+
+    return (ml_ntp_client_sync(server_p));
+}
+
 static void print_kernel_message(char *message_p)
 {
     unsigned long long secs;
@@ -1739,6 +1757,9 @@ void ml_shell_init(void)
     ml_shell_register_command("status",
                               "System status.",
                               command_status);
+    ml_shell_register_command("ntp_sync",
+                              "NTP time sync.",
+                              command_ntp_sync);
 }
 
 void ml_shell_start(void)
