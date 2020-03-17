@@ -865,7 +865,7 @@ static int command_ntp_sync(int argc, const char *argv[])
     } else {
         printf("Usage: ntp_sync [<server>]\n");
 
-        return (-1);
+        return (-EINVAL);
     }
 
     return (ml_ntp_client_sync(server_p));

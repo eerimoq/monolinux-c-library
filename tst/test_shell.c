@@ -43,6 +43,17 @@
 #define ESC "\x1b"
 #define BACKSPACE "\x08"
 
+static int init_and_start(void)
+{
+    int fd;
+
+    ml_shell_init();
+    fd = stdin_pipe();
+    ml_shell_start();
+
+    return (fd);
+}
+
 static int command_hello(int argc, const char *argv[])
 {
     const char *name_p;
@@ -62,12 +73,10 @@ TEST(various_commands)
 {
     int fd;
 
-    ml_shell_init();
+    fd = init_and_start();
     ml_shell_register_command("hello", "My command.", command_hello);
 
     CAPTURE_OUTPUT(output, errput) {
-        fd = stdin_pipe();
-        ml_shell_start();
         input(fd, "help\n");
         input(fd, "history\n");
         input(fd, "hello\n");
@@ -144,11 +153,9 @@ TEST(command_ls)
 {
     int fd;
 
-    ml_shell_init();
+    fd = init_and_start();
 
     CAPTURE_OUTPUT(output, errput) {
-        fd = stdin_pipe();
-        ml_shell_start();
         input(fd, "ls\n");
         input(fd, "exit\n");
         ml_shell_join();
@@ -161,11 +168,9 @@ TEST(command_cat)
 {
     int fd;
 
-    ml_shell_init();
+    fd = init_and_start();
 
     CAPTURE_OUTPUT(output, errput) {
-        fd = stdin_pipe();
-        ml_shell_start();
         input(fd, "cat\n");
         input(fd, "cat hexdump.in\n");
         input(fd, "cat foobar\n");
@@ -190,11 +195,9 @@ TEST(command_hexdump)
 {
     int fd;
 
-    ml_shell_init();
+    fd = init_and_start();
 
     CAPTURE_OUTPUT(output, errput) {
-        fd = stdin_pipe();
-        ml_shell_start();
         input(fd, "hexdump\n");
         input(fd, "hexdump hexdump.in\n");
         input(fd, "hexdump 0 hexdump.in\n");
@@ -229,12 +232,9 @@ TEST(command_editing)
 {
     int fd;
 
-    ml_shell_init();
+    fd = init_and_start();
 
     CAPTURE_OUTPUT(output, errput) {
-        fd = stdin_pipe();
-        ml_shell_start();
-
         /* 1. Ctrl-A + Ctrl-D + Enter. */
         input(fd, "12");
         input(fd, "\x01\x04\n");
@@ -334,11 +334,9 @@ TEST(history)
 {
     int fd;
 
-    ml_shell_init();
+    fd = init_and_start();
 
     CAPTURE_OUTPUT(output, errput) {
-        fd = stdin_pipe();
-        ml_shell_start();
         input(fd, "foo\n");
         input(fd, "bar\n");
         input(fd, "fie\n");
@@ -404,12 +402,9 @@ TEST(history_full)
     int i;
     char buf[64];
 
-    ml_shell_init();
+    fd = init_and_start();
 
     CAPTURE_OUTPUT(output, errput) {
-        fd = stdin_pipe();
-        ml_shell_start();
-
         for (i = 0; i < 64; i++) {
             sprintf(&buf[0], "command-%d\n", i);
             input(fd, &buf[0]);
@@ -697,11 +692,9 @@ TEST(command_insmod)
     ml_finit_module_mock_once(fd, "fie=fum", 0, 0);
     close_mock_once(fd, 0);
 
-    ml_shell_init();
+    fd = init_and_start();
 
     CAPTURE_OUTPUT(output, errput) {
-        fd = stdin_pipe();
-        ml_shell_start();
         input(fd, "insmod\n");
         input(fd, "insmod foo.ko\n");
         input(fd, "insmod bar.ko fie=fum\n");
@@ -726,11 +719,9 @@ TEST(command_df_setmntent_failure)
 
     setmntent_mock_once("/proc/mounts", "r", NULL);
 
-    ml_shell_init();
+    fd = init_and_start();
 
     CAPTURE_OUTPUT(output, errput) {
-        fd = stdin_pipe();
-        ml_shell_start();
         input(fd, "df\n");
         input(fd, "exit\n");
         ml_shell_join();
@@ -781,11 +772,9 @@ TEST(command_df)
     endmntent_mock_once(0);
     endmntent_mock_set_streamp_in_pointer(f_p);
 
-    ml_shell_init();
+    fd = init_and_start();
 
     CAPTURE_OUTPUT(output, errput) {
-        fd = stdin_pipe();
-        ml_shell_start();
         input(fd, "df\n");
         input(fd, "exit\n");
         ml_shell_join();
@@ -807,11 +796,9 @@ TEST(command_suicide_no_args)
 {
     int fd;
 
-    ml_shell_init();
+    fd = init_and_start();
 
     CAPTURE_OUTPUT(output, errput) {
-        fd = stdin_pipe();
-        ml_shell_start();
         input(fd, "suicide\n");
         input(fd, "exit\n");
         ml_shell_join();
@@ -828,11 +815,9 @@ TEST(command_find_too_many_args)
 {
     int fd;
 
-    ml_shell_init();
+    fd = init_and_start();
 
     CAPTURE_OUTPUT(output, errput) {
-        fd = stdin_pipe();
-        ml_shell_start();
         input(fd, "find a b\n");
         input(fd, "exit\n");
         ml_shell_join();
@@ -872,11 +857,9 @@ TEST(command_find_no_args)
     nftw_mock_ignore_fn_in();
     nftw_mock_set_callback(find_callback);
 
-    ml_shell_init();
+    fd = init_and_start();
 
     CAPTURE_OUTPUT(output, errput) {
-        fd = stdin_pipe();
-        ml_shell_start();
         input(fd, "find\n");
         input(fd, "exit\n");
         ml_shell_join();
@@ -918,11 +901,9 @@ TEST(command_find_in_dir)
     nftw_mock_ignore_fn_in();
     nftw_mock_set_callback(tmp_callback);
 
-    ml_shell_init();
+    fd = init_and_start();
 
     CAPTURE_OUTPUT(output, errput) {
-        fd = stdin_pipe();
-        ml_shell_start();
         input(fd, "find tmp\n");
         input(fd, "exit\n");
         ml_shell_join();
@@ -941,11 +922,9 @@ TEST(command_mknod_no_args)
 {
     int fd;
 
-    ml_shell_init();
+    fd = init_and_start();
 
     CAPTURE_OUTPUT(output, errput) {
-        fd = stdin_pipe();
-        ml_shell_start();
         input(fd, "mknod\n");
         input(fd, "exit\n");
         ml_shell_join();
@@ -962,11 +941,9 @@ TEST(command_mknod_bad_type)
 {
     int fd;
 
-    ml_shell_init();
+    fd = init_and_start();
 
     CAPTURE_OUTPUT(output, errput) {
-        fd = stdin_pipe();
-        ml_shell_start();
         input(fd, "mknod /dev/foo g\n");
         input(fd, "exit\n");
         ml_shell_join();
@@ -985,11 +962,9 @@ TEST(command_mknod_fifo)
 
     ml_mknod_mock_once("/dev/foo", S_IFIFO | 0666, 0, 0);
 
-    ml_shell_init();
+    fd = init_and_start();
 
     CAPTURE_OUTPUT(output, errput) {
-        fd = stdin_pipe();
-        ml_shell_start();
         input(fd, "mknod /dev/foo p\n");
         input(fd, "exit\n");
         ml_shell_join();
@@ -1007,11 +982,9 @@ TEST(command_mknod_char)
 
     ml_mknod_mock_once("/dev/bar", S_IFCHR | 0666, makedev(5, 6), 0);
 
-    ml_shell_init();
+    fd = init_and_start();
 
     CAPTURE_OUTPUT(output, errput) {
-        fd = stdin_pipe();
-        ml_shell_start();
         input(fd, "mknod /dev/bar c 5 6\n");
         input(fd, "exit\n");
         ml_shell_join();
@@ -1027,11 +1000,9 @@ TEST(command_mknod_char_no_minor)
 {
     int fd;
 
-    ml_shell_init();
+    fd = init_and_start();
 
     CAPTURE_OUTPUT(output, errput) {
-        fd = stdin_pipe();
-        ml_shell_start();
         input(fd, "mknod /dev/bar c 5\n");
         input(fd, "exit\n");
         ml_shell_join();
@@ -1050,11 +1021,9 @@ TEST(command_mknod_block)
 
     ml_mknod_mock_once("/dev/sda1", S_IFBLK | 0666, makedev(8, 1), 0);
 
-    ml_shell_init();
+    fd = init_and_start();
 
     CAPTURE_OUTPUT(output, errput) {
-        fd = stdin_pipe();
-        ml_shell_start();
         input(fd, "mknod /dev/sda1 b 8 1\n");
         input(fd, "exit\n");
         ml_shell_join();
@@ -1070,9 +1039,7 @@ TEST(command_mount_usage)
 {
     int fd;
 
-    ml_shell_init();
-    fd = stdin_pipe();
-    ml_shell_start();
+    fd = init_and_start();
 
     CAPTURE_OUTPUT(output, errput) {
         input(fd, "mount -h\n");
@@ -1094,11 +1061,9 @@ TEST(command_mount)
     mount_mock_once("/dev/sda1", "/mnt/disk", "ext4", 0, 0);
     mount_mock_set_data_in_pointer(NULL);
 
-    ml_shell_init();
+    fd = init_and_start();
 
     CAPTURE_OUTPUT(output, errput) {
-        fd = stdin_pipe();
-        ml_shell_start();
         input(fd, "mount /dev/sda1 /mnt/disk ext4\n");
         input(fd, "exit\n");
         ml_shell_join();
@@ -1117,9 +1082,7 @@ TEST(command_mount_with_options)
     mount_mock_once("/dev/sda1", "/mnt/disk", "ext4", 0, 0);
     mount_mock_set_data_in("size=1024k", 11);
 
-    ml_shell_init();
-    fd = stdin_pipe();
-    ml_shell_start();
+    fd = init_and_start();
 
     CAPTURE_OUTPUT(output, errput) {
         input(fd, "mount /dev/sda1 /mnt/disk ext4 size=1024k\n");
@@ -1139,9 +1102,7 @@ TEST(command_date_get)
 
     time_mock_once(1574845540);
 
-    ml_shell_init();
-    fd = stdin_pipe();
-    ml_shell_start();
+    fd = init_and_start();
 
     CAPTURE_OUTPUT(output, errput) {
         input(fd, "date\n");
@@ -1166,9 +1127,7 @@ TEST(command_date_set)
     clock_settime_mock_once(CLOCK_REALTIME, 0);
     clock_settime_mock_set_tp_in(&ts, sizeof(ts));
 
-    ml_shell_init();
-    fd = stdin_pipe();
-    ml_shell_start();
+    fd = init_and_start();
 
     CAPTURE_OUTPUT(output, errput) {
         input(fd, "date 3600\n");
@@ -1186,9 +1145,7 @@ TEST(command_date_too_many_args)
 {
     int fd;
 
-    ml_shell_init();
-    fd = stdin_pipe();
-    ml_shell_start();
+    fd = init_and_start();
 
     CAPTURE_OUTPUT(output, errput) {
         input(fd, "date 1 2\n");
@@ -1208,7 +1165,7 @@ TEST(command_print)
     int fd;
     FILE file;
 
-    ml_shell_init();
+    fd = init_and_start();
 
     fopen_mock_once("my-file", "w", &file);
     fwrite_mock_once(1, 5, 5);
@@ -1218,8 +1175,6 @@ TEST(command_print)
     fclose_mock_once(0);
 
     CAPTURE_OUTPUT(output, errput) {
-        fd = stdin_pipe();
-        ml_shell_start();
         input(fd, "print hello my-file\n");
         input(fd, "exit\n");
         ml_shell_join();
@@ -1235,7 +1190,7 @@ TEST(command_dmesg)
 {
     int fd;
 
-    ml_shell_init();
+    fd = init_and_start();
 
     ml_open_mock_once("/dev/kmsg", O_RDONLY | O_NONBLOCK, 5);
     read_mock_once(5, 1023, 54);
@@ -1250,8 +1205,6 @@ TEST(command_dmesg)
     close_mock_once(5, 0);
 
     CAPTURE_OUTPUT(output, errput) {
-        fd = stdin_pipe();
-        ml_shell_start();
         input(fd, "dmesg\n");
         input(fd, "exit\n");
         ml_shell_join();
@@ -1269,14 +1222,12 @@ TEST(command_dmesg_open_error)
 {
     int fd;
 
-    ml_shell_init();
+    fd = init_and_start();
 
     ml_open_mock_once("/dev/kmsg", O_RDONLY | O_NONBLOCK, -1);
     ml_open_mock_set_errno(55);
 
     CAPTURE_OUTPUT(output, errput) {
-        fd = stdin_pipe();
-        ml_shell_start();
         input(fd, "dmesg\n");
         input(fd, "exit\n");
         ml_shell_join();
@@ -1292,13 +1243,11 @@ TEST(command_sync)
 {
     int fd;
 
-    ml_shell_init();
+    fd = init_and_start();
 
     sync_mock_once();
 
     CAPTURE_OUTPUT(output, errput) {
-        fd = stdin_pipe();
-        ml_shell_start();
         input(fd, "sync\n");
         input(fd, "exit\n");
         ml_shell_join();
@@ -1349,15 +1298,13 @@ TEST(command_status)
         }
     };
 
-    ml_shell_init();
+    fd = init_and_start();
 
     mock_prepare_read_cpus_stats(&lines[0][0], 6);
     usleep_mock_once(100000, 0);
     mock_prepare_read_cpus_stats(&lines[1][0], 5);
 
     CAPTURE_OUTPUT(output, errput) {
-        fd = stdin_pipe();
-        ml_shell_start();
         input(fd, "status\n");
         input(fd, "exit\n");
         ml_shell_join();
@@ -1372,5 +1319,84 @@ TEST(command_status)
               "3     25%      0%   75%\n"
               "4     44%      0%   55%\n"
               "OK\n"
+              "$ exit\n");
+}
+
+TEST(command_ntp_date_default_server)
+{
+    int fd;
+
+    fd = init_and_start();
+
+    ml_ntp_client_sync_mock_once("0.se.pool.ntp.org", 0);
+
+    CAPTURE_OUTPUT(output, errput) {
+        input(fd, "ntp_sync\n");
+        input(fd, "exit\n");
+        ml_shell_join();
+    }
+
+    ASSERT_EQ(output,
+              "ntp_sync\n"
+              "OK\n"
+              "$ exit\n");
+}
+
+TEST(command_ntp_date_non_default_server)
+{
+    int fd;
+
+    fd = init_and_start();
+
+    ml_ntp_client_sync_mock_once("foo.bar", 0);
+
+    CAPTURE_OUTPUT(output, errput) {
+        input(fd, "ntp_sync foo.bar\n");
+        input(fd, "exit\n");
+        ml_shell_join();
+    }
+
+    ASSERT_EQ(output,
+              "ntp_sync foo.bar\n"
+              "OK\n"
+              "$ exit\n");
+}
+
+TEST(command_ntp_date_sync_failure)
+{
+    int fd;
+
+    fd = init_and_start();
+
+    ml_ntp_client_sync_mock_once("0.se.pool.ntp.org", -EACCES);
+
+    CAPTURE_OUTPUT(output, errput) {
+        input(fd, "ntp_sync\n");
+        input(fd, "exit\n");
+        ml_shell_join();
+    }
+
+    ASSERT_EQ(output,
+              "ntp_sync\n"
+              "ERROR(-13: Permission denied)\n"
+              "$ exit\n");
+}
+
+TEST(command_ntp_date_too_many_arguments)
+{
+    int fd;
+
+    fd = init_and_start();
+
+    CAPTURE_OUTPUT(output, errput) {
+        input(fd, "ntp_sync 1 2\n");
+        input(fd, "exit\n");
+        ml_shell_join();
+    }
+
+    ASSERT_EQ(output,
+              "ntp_sync 1 2\n"
+              "Usage: ntp_sync [<server>]\n"
+              "ERROR(-22: Invalid argument)\n"
               "$ exit\n");
 }
