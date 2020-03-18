@@ -595,3 +595,14 @@ int ml_file_write_string(const char *path_p, const char *data_p)
 
     return (res);
 }
+
+float ml_timeval_to_ms(struct timeval *timeval_p)
+{
+    float res;
+
+    res = (float)timeval_p->tv_usec;
+    res /= 1000;
+    res += (float)(1000 * timeval_p->tv_sec);
+
+    return (res);
+}

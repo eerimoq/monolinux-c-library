@@ -117,6 +117,7 @@ TEST(various_commands)
               "\n"
               "          cat   Print a file.\n"
               "         date   Print current date.\n"
+              "           dd   File copy.\n"
               "           df   Disk space usage.\n"
               "        dmesg   Print the kernel ring buffer.\n"
               "         exit   Shell exit.\n"

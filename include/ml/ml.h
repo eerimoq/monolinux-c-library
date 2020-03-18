@@ -683,6 +683,8 @@ int ml_device_mapper_verity_create(const char *mapping_name_p,
  */
 int ml_file_write_string(const char *path_p, const char *data_p);
 
+float ml_timeval_to_ms(struct timeval *timeval_p);
+
 /* Exits on failure. Use with care. */
 
 void *xmalloc(size_t size);

@@ -40,6 +40,7 @@
 #include <sys/mount.h>
 #include <sys/param.h>
 #include <sys/reboot.h>
+#include <sys/time.h>
 #include <ctype.h>
 #include <termios.h>
 #include <ftw.h>
@@ -869,6 +870,187 @@ static int command_ntp_sync(int argc, const char *argv[])
     }
 
     return (ml_ntp_client_sync(server_p));
+}
+
+static int command_dd_parse_args(int argc,
+                                 const char *argv[],
+                                 int *fdin_p,
+                                 int *fdout_p,
+                                 size_t *total_size_p,
+                                 size_t *chunk_size_p)
+{
+    int res;
+
+    if (argc != 5) {
+        return (-EINVAL);
+    }
+
+    *fdin_p = open(argv[1], O_RDONLY);
+
+    if (*fdin_p == -1) {
+        return (-errno);
+    }
+
+    if (strcmp(argv[2], "-") == 0) {
+        *fdout_p = -1;
+    } else {
+        *fdout_p = open(argv[2], O_WRONLY);
+
+        if (*fdout_p == -1) {
+            res = -errno;
+            goto out1;
+        }
+    }
+
+    *total_size_p = atoi(argv[3]);
+
+    if (*total_size_p > 1024 * 1024 * 1024) {
+        res = -EINVAL;
+        goto out2;
+    }
+
+    *chunk_size_p = atoi(argv[4]);
+
+    if (*chunk_size_p > 1024 * 1024 * 1024) {
+        res = -EINVAL;
+        goto out2;
+    }
+
+    if (*chunk_size_p > *total_size_p) {
+        res = -EINVAL;
+        goto out2;
+    }
+
+    if ((*total_size_p % *chunk_size_p) != 0) {
+        res = -EINVAL;
+        goto out2;
+    }
+
+    return (0);
+
+ out2:
+    close(*fdout_p);
+
+ out1:
+    close(*fdin_p);
+
+    return (res);
+}
+
+static void command_dd_summary(size_t total_size,
+                               struct timeval *start_time_p,
+                               struct timeval *end_time_p)
+{
+    float time_elapsed_ms;
+    float transfer_rate;
+    struct timeval elapsed_time;
+
+    timersub(end_time_p, start_time_p, &elapsed_time);
+    time_elapsed_ms = ml_timeval_to_ms(&elapsed_time);
+    transfer_rate = ((float)total_size / time_elapsed_ms / 1000.0f);
+
+    printf("%lu bytes copied in %.03f ms (%.03f MB/s).\n",
+           (unsigned long)total_size,
+           time_elapsed_ms,
+           transfer_rate);
+}
+
+static int command_dd_copy_chunk(size_t chunk_size,
+                                 int fdin,
+                                 int fdout,
+                                 void *buf_p)
+{
+    ssize_t size;
+
+    size = read(fdin, buf_p, chunk_size);
+
+    if (size == -1) {
+        return (-errno);
+    } else if ((size_t)size != chunk_size) {
+        return (-1);
+    }
+
+    if (fdout == -1) {
+        return (0);
+    }
+
+    size = write(fdout, buf_p, chunk_size);
+
+    if (size == -1) {
+        return (-errno);
+    } else if ((size_t)size != chunk_size) {
+        return (-1);
+    }
+
+    return (0);
+}
+
+static int command_dd(int argc, const char *argv[])
+{
+    int fdin;
+    int fdout;
+    size_t total_size;
+    size_t chunk_size;
+    void *buf_p;
+    int res;
+    struct timeval start_time;
+    struct timeval end_time;
+    size_t left;
+
+    res = command_dd_parse_args(argc,
+                                argv,
+                                &fdin,
+                                &fdout,
+                                &total_size,
+                                &chunk_size);
+
+    if (res != 0) {
+        printf("Usage: dd <infile> <outfile> <total-size> <chunk-size>\n");
+
+        return (res);
+    }
+
+    buf_p = malloc(chunk_size);
+
+    if (buf_p == NULL) {
+        res = -errno;
+        goto out1;
+    }
+
+    gettimeofday(&start_time, NULL);
+    left = total_size;
+
+    while (left > 0) {
+        res = command_dd_copy_chunk(chunk_size, fdin, fdout, buf_p);
+
+        if (res != 0) {
+            break;
+        }
+
+        left -= chunk_size;
+    }
+
+    if (res != 0) {
+        goto out2;
+    }
+
+    gettimeofday(&end_time, NULL);
+    command_dd_summary(total_size, &start_time, &end_time);
+
+    free(buf_p);
+    close(fdin);
+    close(fdout);
+
+    return (0);
+
+ out2:
+    free(buf_p);
+
+ out1:
+    close(fdin);
+    close(fdout);
+
+    return (res);
 }
 
 static void print_kernel_message(char *message_p)
@@ -1759,6 +1941,9 @@ void ml_shell_init(void)
     ml_shell_register_command("ntp_sync",
                               "NTP time sync.",
                               command_ntp_sync);
+    ml_shell_register_command("dd",
+                              "File copy.",
+                              command_dd);
 }
 
 void ml_shell_start(void)
