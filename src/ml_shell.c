@@ -891,15 +891,11 @@ static int command_dd_parse_args(int argc,
         return (-errno);
     }
 
-    if (strcmp(argv[2], "-") == 0) {
-        *fdout_p = -1;
-    } else {
-        *fdout_p = open(argv[2], O_WRONLY);
+    *fdout_p = open(argv[2], O_WRONLY);
 
-        if (*fdout_p == -1) {
-            res = -errno;
-            goto out1;
-        }
+    if (*fdout_p == -1) {
+        res = -errno;
+        goto out1;
     }
 
     *total_size_p = atoi(argv[3]);
@@ -1024,22 +1020,21 @@ static int command_dd(int argc, const char *argv[])
         res = command_dd_copy_chunk(chunk_size, fdin, fdout, buf_p);
 
         if (res != 0) {
-            break;
+            goto out2;
         }
 
         left -= chunk_size;
     }
 
-    if (res != 0) {
-        goto out2;
-    }
+    /* Close finalizes the transfer, so must be part of the time
+       measurement. */
+    close(fdin);
+    close(fdout);
 
     gettimeofday(&end_time, NULL);
     command_dd_summary(total_size, &start_time, &end_time);
 
     free(buf_p);
-    close(fdin);
-    close(fdout);
 
     return (0);
 
