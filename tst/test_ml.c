@@ -494,15 +494,16 @@ TEST(file_write_string)
     fwrite_mock_set_ptr_in("bar", 3);
     fclose_mock_once(0);
 
-    ASSERT(ml_file_write_string("foo.txt", "bar"));
+    ASSERT_EQ(ml_file_write_string("foo.txt", "bar"), 0);
 }
 
 TEST(file_write_string_open_failure)
 {
     fopen_mock_once("foo.txt", "w", NULL);
+    fopen_mock_set_errno(5);
     fclose_mock_none();
 
-    ASSERT(!ml_file_write_string("foo.txt", "bar"));
+    ASSERT_EQ(ml_file_write_string("foo.txt", "bar"), -5);
 }
 
 TEST(file_write_string_write_failure)
@@ -514,5 +515,5 @@ TEST(file_write_string_write_failure)
     fwrite_mock_set_ptr_in("bar", 3);
     fclose_mock_once(0);
 
-    ASSERT(!ml_file_write_string("foo.txt", "bar"));
+    ASSERT_EQ(ml_file_write_string("foo.txt", "bar"), -1);
 }

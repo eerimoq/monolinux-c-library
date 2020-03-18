@@ -93,7 +93,7 @@ void ml_log_object_module_init(void)
 {
 #ifndef UNIT_TEST
     /* Use /dev/kmsg without rate limiting. */
-    if (ml_file_write_string("/proc/sys/kernel/printk_devkmsg", "on\n")) {
+    if (ml_file_write_string("/proc/sys/kernel/printk_devkmsg", "on\n") == 0) {
         module.fd = ml_open("/dev/kmsg", O_WRONLY);
     }
 #endif

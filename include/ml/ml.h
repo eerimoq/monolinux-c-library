@@ -679,9 +679,9 @@ int ml_device_mapper_verity_create(const char *mapping_name_p,
 
 /**
  * Write given string to given file. Creates the file if it does not
- * exist. Returns true on success, false otherwise.
+ * exist. Returns zero(0) on success, otherwise negative error code.
  */
-bool ml_file_write_string(const char *path_p, const char *data_p);
+int ml_file_write_string(const char *path_p, const char *data_p);
 
 /* Exits on failure. Use with care. */
 

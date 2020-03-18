@@ -574,21 +574,24 @@ bool ml_log_is_enabled_for(int level)
     return (ml_log_object_is_enabled_for(&module.log_object, level));
 }
 
-bool ml_file_write_string(const char *path_p, const char *data_p)
+int ml_file_write_string(const char *path_p, const char *data_p)
 {
     FILE *file_p;
-    bool ok;
+    int res;
 
-    ok = false;
     file_p = fopen(path_p, "w");
 
-    if (file_p != NULL) {
-        if (fwrite(data_p, strlen(data_p), 1, file_p) == 1) {
-            ok = true;
-        }
-
-        fclose(file_p);
+    if (file_p == NULL) {
+        return (-errno);
     }
 
-    return (ok);
+    if (fwrite(data_p, strlen(data_p), 1, file_p) == 1) {
+        res = 0;
+    } else {
+        res = -1;
+    }
+
+    fclose(file_p);
+
+    return (res);
 }
