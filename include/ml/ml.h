@@ -695,6 +695,8 @@ void *xrealloc(void *buf_p, size_t size);
 
 int ml_open(const char *path_p, int flags);
 
+ssize_t ml_write(int fd, const void *buf, size_t count);
+
 int ml_finit_module(int fd, const char *params_p, int flags);
 
 int ml_mknod(const char *path_p, mode_t mode, dev_t dev);

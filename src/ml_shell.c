@@ -885,13 +885,13 @@ static int command_dd_parse_args(int argc,
         return (-EINVAL);
     }
 
-    *fdin_p = open(argv[1], O_RDONLY);
+    *fdin_p = ml_open(argv[1], O_RDONLY);
 
     if (*fdin_p == -1) {
         return (-errno);
     }
 
-    *fdout_p = open(argv[2], O_WRONLY);
+    *fdout_p = ml_open(argv[2], O_WRONLY);
 
     if (*fdout_p == -1) {
         res = -errno;
@@ -970,7 +970,7 @@ static int command_dd_copy_chunk(size_t chunk_size,
         return (0);
     }
 
-    size = write(fdout, buf_p, chunk_size);
+    size = ml_write(fdout, buf_p, chunk_size);
 
     if (size == -1) {
         return (-errno);

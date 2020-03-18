@@ -35,6 +35,7 @@
 #include <sys/mount.h>
 #include <mntent.h>
 #include <sys/statvfs.h>
+#include <sys/time.h>
 #include "nala.h"
 #include "nala_mocks.h"
 #include "utils/utils.h"
@@ -1399,5 +1400,54 @@ TEST(command_ntp_date_too_many_arguments)
               "ntp_sync 1 2\n"
               "Usage: ntp_sync [<server>]\n"
               "ERROR(-22: Invalid argument)\n"
+              "$ exit\n");
+}
+
+TEST(command_dd)
+{
+    int fd;
+    int fdin;
+    int fdout;
+    struct timeval start_time;
+    struct timeval end_time;
+    char buf[1000];
+    int i;
+
+    fdin = 30;
+    fdout = 40;
+    start_time.tv_sec = 1;
+    start_time.tv_usec = 0;
+    end_time.tv_sec = 1;
+    end_time.tv_usec = 500;
+
+    for (i = 0; i < 1000; i++) {
+        buf[i] = i;
+    }
+
+    ml_open_mock_once("a", O_RDONLY, fdin);
+    ml_open_mock_once("b", O_WRONLY, fdout);
+    gettimeofday_mock_ignore_in_once(0);
+    gettimeofday_mock_set___tv_out(&start_time, sizeof(start_time));
+    read_mock_once(fdin, 1000, 1000);
+    read_mock_set_buf_out(&buf[0], sizeof(buf));
+    ml_write_mock_once(fdout, 1000, 1000);
+    ml_write_mock_set_buf_in(&buf[0], sizeof(buf));
+    close_mock_once(fdin, 0);
+    close_mock_once(fdout, 0);
+    gettimeofday_mock_ignore_in_once(0);
+    gettimeofday_mock_set___tv_out(&end_time, sizeof(end_time));
+
+    fd = init_and_start();
+
+    CAPTURE_OUTPUT(output, errput) {
+        input(fd, "dd a b 1000 1000\n");
+        input(fd, "exit\n");
+        ml_shell_join();
+    }
+
+    ASSERT_EQ(output,
+              "dd a b 1000 1000\n"
+              "1000 bytes copied in 0.500 ms (2.000 MB/s).\n"
+              "OK\n"
               "$ exit\n");
 }

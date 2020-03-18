@@ -38,6 +38,11 @@ int ml_open(const char *path_p, int flags)
     return (open(path_p, flags));
 }
 
+ssize_t ml_write(int fd, const void *buf, size_t count)
+{
+    return (write(fd, buf, count));
+}
+
 int ml_finit_module(int fd, const char *params_p, int flags)
 {
     return (syscall(SYS_finit_module, fd, params_p, flags));
