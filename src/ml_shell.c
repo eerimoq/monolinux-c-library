@@ -966,10 +966,6 @@ static int command_dd_copy_chunk(size_t chunk_size,
         return (-1);
     }
 
-    if (fdout == -1) {
-        return (0);
-    }
-
     size = ml_write(fdout, buf_p, chunk_size);
 
     if (size == -1) {
