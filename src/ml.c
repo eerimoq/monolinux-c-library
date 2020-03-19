@@ -606,3 +606,102 @@ float ml_timeval_to_ms(struct timeval *timeval_p)
 
     return (res);
 }
+
+static int dd_copy_chunk(size_t chunk_size,
+                         int fdin,
+                         int fdout,
+                         void *buf_p)
+{
+    ssize_t size;
+
+    size = read(fdin, buf_p, chunk_size);
+
+    if (size == -1) {
+        return (-errno);
+    } else if ((size_t)size != chunk_size) {
+        return (-1);
+    }
+
+    size = ml_write(fdout, buf_p, chunk_size);
+
+    if (size == -1) {
+        return (-errno);
+    } else if ((size_t)size != chunk_size) {
+        return (-1);
+    }
+
+    return (0);
+}
+
+int ml_dd(const char *infile_p,
+          const char *outfile_p,
+          size_t total_size,
+          size_t chunk_size)
+{
+    int fdin;
+    int fdout;
+    void *buf_p;
+    int res;
+    size_t left;
+
+    if (chunk_size > 1024 * 1024 * 1024) {
+        return (-EINVAL);
+    }
+
+    if (chunk_size > total_size) {
+        return (-EINVAL);
+    }
+
+    if ((total_size % chunk_size) != 0) {
+        return (-EINVAL);
+    }
+
+    fdin = ml_open(infile_p, O_RDONLY);
+
+    if (fdin == -1) {
+        return (-errno);
+    }
+
+    fdout = ml_open(outfile_p, O_WRONLY);
+
+    if (fdout == -1) {
+        res = -errno;
+        goto out1;
+    }
+
+    buf_p = malloc(chunk_size);
+
+    if (buf_p == NULL) {
+        res = -errno;
+        goto out2;
+    }
+
+    left = total_size;
+
+    while (left > 0) {
+        res = dd_copy_chunk(chunk_size, fdin, fdout, buf_p);
+
+        if (res != 0) {
+            goto out3;
+        }
+
+        left -= chunk_size;
+    }
+
+    close(fdin);
+    close(fdout);
+    free(buf_p);
+
+    return (0);
+
+ out3:
+    free(buf_p);
+
+ out2:
+    close(fdout);
+
+ out1:
+    close(fdin);
+
+    return (res);
+}

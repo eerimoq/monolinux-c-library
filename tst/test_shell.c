@@ -1486,7 +1486,6 @@ TEST(command_dd_infile_open_error)
 
     ASSERT_EQ(output,
               "dd a b 1000 1000\n"
-              "Usage: dd <infile> <outfile> <total-size> <chunk-size>\n"
               "ERROR(-2: No such file or directory)\n"
               "$ exit\n");
 }
@@ -1512,7 +1511,6 @@ TEST(command_dd_outfile_open_error)
 
     ASSERT_EQ(output,
               "dd a b 1000 1000\n"
-              "Usage: dd <infile> <outfile> <total-size> <chunk-size>\n"
               "ERROR(-2: No such file or directory)\n"
               "$ exit\n");
 }
@@ -1535,8 +1533,8 @@ TEST(command_dd_read_error)
     gettimeofday_mock_set_tv_out(&start_time, sizeof(start_time));
     read_mock_once(fdin, 1, -1);
     read_mock_set_errno(EACCES);
-    close_mock_once(fdin, 0);
     close_mock_once(fdout, 0);
+    close_mock_once(fdin, 0);
 
     fd = init_and_start();
 

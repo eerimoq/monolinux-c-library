@@ -685,6 +685,11 @@ int ml_file_write_string(const char *path_p, const char *data_p);
 
 float ml_timeval_to_ms(struct timeval *timeval_p);
 
+int ml_dd(const char *infile_p,
+          const char *outfile_p,
+          size_t total_size,
+          size_t chunk_size);
+
 /* Exits on failure. Use with care. */
 
 void *xmalloc(size_t size);

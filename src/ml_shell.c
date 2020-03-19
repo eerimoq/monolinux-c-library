@@ -872,67 +872,6 @@ static int command_ntp_sync(int argc, const char *argv[])
     return (ml_ntp_client_sync(server_p));
 }
 
-static int command_dd_parse_args(int argc,
-                                 const char *argv[],
-                                 int *fdin_p,
-                                 int *fdout_p,
-                                 size_t *total_size_p,
-                                 size_t *chunk_size_p)
-{
-    int res;
-
-    if (argc != 5) {
-        return (-EINVAL);
-    }
-
-    *fdin_p = ml_open(argv[1], O_RDONLY);
-
-    if (*fdin_p == -1) {
-        return (-errno);
-    }
-
-    *fdout_p = ml_open(argv[2], O_WRONLY);
-
-    if (*fdout_p == -1) {
-        res = -errno;
-        goto out1;
-    }
-
-    *total_size_p = atoi(argv[3]);
-
-    if (*total_size_p > 1024 * 1024 * 1024) {
-        res = -EINVAL;
-        goto out2;
-    }
-
-    *chunk_size_p = atoi(argv[4]);
-
-    if (*chunk_size_p > 1024 * 1024 * 1024) {
-        res = -EINVAL;
-        goto out2;
-    }
-
-    if (*chunk_size_p > *total_size_p) {
-        res = -EINVAL;
-        goto out2;
-    }
-
-    if ((*total_size_p % *chunk_size_p) != 0) {
-        res = -EINVAL;
-        goto out2;
-    }
-
-    return (0);
-
- out2:
-    close(*fdout_p);
-
- out1:
-    close(*fdin_p);
-
-    return (res);
-}
-
 static void command_dd_summary(size_t total_size,
                                struct timeval *start_time_p,
                                struct timeval *end_time_p)
@@ -951,97 +890,34 @@ static void command_dd_summary(size_t total_size,
            transfer_rate);
 }
 
-static int command_dd_copy_chunk(size_t chunk_size,
-                                 int fdin,
-                                 int fdout,
-                                 void *buf_p)
-{
-    ssize_t size;
-
-    size = read(fdin, buf_p, chunk_size);
-
-    if (size == -1) {
-        return (-errno);
-    } else if ((size_t)size != chunk_size) {
-        return (-1);
-    }
-
-    size = ml_write(fdout, buf_p, chunk_size);
-
-    if (size == -1) {
-        return (-errno);
-    } else if ((size_t)size != chunk_size) {
-        return (-1);
-    }
-
-    return (0);
-}
-
 static int command_dd(int argc, const char *argv[])
 {
-    int fdin;
-    int fdout;
-    size_t total_size;
-    size_t chunk_size;
-    void *buf_p;
     int res;
     struct timeval start_time;
     struct timeval end_time;
-    size_t left;
+    size_t total_size;
+    size_t chunk_size;
 
-    res = command_dd_parse_args(argc,
-                                argv,
-                                &fdin,
-                                &fdout,
-                                &total_size,
-                                &chunk_size);
-
-    if (res != 0) {
+    if (argc != 5) {
         printf("Usage: dd <infile> <outfile> <total-size> <chunk-size>\n");
 
+        return (-EINVAL);
+    }
+
+    total_size = atoi(argv[3]);
+    chunk_size = atoi(argv[4]);
+    gettimeofday(&start_time, NULL);
+
+    res = ml_dd(argv[1], argv[2], total_size, chunk_size);
+
+    if (res != 0) {
         return (res);
     }
-
-    buf_p = malloc(chunk_size);
-
-    if (buf_p == NULL) {
-        res = -errno;
-        goto out1;
-    }
-
-    gettimeofday(&start_time, NULL);
-    left = total_size;
-
-    while (left > 0) {
-        res = command_dd_copy_chunk(chunk_size, fdin, fdout, buf_p);
-
-        if (res != 0) {
-            goto out2;
-        }
-
-        left -= chunk_size;
-    }
-
-    /* Close finalizes the transfer, so must be part of the time
-       measurement. */
-    close(fdin);
-    close(fdout);
 
     gettimeofday(&end_time, NULL);
     command_dd_summary(total_size, &start_time, &end_time);
 
-    free(buf_p);
-
     return (0);
-
- out2:
-    free(buf_p);
-
- out1:
-    close(fdin);
-    close(fdout);
-
-    return (res);
 }
 
 static void print_kernel_message(char *message_p)
