@@ -50,8 +50,7 @@ static void mock_ioctl_ifreq_ok(int fd,
 static void mock_ml_shell_register_command(const char *name_p,
                                            const char *description_p)
 {
-    ml_shell_register_command_mock_once(name_p, description_p, NULL);
-    ml_shell_register_command_mock_ignore_callback_in();
+    ml_shell_register_command_mock_once(name_p, description_p);
     ml_shell_register_command_mock_set_callback(mock_set_callback);
 }
 
