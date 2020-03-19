@@ -518,6 +518,49 @@ TEST(file_write_string_write_failure)
     ASSERT_EQ(ml_file_write_string("foo.txt", "bar"), -1);
 }
 
+TEST(file_read)
+{
+    FILE file;
+    uint8_t buf[3];
+
+    buf[0] = 99;
+    buf[1] = 98;
+    buf[2] = 97;
+    fopen_mock_once("foo.txt", "rb", &file);
+    fread_mock_once(3, 1, 1);
+    fread_mock_set_ptr_out(&buf[0], sizeof(buf));
+    fclose_mock_once(0);
+
+    memset(&buf[0], 0, sizeof(buf));
+    ASSERT_EQ(ml_file_read("foo.txt", &buf[0], sizeof(buf)), 0);
+    ASSERT_EQ(buf[0], 99);
+    ASSERT_EQ(buf[1], 98);
+    ASSERT_EQ(buf[2], 97);
+}
+
+TEST(file_read_open_failure)
+{
+    uint8_t buf[3];
+
+    fopen_mock_once("foo.txt", "rb", NULL);
+    fopen_mock_set_errno(5);
+    fclose_mock_none();
+
+    ASSERT_EQ(ml_file_read("foo.txt", &buf[0], sizeof(buf)), -5);
+}
+
+TEST(file_read_read_failure)
+{
+    FILE file;
+    uint8_t buf[3];
+
+    fopen_mock_once("foo.txt", "rb", &file);
+    fread_mock_once(3, 1, 0);
+    fclose_mock_once(0);
+
+    ASSERT_EQ(ml_file_read("foo.txt", &buf[0], sizeof(buf)), -1);
+}
+
 TEST(dd)
 {
     int fdin;
