@@ -683,6 +683,12 @@ int ml_device_mapper_verity_create(const char *mapping_name_p,
  */
 int ml_file_write_string(const char *path_p, const char *data_p);
 
+/**
+ * Read given number of bytes from given file. Returns zero(0) on
+ * success, otherwise negative error code.
+ */
+int ml_file_read(const char *path_p, void *buf_p, size_t size);
+
 float ml_timeval_to_ms(struct timeval *timeval_p);
 
 int ml_dd(const char *infile_p,

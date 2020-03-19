@@ -596,6 +596,33 @@ int ml_file_write_string(const char *path_p, const char *data_p)
     return (res);
 }
 
+int ml_file_read(const char *path_p, void *buf_p, size_t size)
+{
+    size_t items_read;
+    FILE *file_p;
+
+    file_p = fopen(path_p, "rb");
+
+    if (file_p == NULL) {
+        return (-errno);
+    }
+
+    items_read = fread(buf_p, size, 1, file_p);
+
+    if (items_read != 1) {
+        goto out;
+    }
+
+    fclose(file_p);
+
+    return (0);
+
+ out:
+    fclose(file_p);
+
+    return (-1);
+}
+
 float ml_timeval_to_ms(struct timeval *timeval_p)
 {
     float res;
