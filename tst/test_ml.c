@@ -410,7 +410,7 @@ TEST(get_cpus_stats_4_cpus)
     };
 
     mock_prepare_read_cpus_stats(&lines[0][0], 6);
-    usleep_mock_once(100000, 0);
+    usleep_mock_once(500000, 0);
     mock_prepare_read_cpus_stats(&lines[1][0], 5);
 
     ASSERT_EQ(ml_get_cpus_stats(&stats[0], membersof(stats)), 5);
@@ -454,7 +454,7 @@ TEST(get_cpus_stats_4_cpus_get_one)
     };
 
     mock_prepare_read_cpus_stats(&lines[0][0], 1);
-    usleep_mock_once(100000, 0);
+    usleep_mock_once(500000, 0);
     mock_prepare_read_cpus_stats(&lines[1][0], 1);
 
     ASSERT_EQ(ml_get_cpus_stats(&stats, 1), 1);

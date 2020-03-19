@@ -445,8 +445,8 @@ int ml_get_cpus_stats(struct ml_cpu_stats_t *stats_p, int length)
         return (length);
     }
 
-    /* Measure over 100 ms. */
-    usleep(100000);
+    /* Measure over 500 ms. */
+    usleep(500000);
 
     res = read_cpus_stats(&stats[1][0], length);
 

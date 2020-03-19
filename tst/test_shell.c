@@ -1301,7 +1301,7 @@ TEST(command_status)
     fd = init_and_start();
 
     mock_prepare_read_cpus_stats(&lines[0][0], 6);
-    usleep_mock_once(100000, 0);
+    usleep_mock_once(500000, 0);
     mock_prepare_read_cpus_stats(&lines[1][0], 5);
 
     CAPTURE_OUTPUT(output, errput) {
