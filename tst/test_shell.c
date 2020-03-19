@@ -1516,3 +1516,38 @@ TEST(command_dd_outfile_open_error)
               "ERROR(-2: No such file or directory)\n"
               "$ exit\n");
 }
+
+TEST(command_dd_read_error)
+{
+    int fd;
+    int fdin;
+    int fdout;
+    struct timeval start_time;
+
+    fdin = 30;
+    fdout = 40;
+    start_time.tv_sec = 1;
+    start_time.tv_usec = 0;
+
+    ml_open_mock_once("a", O_RDONLY, fdin);
+    ml_open_mock_once("b", O_WRONLY, fdout);
+    gettimeofday_mock_once(0);
+    gettimeofday_mock_set_tv_out(&start_time, sizeof(start_time));
+    read_mock_once(fdin, 1, -1);
+    read_mock_set_errno(EACCES);
+    close_mock_once(fdin, 0);
+    close_mock_once(fdout, 0);
+
+    fd = init_and_start();
+
+    CAPTURE_OUTPUT(output, errput) {
+        input(fd, "dd a b 1 1\n");
+        input(fd, "exit\n");
+        ml_shell_join();
+    }
+
+    ASSERT_EQ(output,
+              "dd a b 1 1\n"
+              "ERROR(-13: Permission denied)\n"
+              "$ exit\n");
+}
