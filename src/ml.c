@@ -622,7 +622,7 @@ static int dd_copy_chunk(size_t chunk_size,
         return (-1);
     }
 
-    size = ml_write(fdout, buf_p, chunk_size);
+    size = write(fdout, buf_p, chunk_size);
 
     if (size == -1) {
         return (-errno);

@@ -517,3 +517,125 @@ TEST(file_write_string_write_failure)
 
     ASSERT_EQ(ml_file_write_string("foo.txt", "bar"), -1);
 }
+
+TEST(dd)
+{
+    int fdin;
+    int fdout;
+    char buf[1000];
+    int i;
+
+    fdin = 30;
+    fdout = 40;
+
+    for (i = 0; i < 1000; i++) {
+        buf[i] = i;
+    }
+
+    ml_open_mock_once("a", O_RDONLY, fdin);
+    ml_open_mock_once("b", O_WRONLY, fdout);
+
+    /* First 500 bytes. */
+    read_mock_once(fdin, 500, 500);
+    read_mock_set_buf_out(&buf[0], sizeof(buf) / 2);
+    write_mock_once(fdout, 500, 500);
+    write_mock_set_buf_in(&buf[0], sizeof(buf) / 2);
+
+    /* Last 500 bytes. */
+    read_mock_once(fdin, 500, 500);
+    read_mock_set_buf_out(&buf[500], sizeof(buf) / 2);
+    write_mock_once(fdout, 500, 500);
+    write_mock_set_buf_in(&buf[500], sizeof(buf) / 2);
+
+    close_mock_once(fdin, 0);
+    close_mock_once(fdout, 0);
+
+    ASSERT_EQ(ml_dd("a", "b", 1000, 500), 0);
+}
+
+TEST(dd_infile_open_error)
+{
+    ml_open_mock_once("a", O_RDONLY, -1);
+    ml_open_mock_set_errno(ENOENT);
+    close_mock_none();
+
+    ASSERT_EQ(ml_dd("a", "b", 1000, 1000), -ENOENT);
+}
+
+TEST(dd_outfile_open_error)
+{
+    int fdin;
+
+    fdin = 4;
+    ml_open_mock_once("a", O_RDONLY, fdin);
+    ml_open_mock_once("b", O_WRONLY, -1);
+    ml_open_mock_set_errno(ENOENT);
+    close_mock_once(fdin, 0);
+
+    ASSERT_EQ(ml_dd("a", "b", 1000, 1000), -ENOENT);
+}
+
+TEST(dd_read_error)
+{
+    int fdin;
+    int fdout;
+
+    fdin = 30;
+    fdout = 40;
+
+    ml_open_mock_once("a", O_RDONLY, fdin);
+    ml_open_mock_once("b", O_WRONLY, fdout);
+    read_mock_once(fdin, 1, -1);
+    read_mock_set_errno(EACCES);
+    close_mock_once(fdout, 0);
+    close_mock_once(fdin, 0);
+
+    ASSERT_EQ(ml_dd("a", "b", 1, 1), -EACCES);
+}
+
+TEST(dd_short_read_error)
+{
+    int fdin;
+    int fdout;
+
+    fdin = 30;
+    fdout = 40;
+
+    ml_open_mock_once("a", O_RDONLY, fdin);
+    ml_open_mock_once("b", O_WRONLY, fdout);
+    read_mock_once(fdin, 1, 0);
+    read_mock_set_errno(EACCES);
+    close_mock_once(fdout, 0);
+    close_mock_once(fdin, 0);
+
+    ASSERT_EQ(ml_dd("a", "b", 1, 1), -1);
+}
+
+TEST(dd_write_error)
+{
+    int fdin;
+    int fdout;
+
+    fdin = 30;
+    fdout = 40;
+
+    ml_open_mock_once("a", O_RDONLY, fdin);
+    ml_open_mock_once("b", O_WRONLY, fdout);
+    read_mock_once(fdin, 1, 1);
+    write_mock_once(fdout, 1, -1);
+    write_mock_set_errno(EACCES);
+    close_mock_once(fdout, 0);
+    close_mock_once(fdin, 0);
+
+    ASSERT_EQ(ml_dd("a", "b", 1, 1), -EACCES);
+}
+
+TEST(dd_chunk_size_greater_than_total_size)
+{
+    ASSERT_EQ(ml_dd("a", "b", 1, 2), -EINVAL);
+}
+
+TEST(dd_chunk_size_not_multiple_of_total_size)
+{
+    ASSERT_EQ(ml_dd("a", "b", 3, 2), -EINVAL);
+}

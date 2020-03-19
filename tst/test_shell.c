@@ -1404,34 +1404,17 @@ TEST(command_ntp_date_too_many_arguments)
 TEST(command_dd)
 {
     int fd;
-    int fdin;
-    int fdout;
     struct timeval start_time;
     struct timeval end_time;
-    char buf[1000];
-    int i;
 
-    fdin = 30;
-    fdout = 40;
     start_time.tv_sec = 1;
     start_time.tv_usec = 0;
     end_time.tv_sec = 1;
     end_time.tv_usec = 500;
 
-    for (i = 0; i < 1000; i++) {
-        buf[i] = i;
-    }
-
-    ml_open_mock_once("a", O_RDONLY, fdin);
-    ml_open_mock_once("b", O_WRONLY, fdout);
     gettimeofday_mock_once(0);
     gettimeofday_mock_set_tv_out(&start_time, sizeof(start_time));
-    read_mock_once(fdin, 1000, 1000);
-    read_mock_set_buf_out(&buf[0], sizeof(buf));
-    ml_write_mock_once(fdout, 1000, 1000);
-    ml_write_mock_set_buf_in(&buf[0], sizeof(buf));
-    close_mock_once(fdin, 0);
-    close_mock_once(fdout, 0);
+    ml_dd_mock_once("a", "b", 1000, 1000, 0);
     gettimeofday_mock_once(0);
     gettimeofday_mock_set_tv_out(&end_time, sizeof(end_time));
 
@@ -1469,12 +1452,11 @@ TEST(command_dd_no_args)
               "$ exit\n");
 }
 
-TEST(command_dd_infile_open_error)
+TEST(command_dd_error)
 {
     int fd;
 
-    ml_open_mock_once("a", O_RDONLY, -1);
-    ml_open_mock_set_errno(ENOENT);
+    ml_dd_mock_once("a", "b", 1000, 1000, -ENOENT);
 
     fd = init_and_start();
 
@@ -1487,65 +1469,5 @@ TEST(command_dd_infile_open_error)
     ASSERT_EQ(output,
               "dd a b 1000 1000\n"
               "ERROR(-2: No such file or directory)\n"
-              "$ exit\n");
-}
-
-TEST(command_dd_outfile_open_error)
-{
-    int fd;
-    int fdin;
-
-    fdin = 4;
-    ml_open_mock_once("a", O_RDONLY, fdin);
-    ml_open_mock_once("b", O_WRONLY, -1);
-    ml_open_mock_set_errno(ENOENT);
-    close_mock_once(fdin, 0);
-
-    fd = init_and_start();
-
-    CAPTURE_OUTPUT(output, errput) {
-        input(fd, "dd a b 1000 1000\n");
-        input(fd, "exit\n");
-        ml_shell_join();
-    }
-
-    ASSERT_EQ(output,
-              "dd a b 1000 1000\n"
-              "ERROR(-2: No such file or directory)\n"
-              "$ exit\n");
-}
-
-TEST(command_dd_read_error)
-{
-    int fd;
-    int fdin;
-    int fdout;
-    struct timeval start_time;
-
-    fdin = 30;
-    fdout = 40;
-    start_time.tv_sec = 1;
-    start_time.tv_usec = 0;
-
-    ml_open_mock_once("a", O_RDONLY, fdin);
-    ml_open_mock_once("b", O_WRONLY, fdout);
-    gettimeofday_mock_once(0);
-    gettimeofday_mock_set_tv_out(&start_time, sizeof(start_time));
-    read_mock_once(fdin, 1, -1);
-    read_mock_set_errno(EACCES);
-    close_mock_once(fdout, 0);
-    close_mock_once(fdin, 0);
-
-    fd = init_and_start();
-
-    CAPTURE_OUTPUT(output, errput) {
-        input(fd, "dd a b 1 1\n");
-        input(fd, "exit\n");
-        ml_shell_join();
-    }
-
-    ASSERT_EQ(output,
-              "dd a b 1 1\n"
-              "ERROR(-13: Permission denied)\n"
               "$ exit\n");
 }
