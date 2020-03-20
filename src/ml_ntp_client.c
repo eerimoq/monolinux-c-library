@@ -63,10 +63,10 @@ static void ntp_time_to_timespec(uint8_t *time_p, struct timespec *ts_p)
     uint64_t nsecs;
 
     /* Seconds. */
-    secs = (uint32_t)((time_p[0] << 24)
-                      | (time_p[1] << 16)
-                      | (time_p[2] << 8)
-                      | (time_p[3] << 0));
+    secs = (uint32_t)(((uint32_t)time_p[0] << 24)
+                      | ((uint32_t)time_p[1] << 16)
+                      | ((uint32_t)time_p[2] << 8)
+                      | ((uint32_t)time_p[3] << 0));
 
     if ((time_p[0] & 0x80) == 0) {
         secs += (1ULL << 32);
@@ -76,10 +76,10 @@ static void ntp_time_to_timespec(uint8_t *time_p, struct timespec *ts_p)
     ts_p->tv_sec = secs;
 
     /* Nanoseconds. */
-    nsecs = (uint32_t)((time_p[4] << 24)
-                       | (time_p[5] << 16)
-                       | (time_p[6] << 8)
-                       | (time_p[7] << 0));
+    nsecs = (uint32_t)(((uint32_t)time_p[4] << 24)
+                       | ((uint32_t)time_p[5] << 16)
+                       | ((uint32_t)time_p[6] << 8)
+                       | ((uint32_t)time_p[7] << 0));
     nsecs *= 1000000000ULL;
     nsecs >>= 32;
     ts_p->tv_nsec = (long)nsecs;

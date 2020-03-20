@@ -22,6 +22,9 @@ SRC += $(BUILD)/nala_mocks.c
 SRC += $(TESTS)
 NALA = nala
 TESTS ?= main.c
+LSAN_OPTIONS = \
+	suppressions=$(ML_ROOT)/make/lsan-suppressions.txt \
+	print_suppressions=0
 
 .PHONY: all run build coverage clean
 
@@ -32,7 +35,7 @@ build:
 	$(MAKE) $(EXE)
 
 run: build
-	$(EXE) $(ARGS)
+	LSAN_OPTIONS="$(LSAN_OPTIONS)" $(EXE) $(ARGS)
 
 test: run
 	$(MAKE) coverage

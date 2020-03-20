@@ -285,10 +285,10 @@ static int unpack_option_u32(struct option_u32_t *option_p,
         return (-1);
     }
 
-    option_p->value = ((buf_p[0] << 24)
-                       | (buf_p[1] << 16)
-                       | (buf_p[2] << 8)
-                       | (buf_p[3] << 0));
+    option_p->value = (((uint32_t)buf_p[0] << 24)
+                       | ((uint32_t)buf_p[1] << 16)
+                       | ((uint32_t)buf_p[2] << 8)
+                       | ((uint32_t)buf_p[3] << 0));
     option_p->valid = true;
 
     return (0);
@@ -302,10 +302,10 @@ static int unpack_option_in_addr(struct option_in_addr_t *option_p,
         return (-1);
     }
 
-    option_p->value.s_addr = ntohl((buf_p[0] << 24)
-                                   | (buf_p[1] << 16)
-                                   | (buf_p[2] << 8)
-                                   | (buf_p[3] << 0));
+    option_p->value.s_addr = ntohl(((uint32_t)buf_p[0] << 24)
+                                   | ((uint32_t)buf_p[1] << 16)
+                                   | ((uint32_t)buf_p[2] << 8)
+                                   | ((uint32_t)buf_p[3] << 0));
     option_p->valid = true;
 
     return (0);
@@ -478,10 +478,10 @@ static void unpack_message_type_offer(struct ml_dhcp_client_t *self_p,
         return;
     }
 
-    self_p->ip_address.s_addr = ntohl((buf_p[0] << 24)
-                                      | (buf_p[1] << 16)
-                                      | (buf_p[2] << 8)
-                                      | (buf_p[3] << 0));
+    self_p->ip_address.s_addr = ntohl(((uint32_t)buf_p[0] << 24)
+                                      | ((uint32_t)buf_p[1] << 16)
+                                      | ((uint32_t)buf_p[2] << 8)
+                                      | ((uint32_t)buf_p[3] << 0));
     self_p->server.ip_address = options_p->server_ip_address.value;
     self_p->subnet_mask = options_p->subnet_mask.value;
     self_p->gateway = options_p->gateway.value;

@@ -8,8 +8,8 @@ install:
   - pip install nala
 
 script:
-  - make -s -j $(cat /proc/cpuinfo | grep processor | wc -l) run
-  - make -s -j $(cat /proc/cpuinfo | grep processor | wc -l) library
+  - make -s -j $(nproc) run SANITIZE=yes
+  - make -s -j $(nproc) library
   - make install PREFIX=root
 
 after_success:

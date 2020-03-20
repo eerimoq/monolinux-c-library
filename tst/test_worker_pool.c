@@ -30,6 +30,7 @@
 #include "nala.h"
 #include "ml/ml.h"
 
+static struct ml_worker_pool_t worker_pool;
 static struct ml_queue_t queue;
 static ML_UID(mid);
 
@@ -42,7 +43,6 @@ static void test_full_entry(void *arg_p)
 TEST(full)
 {
     void *message_p;
-    struct ml_worker_pool_t worker_pool;
     int i;
 
     ml_queue_init(&queue, 100);

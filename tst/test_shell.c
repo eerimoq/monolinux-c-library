@@ -74,8 +74,10 @@ TEST(various_commands)
 {
     int fd;
 
-    fd = init_and_start();
+    ml_shell_init();
     ml_shell_register_command("hello", "My command.", command_hello);
+    fd = stdin_pipe();
+    ml_shell_start();
 
     CAPTURE_OUTPUT(output, errput) {
         input(fd, "help\n");
