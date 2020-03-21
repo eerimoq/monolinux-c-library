@@ -41,6 +41,7 @@
 #include <sys/param.h>
 #include <sys/reboot.h>
 #include <sys/time.h>
+#include <linux/i2c-dev.h>
 #include <ctype.h>
 #include <termios.h>
 #include <ftw.h>
@@ -888,6 +889,65 @@ static void command_dd_summary(size_t total_size,
            (unsigned long)total_size,
            time_elapsed_ms,
            transfer_rate);
+}
+
+static int command_i2c_scan(int argc, const char *argv[])
+{
+    int fd;
+    long address;
+    char value;
+    int res;
+
+    if (argc != 3) {
+        return (-EINVAL);
+    }
+
+    fd = ml_open(argv[2], O_RDWR);
+
+    if (fd < 0) {
+        return (-errno);
+    }
+
+    for (address = 0; address < 128; address++) {
+        res = ioctl(fd, I2C_SLAVE, address);
+
+        if (res < 0) {
+            printf("Failed to set I2C address 0x%02lx.\n", address);
+
+            continue;
+        }
+
+        res = read(fd, &value, sizeof(value));
+
+        if (res != 1) {
+            continue;
+        }
+
+        printf("Found I2C-device with address 0x%02lx.\n", address);
+    }
+
+    close(fd);
+
+    return (0);
+}
+
+static int command_i2c(int argc, const char *argv[])
+{
+    int res;
+
+    res = -EINVAL;
+
+    if (argc >= 2) {
+        if (strcmp(argv[1], "scan") == 0) {
+            res = command_i2c_scan(argc, argv);
+        }
+    }
+
+    if (res != 0) {
+        printf("Usage: i2c scan <device>\n");
+    }
+
+    return (res);
 }
 
 static int command_dd(int argc, const char *argv[])
@@ -1811,6 +1871,9 @@ void ml_shell_init(void)
     ml_shell_register_command("dd",
                               "File copy.",
                               command_dd);
+    ml_shell_register_command("i2c",
+                              "I2C bus commands.",
+                              command_i2c);
 }
 
 void ml_shell_start(void)

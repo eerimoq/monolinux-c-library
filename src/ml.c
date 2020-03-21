@@ -340,7 +340,14 @@ int ml_insert_module(const char *path_p, const char *params_p)
 
     if (fd != -1) {
         res = ml_finit_module(fd, params_p, 0);
+
+        if (res != 0) {
+            res = -errno;
+        }
+
         close(fd);
+    } else {
+        res = -errno;
     }
 
     return (res);

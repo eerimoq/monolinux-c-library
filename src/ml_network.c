@@ -400,7 +400,7 @@ static int command_ifconfig(int argc, const char *argv[])
 {
     int res;
 
-    res = -EGENERAL;
+    res = -EINVAL;
 
     if (argc == 2) {
         res = command_ifconfig_print(argv[1]);
@@ -430,7 +430,7 @@ static int command_route(int argc, const char *argv[])
 {
     int res;
 
-    res = -EGENERAL;
+    res = -EINVAL;
 
     if (argc == 3) {
         res = ml_network_interface_add_route(argv[1], argv[2]);
@@ -452,7 +452,7 @@ static int udp_send(const char *ip_address_p,
     int sockfd;
     struct sockaddr_in other;
 
-    res = -EGENERAL;
+    res = -EINVAL;
     memset(&other, 0, sizeof(other));
     other.sin_family = AF_INET;
     other.sin_port = htons(atoi(port_p));
@@ -522,7 +522,7 @@ static int udp_recv(const char *port_p, int timeout)
     struct sockaddr_in other;
     char buf[256];
 
-    res = -EGENERAL;
+    res = -EINVAL;
     sockfd = ml_socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
     if (sockfd != -1) {
@@ -571,7 +571,7 @@ static int command_udp_send(int argc, const char *argv[])
     if (argc == 4) {
         res = udp_send(argv[1], argv[2], argv[3]);
     } else {
-        res = -EGENERAL;
+        res = -EINVAL;
     }
 
     if (res != 0) {
@@ -586,7 +586,7 @@ static int command_udp_recv(int argc, const char *argv[])
     int res;
     int timeout;
 
-    res = -EGENERAL;
+    res = -EINVAL;
 
     if (argc == 2) {
         res = udp_recv(argv[1], 5);
@@ -614,7 +614,7 @@ static int tcp_send(const char *ip_address_p,
     int sockfd;
     struct sockaddr_in other;
 
-    res = -EGENERAL;
+    res = -EINVAL;
     memset(&other, 0, sizeof(other));
     other.sin_family = AF_INET;
     other.sin_port = htons(atoi(port_p));
@@ -653,7 +653,7 @@ static int command_tcp_send(int argc, const char *argv[])
     if (argc == 4) {
         res = tcp_send(argv[1], argv[2], argv[3]);
     } else {
-        res = -EGENERAL;
+        res = -EINVAL;
     }
 
     if (res != 0) {

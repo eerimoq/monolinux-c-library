@@ -129,6 +129,7 @@ TEST(various_commands)
               "         help   Print this help.\n"
               "      hexdump   Hexdump a file.\n"
               "      history   List command history.\n"
+              "          i2c   I2C bus commands.\n"
               "       insmod   Insert a kernel module.\n"
               "           ls   List directory contents.\n"
               "        mknod   Create a node.\n"
