@@ -897,6 +897,7 @@ static int command_i2c_scan(int argc, const char *argv[])
     long address;
     char value;
     int res;
+    int number_of_found_devices;
 
     if (argc != 3) {
         return (-EINVAL);
@@ -908,11 +909,13 @@ static int command_i2c_scan(int argc, const char *argv[])
         return (-errno);
     }
 
+    number_of_found_devices = 0;
+
     for (address = 0; address < 128; address++) {
         res = ioctl(fd, I2C_SLAVE, address);
 
         if (res < 0) {
-            printf("Failed to set I2C address 0x%02lx.\n", address);
+            printf("Failed to set address 0x%02lx.\n", address);
 
             continue;
         }
@@ -923,10 +926,15 @@ static int command_i2c_scan(int argc, const char *argv[])
             continue;
         }
 
-        printf("Found I2C-device with address 0x%02lx.\n", address);
+        printf("Found device with address 0x%02lx.\n", address);
+        number_of_found_devices++;
     }
 
     close(fd);
+
+    if (number_of_found_devices == 0) {
+        printf("No devices found.\n");
+    }
 
     return (0);
 }

@@ -1555,11 +1555,37 @@ TEST(i2c_scan)
 
     ASSERT_EQ(output,
               "i2c scan /dev/i2c1\n"
-              "Found I2C-device with address 0x0b.\n"
-              "Failed to set I2C address 0x5a.\n"
-              "Found I2C-device with address 0x5b.\n"
-              "Found I2C-device with address 0x5c.\n"
-              "Found I2C-device with address 0x5d.\n"
+              "Found device with address 0x0b.\n"
+              "Failed to set address 0x5a.\n"
+              "Found device with address 0x5b.\n"
+              "Found device with address 0x5c.\n"
+              "Found device with address 0x5d.\n"
+              "OK\n"
+              "$ exit\n");
+}
+
+TEST(i2c_scan_no_devices_found)
+{
+    int fd;
+    int i2cfd;
+
+    fd = init_and_start();
+
+    i2cfd = 6;
+    ml_open_mock_once("/dev/i2c2", O_RDWR, i2cfd);
+
+    mock_prepare_devices_not_present(i2cfd, 0x00, 0x7f);
+    close_mock_once(i2cfd, 0);
+
+    CAPTURE_OUTPUT(output, errput) {
+        input(fd, "i2c scan /dev/i2c2\n");
+        input(fd, "exit\n");
+        ml_shell_join();
+    }
+
+    ASSERT_EQ(output,
+              "i2c scan /dev/i2c2\n"
+              "No devices found.\n"
               "OK\n"
               "$ exit\n");
 }
