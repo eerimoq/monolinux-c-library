@@ -502,7 +502,7 @@ static int command_suicide(int argc, const char *argv[])
     int res;
     uint8_t *null_p;
 
-    res = -EGENERAL;
+    res = -EINVAL;
     null_p = NULL;
 
     if (argc == 2) {
@@ -698,7 +698,7 @@ static int command_mknod(int argc, const char *argv[])
     mode_t mode;
     dev_t dev;
 
-    res = -EGENERAL;
+    res = -EINVAL;
     mode = 0666;
 
     if (argc == 3) {
@@ -726,7 +726,7 @@ static int command_mount(int argc, const char *argv[])
 {
     int res;
 
-    res = -EGENERAL;
+    res = -EINVAL;
 
     if (argc == 4) {
         res = ml_mount(argv[1], argv[2], argv[3], 0, NULL);
@@ -770,7 +770,7 @@ static int command_find(int argc, const char *argv[])
 {
     int res;
 
-    res = -EGENERAL;
+    res = -EINVAL;
 
     if (argc == 1) {
         res = nftw(".", print_info, 20, FTW_PHYS);
@@ -791,7 +791,7 @@ static int command_date(int argc, const char *argv[])
     time_t now;
     struct timespec ts;
 
-    res = -EGENERAL;
+    res = -EINVAL;
 
     if (argc == 1) {
         now = time(NULL);
