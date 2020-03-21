@@ -1586,3 +1586,22 @@ TEST(i2c_scan_open_error)
               "ERROR(-2: No such file or directory)\n"
               "$ exit\n");
 }
+
+TEST(i2c_scan_no_device_given)
+{
+    int fd;
+
+    fd = init_and_start();
+
+    CAPTURE_OUTPUT(output, errput) {
+        input(fd, "i2c scan\n");
+        input(fd, "exit\n");
+        ml_shell_join();
+    }
+
+    ASSERT_EQ(output,
+              "i2c scan\n"
+              "Usage: i2c scan <device>\n"
+              "ERROR(-22: Invalid argument)\n"
+              "$ exit\n");
+}
