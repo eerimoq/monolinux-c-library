@@ -502,7 +502,7 @@ static int command_suicide(int argc, const char *argv[])
     int res;
     uint8_t *null_p;
 
-    res = -1;
+    res = -EGENERAL;
     null_p = NULL;
 
     if (argc == 2) {
@@ -572,7 +572,7 @@ static int command_ls(int argc, const char *argv[])
 
         closedir(dir_p);
     } else {
-        res = -1;
+        res = -EGENERAL;
     }
 
     return (res);
@@ -623,7 +623,7 @@ static int hexdump(const char *name_p, size_t offset, ssize_t size)
         res = ml_hexdump_file(file_p, offset, size);
         fclose(file_p);
     } else {
-        res = -1;
+        res = -EGENERAL;
     }
 
     return (res);
@@ -698,7 +698,7 @@ static int command_mknod(int argc, const char *argv[])
     mode_t mode;
     dev_t dev;
 
-    res = -1;
+    res = -EGENERAL;
     mode = 0666;
 
     if (argc == 3) {
@@ -726,7 +726,7 @@ static int command_mount(int argc, const char *argv[])
 {
     int res;
 
-    res = -1;
+    res = -EGENERAL;
 
     if (argc == 4) {
         res = ml_mount(argv[1], argv[2], argv[3], 0, NULL);
@@ -770,7 +770,7 @@ static int command_find(int argc, const char *argv[])
 {
     int res;
 
-    res = -1;
+    res = -EGENERAL;
 
     if (argc == 1) {
         res = nftw(".", print_info, 20, FTW_PHYS);
@@ -791,7 +791,7 @@ static int command_date(int argc, const char *argv[])
     time_t now;
     struct timespec ts;
 
-    res = -1;
+    res = -EGENERAL;
 
     if (argc == 1) {
         now = time(NULL);
@@ -826,7 +826,7 @@ static int command_print(int argc, const char *argv[])
     if (argc != 3) {
         printf("Usage: print <text> <file>\n");
 
-        return (-1);
+        return (-EINVAL);
     }
 
     file_p = fopen(argv[2], "w");
@@ -997,13 +997,13 @@ static int command_status(int argc, const char *argv[])
     if (argc != 1) {
         printf("Usage: status\n");
 
-        return (-1);
+        return (-EINVAL);
     }
 
     length = ml_get_cpus_stats(&stats[0], membersof(stats));
 
     if (length <= 0) {
-        return (-1);
+        return (-EGENERAL);
     }
 
     printf("CPU  USER  SYSTEM  IDLE\n");
@@ -1732,7 +1732,7 @@ void *shell_main(void *arg_p)
                 if (res == 0) {
                     printf("OK\n");
                 } else {
-                    printf("ERROR(%d: %s)\n", res, strerror(-res));
+                    printf("ERROR(%d: %s)\n", res, ml_strerror(-res));
                 }
             }
         }

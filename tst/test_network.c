@@ -247,7 +247,7 @@ TEST(command_ifconfig_no_args)
     command_ifconfig = mock_get_callback("ifconfig");
 
     CAPTURE_OUTPUT(output, errput) {
-        ASSERT_EQ(command_ifconfig(membersof(argv), argv), -1);
+        ASSERT_EQ(command_ifconfig(membersof(argv), argv), -EGENERAL);
     }
 
     ASSERT_EQ(output,
@@ -334,7 +334,7 @@ TEST(command_ifconfig_foobar)
     command_ifconfig = mock_get_callback("ifconfig");
 
     CAPTURE_OUTPUT(output, errput) {
-        ASSERT_EQ(command_ifconfig(membersof(argv), argv), -1);
+        ASSERT_EQ(command_ifconfig(membersof(argv), argv), -EGENERAL);
     }
 
     ASSERT_EQ(output,
@@ -430,7 +430,7 @@ TEST(command_udp_send_no_args)
     command_udp_send = mock_get_callback("udp_send");
 
     CAPTURE_OUTPUT(output, errput) {
-        ASSERT_EQ(command_udp_send(membersof(argv), argv), -1);
+        ASSERT_EQ(command_udp_send(membersof(argv), argv), -EGENERAL);
     }
 
     ASSERT_EQ(output, "Usage: udp_send <ip-address> <port> <data>\n");
@@ -449,7 +449,7 @@ TEST(command_udp_send_bad_ip_address)
     command_udp_send = mock_get_callback("udp_send");
 
     CAPTURE_OUTPUT(output, errput) {
-        ASSERT_EQ(command_udp_send(membersof(argv), argv), -1);
+        ASSERT_EQ(command_udp_send(membersof(argv), argv), -EGENERAL);
     }
 
     ASSERT_SUBSTRING(output, "udp_send <ip-address> <port> <data>\n");
@@ -469,7 +469,7 @@ TEST(command_udp_send_open_socket_failure)
     socket_mock_once(AF_INET, SOCK_DGRAM, 0, -1);
 
     CAPTURE_OUTPUT(output, errput) {
-        ASSERT_EQ(command_udp_send(membersof(argv), argv), -1);
+        ASSERT_EQ(command_udp_send(membersof(argv), argv), -EGENERAL);
     }
 
     ASSERT_SUBSTRING(output, "udp_send <ip-address> <port> <data>\n");
@@ -500,7 +500,7 @@ TEST(command_udp_send_sendto_failure)
     close_mock_once(fd, 0);
 
     CAPTURE_OUTPUT(output, errput) {
-        ASSERT_EQ(command_udp_send(membersof(argv), argv), -1);
+        ASSERT_EQ(command_udp_send(membersof(argv), argv), -EGENERAL);
     }
 
     ASSERT_SUBSTRING(errput, "sendto failed:");
@@ -551,7 +551,7 @@ TEST(command_udp_recv_no_args)
     command_udp_recv = mock_get_callback("udp_recv");
 
     CAPTURE_OUTPUT(output, errput) {
-        ASSERT_EQ(command_udp_recv(membersof(argv), argv), -1);
+        ASSERT_EQ(command_udp_recv(membersof(argv), argv), -EGENERAL);
     }
 
     ASSERT_EQ(output, "Usage: udp_recv <port> [<timeout in seconds>]\n");
@@ -571,7 +571,7 @@ TEST(command_udp_recv_open_socket_failure)
     socket_mock_once(AF_INET, SOCK_DGRAM, IPPROTO_UDP, -1);
 
     CAPTURE_OUTPUT(output, errput) {
-        ASSERT_EQ(command_udp_recv(membersof(argv), argv), -1);
+        ASSERT_EQ(command_udp_recv(membersof(argv), argv), -EGENERAL);
     }
 
     ASSERT_SUBSTRING(output, "udp_recv <port> [<timeout in seconds>]\n");
@@ -630,9 +630,10 @@ TEST(filter_set_setsockopt_error)
     socket_mock_once(AF_INET, SOCK_RAW, IPPROTO_RAW, fd);
     setsockopt_mock_once(fd, SOL_IP, IPT_SO_SET_REPLACE, 0, -1);
     setsockopt_mock_ignore_optlen_in();
+    setsockopt_mock_set_errno(EACCES);
     close_mock_once(fd, 0);
 
-    ASSERT_EQ(ml_network_filter_ipv4_set(&filter), -1);
+    ASSERT_EQ(ml_network_filter_ipv4_set(&filter), -EACCES);
 }
 
 TEST(filter_set_socket_error)
@@ -641,9 +642,10 @@ TEST(filter_set_socket_error)
 
     memset(&filter, 0, sizeof(filter));
     socket_mock_once(AF_INET, SOCK_RAW, IPPROTO_RAW, -1);
+    socket_mock_set_errno(EACCES);
     close_mock_none();
 
-    ASSERT_EQ(ml_network_filter_ipv4_set(&filter), -1);
+    ASSERT_EQ(ml_network_filter_ipv4_set(&filter), -EACCES);
 }
 
 TEST(filter_ipv4_get_ok)
@@ -1108,7 +1110,7 @@ TEST(filter_ipv4_accept_all_get_info_socket_error)
 {
     socket_mock_once(AF_INET, SOCK_RAW, IPPROTO_RAW, -1);
 
-    ASSERT_EQ(ml_network_filter_ipv4_accept_all(), -1);
+    ASSERT_EQ(ml_network_filter_ipv4_accept_all(), -EGENERAL);
 }
 
 TEST(filter_ipv4_drop_all)

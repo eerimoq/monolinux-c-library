@@ -151,7 +151,7 @@ static int get_ifreq(const char *name_p,
     int res;
     int netfd;
 
-    res = -1;
+    res = -EGENERAL;
     netfd = net_open(name_p, ifreq_p);
 
     if (netfd != -1) {
@@ -207,12 +207,18 @@ static int set_filter(int domain, int optname, const void *buf_p, size_t size)
     int sockfd;
     int res;
 
-    res = -1;
     sockfd = ml_socket(domain, SOCK_RAW, IPPROTO_RAW);
 
     if (sockfd != -1) {
         res = setsockopt(sockfd, SOL_IP, optname, buf_p, size);
+
+        if (res == -1) {
+            res = -errno;
+        }
+
         close(sockfd);
+    } else {
+        res = -errno;
     }
 
     if (res != 0) {
@@ -229,7 +235,7 @@ static int get_filter(int domain, int optname, void *buf_p, socklen_t *size_p)
     int sockfd;
     int res;
 
-    res = -1;
+    res = -EGENERAL;
     sockfd = ml_socket(domain, SOCK_RAW, IPPROTO_RAW);
 
     if (sockfd != -1) {
@@ -394,7 +400,7 @@ static int command_ifconfig(int argc, const char *argv[])
 {
     int res;
 
-    res = -1;
+    res = -EGENERAL;
 
     if (argc == 2) {
         res = command_ifconfig_print(argv[1]);
@@ -424,7 +430,7 @@ static int command_route(int argc, const char *argv[])
 {
     int res;
 
-    res = -1;
+    res = -EGENERAL;
 
     if (argc == 3) {
         res = ml_network_interface_add_route(argv[1], argv[2]);
@@ -446,7 +452,7 @@ static int udp_send(const char *ip_address_p,
     int sockfd;
     struct sockaddr_in other;
 
-    res = -1;
+    res = -EGENERAL;
     memset(&other, 0, sizeof(other));
     other.sin_family = AF_INET;
     other.sin_port = htons(atoi(port_p));
@@ -516,7 +522,7 @@ static int udp_recv(const char *port_p, int timeout)
     struct sockaddr_in other;
     char buf[256];
 
-    res = -1;
+    res = -EGENERAL;
     sockfd = ml_socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
     if (sockfd != -1) {
@@ -565,7 +571,7 @@ static int command_udp_send(int argc, const char *argv[])
     if (argc == 4) {
         res = udp_send(argv[1], argv[2], argv[3]);
     } else {
-        res = -1;
+        res = -EGENERAL;
     }
 
     if (res != 0) {
@@ -580,7 +586,7 @@ static int command_udp_recv(int argc, const char *argv[])
     int res;
     int timeout;
 
-    res = -1;
+    res = -EGENERAL;
 
     if (argc == 2) {
         res = udp_recv(argv[1], 5);
@@ -608,7 +614,7 @@ static int tcp_send(const char *ip_address_p,
     int sockfd;
     struct sockaddr_in other;
 
-    res = -1;
+    res = -EGENERAL;
     memset(&other, 0, sizeof(other));
     other.sin_family = AF_INET;
     other.sin_port = htons(atoi(port_p));
@@ -647,7 +653,7 @@ static int command_tcp_send(int argc, const char *argv[])
     if (argc == 4) {
         res = tcp_send(argv[1], argv[2], argv[3]);
     } else {
-        res = -1;
+        res = -EGENERAL;
     }
 
     if (res != 0) {
@@ -688,7 +694,7 @@ int ml_network_interface_configure(const char *name_p,
     netfd = net_open(name_p, &ifreq);
 
     if (netfd == -1) {
-        return (-1);
+        return (-EGENERAL);
     }
 
     res = set_ip_address(netfd, &ifreq, ipv4_address_p);
@@ -717,7 +723,7 @@ int ml_network_interface_up(const char *name_p)
     int res;
     int netfd;
 
-    res = -1;
+    res = -EGENERAL;
     netfd = net_open(name_p, &ifreq);
 
     if (netfd != -1) {
@@ -734,7 +740,7 @@ int ml_network_interface_down(const char *name_p)
     int res;
     int netfd;
 
-    res = -1;
+    res = -EGENERAL;
     netfd = net_open(name_p, &ifreq);
 
     if (netfd != -1) {
@@ -812,7 +818,7 @@ int ml_network_interface_add_route(const char *name_p,
     struct rtentry route;
     struct sockaddr_in *addr_p;
 
-    res = -1;
+    res = -EGENERAL;
     netfd = net_open(name_p, &ifreq);
 
     if (netfd != -1) {

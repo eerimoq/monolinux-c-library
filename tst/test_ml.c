@@ -469,9 +469,10 @@ TEST(get_cpus_stats_4_cpus_fopen_error)
     struct ml_cpu_stats_t stats;
 
     fopen_mock_once("/proc/stat", "r", NULL);
+    fopen_mock_set_errno(ENOENT);
     fclose_mock_none();
 
-    ASSERT_EQ(ml_get_cpus_stats(&stats, 1), -1);
+    ASSERT_EQ(ml_get_cpus_stats(&stats, 1), -ENOENT);
 }
 
 TEST(get_cpus_stats_bad_proc_stat_contents)
@@ -482,7 +483,7 @@ TEST(get_cpus_stats_bad_proc_stat_contents)
     mock_prepare_read_cpus_stats(&lines[0], 1);
     usleep_mock_none();
 
-    ASSERT_EQ(ml_get_cpus_stats(&stats, 1), -1);
+    ASSERT_EQ(ml_get_cpus_stats(&stats, 1), -EGENERAL);
 }
 
 TEST(file_write_string)
@@ -515,7 +516,7 @@ TEST(file_write_string_write_failure)
     fwrite_mock_set_ptr_in("bar", 3);
     fclose_mock_once(0);
 
-    ASSERT_EQ(ml_file_write_string("foo.txt", "bar"), -1);
+    ASSERT_EQ(ml_file_write_string("foo.txt", "bar"), -EGENERAL);
 }
 
 TEST(file_read)
@@ -558,7 +559,7 @@ TEST(file_read_read_failure)
     fread_mock_once(3, 1, 0);
     fclose_mock_once(0);
 
-    ASSERT_EQ(ml_file_read("foo.txt", &buf[0], sizeof(buf)), -1);
+    ASSERT_EQ(ml_file_read("foo.txt", &buf[0], sizeof(buf)), -EGENERAL);
 }
 
 TEST(dd)
@@ -651,7 +652,7 @@ TEST(dd_short_read_error)
     close_mock_once(fdout, 0);
     close_mock_once(fdin, 0);
 
-    ASSERT_EQ(ml_dd("a", "b", 1, 1), -1);
+    ASSERT_EQ(ml_dd("a", "b", 1, 1), -EGENERAL);
 }
 
 TEST(dd_write_error)

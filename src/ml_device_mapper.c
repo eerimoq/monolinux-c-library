@@ -208,10 +208,11 @@ int ml_device_mapper_verity_create(const char *mapping_name_p,
     control_fd = ml_open("/dev/mapper/control", O_RDWR);
 
     if (control_fd == -1) {
+        res = -errno;
         ml_info("device-mapper: Failed to open file '/dev/mapper/control': %s",
                 strerror(errno));
 
-        return (-1);
+        return (res);
     }
 
     res = create_device(control_fd, mapping_name_p, mapping_uuid_p);

@@ -733,7 +733,7 @@ TEST(command_df_setmntent_failure)
 
     ASSERT_EQ(output,
               "df\n"
-              "ERROR(-1: Operation not permitted)\n"
+              "ERROR(-1000: General)\n"
               "$ exit\n");
 }
 
@@ -811,7 +811,7 @@ TEST(command_suicide_no_args)
     ASSERT_EQ(output,
               "suicide\n"
               "Usage: suicide {exit,segfault}\n"
-              "ERROR(-1: Operation not permitted)\n"
+              "ERROR(-1000: General)\n"
               "$ exit\n");
 }
 
@@ -830,7 +830,7 @@ TEST(command_find_too_many_args)
     ASSERT_EQ(output,
               "find a b\n"
               "Usage: find [<path>]\n"
-              "ERROR(-1: Operation not permitted)\n"
+              "ERROR(-1000: General)\n"
               "$ exit\n");
 }
 
@@ -935,7 +935,7 @@ TEST(command_mknod_no_args)
     ASSERT_EQ(output,
               "mknod\n"
               "Usage: mknod <path> <type> [<major>] [<minor>]\n"
-              "ERROR(-1: Operation not permitted)\n"
+              "ERROR(-1000: General)\n"
               "$ exit\n");
 }
 
@@ -954,7 +954,7 @@ TEST(command_mknod_bad_type)
     ASSERT_EQ(output,
               "mknod /dev/foo g\n"
               "Usage: mknod <path> <type> [<major>] [<minor>]\n"
-              "ERROR(-1: Operation not permitted)\n"
+              "ERROR(-1000: General)\n"
               "$ exit\n");
 }
 
@@ -1013,7 +1013,7 @@ TEST(command_mknod_char_no_minor)
     ASSERT_EQ(output,
               "mknod /dev/bar c 5\n"
               "Usage: mknod <path> <type> [<major>] [<minor>]\n"
-              "ERROR(-1: Operation not permitted)\n"
+              "ERROR(-1000: General)\n"
               "$ exit\n");
 }
 
@@ -1052,7 +1052,7 @@ TEST(command_mount_usage)
     ASSERT_EQ(output,
               "mount -h\n"
               "Usage: mount [<device> <dir> <type> [<options>]]\n"
-              "ERROR(-1: Operation not permitted)\n"
+              "ERROR(-1000: General)\n"
               "$ exit\n");
 }
 
@@ -1158,7 +1158,7 @@ TEST(command_date_too_many_args)
     ASSERT_EQ(output,
               "date 1 2\n"
               "Usage: date [<unix-time>]\n"
-              "ERROR(-1: Operation not permitted)\n"
+              "ERROR(-1000: General)\n"
               "$ exit\n");
 }
 

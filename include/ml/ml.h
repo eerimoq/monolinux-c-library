@@ -42,6 +42,8 @@
 
 #define ML_VERSION "0.7.0"
 
+#define EGENERAL  1000
+
 /**
  * Create a unique identifier.
  */
@@ -695,6 +697,8 @@ int ml_dd(const char *infile_p,
           const char *outfile_p,
           size_t total_size,
           size_t chunk_size);
+
+const char *ml_strerror(int errnum);
 
 /* Exits on failure. Use with care. */
 

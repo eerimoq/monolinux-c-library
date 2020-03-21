@@ -124,7 +124,7 @@ static int read_cpu_stats(FILE *file_p, struct cpu_stats_t *stats_p)
     int res;
 
     if (fgets(&line[0], sizeof(line), file_p) == NULL) {
-        return (-1);
+        return (-EGENERAL);
     }
 
     if (strncmp("intr", &line[0], 4) == 0) {
@@ -142,7 +142,7 @@ static int read_cpu_stats(FILE *file_p, struct cpu_stats_t *stats_p)
                  &stats_p->softirq);
 
     if (res != 7) {
-        return (-1);
+        return (-EGENERAL);
     }
 
     stats_p->total = 0;
@@ -166,10 +166,10 @@ static int read_cpus_stats(struct cpu_stats_t *stats_p, int length)
     file_p = fopen("/proc/stat", "r");
 
     if (file_p == NULL) {
-        return (-1);
+        return (-errno);
     }
 
-    res = -1;
+    res = -EGENERAL;
 
     for (i = 0; i < length; i++) {
         res = read_cpu_stats(file_p, &stats_p[i]);
@@ -276,7 +276,7 @@ int ml_hexdump_file(FILE *fin_p, size_t offset, ssize_t size)
     size_t chunk_size;
 
     if (fseek(fin_p, offset, SEEK_SET) != 0) {
-        return (-1);
+        return (-EGENERAL);
     }
 
     while (true) {
@@ -335,7 +335,7 @@ int ml_insert_module(const char *path_p, const char *params_p)
     int res;
     int fd;
 
-    res = -1;
+    res = -EGENERAL;
     fd = ml_open(path_p, O_RDONLY);
 
     if (fd != -1) {
@@ -380,7 +380,7 @@ int ml_print_file_systems_space_usage(void)
     unsigned long available;
     unsigned long used;
 
-    res = -1;
+    res = -EGENERAL;
 
     /* Find all mounted file systems. */
     fin_p = setmntent("/proc/mounts", "r");
@@ -417,19 +417,7 @@ int ml_mount(const char *source_p,
              unsigned long flags,
              const char *options_p)
 {
-    int res;
-
-    res = mount(source_p, target_p, type_p, flags, options_p);
-
-    if (res == -1) {
-        ml_info("Mount of '%s' on '%s' as '%s' failed with: %s.",
-                source_p,
-                target_p,
-                type_p,
-                strerror(errno));
-    }
-
-    return (res);
+    return (mount(source_p, target_p, type_p, flags, options_p));
 }
 
 int ml_get_cpus_stats(struct ml_cpu_stats_t *stats_p, int length)
@@ -455,7 +443,7 @@ int ml_get_cpus_stats(struct ml_cpu_stats_t *stats_p, int length)
     }
 
     if (res != length) {
-        return (-1);
+        return (-EGENERAL);
     }
 
     for (i = 0; i < length; i++) {
@@ -476,28 +464,12 @@ int ml_get_cpus_stats(struct ml_cpu_stats_t *stats_p, int length)
 
 int ml_socket(int domain, int type, int protocol)
 {
-    int res;
-
-    res = socket(domain, type, protocol);
-
-    if (res == -1) {
-        ml_info("Socket failed with: %s.", strerror(errno));
-    }
-
-    return (res);
+    return (socket(domain, type, protocol));
 }
 
 int ml_ioctl(int fd, unsigned long request, void *data_p)
 {
-    int res;
-
-    res = ioctl(fd, request, data_p);
-
-    if (res == -1) {
-        ml_info("Ioctl request 0x%lx failed with: %s.", request, strerror(errno));
-    }
-
-    return (res);
+    return (ioctl(fd, request, data_p));
 }
 
 const char *ml_bool_str(bool value)
@@ -588,7 +560,7 @@ int ml_file_write_string(const char *path_p, const char *data_p)
     if (fwrite(data_p, strlen(data_p), 1, file_p) == 1) {
         res = 0;
     } else {
-        res = -1;
+        res = -EGENERAL;
     }
 
     fclose(file_p);
@@ -620,7 +592,7 @@ int ml_file_read(const char *path_p, void *buf_p, size_t size)
  out:
     fclose(file_p);
 
-    return (-1);
+    return (-EGENERAL);
 }
 
 float ml_timeval_to_ms(struct timeval *timeval_p)
@@ -646,7 +618,7 @@ static int dd_copy_chunk(size_t chunk_size,
     if (size == -1) {
         return (-errno);
     } else if ((size_t)size != chunk_size) {
-        return (-1);
+        return (-EGENERAL);
     }
 
     size = write(fdout, buf_p, chunk_size);
@@ -654,7 +626,7 @@ static int dd_copy_chunk(size_t chunk_size,
     if (size == -1) {
         return (-errno);
     } else if ((size_t)size != chunk_size) {
-        return (-1);
+        return (-EGENERAL);
     }
 
     return (0);
@@ -728,4 +700,16 @@ int ml_dd(const char *infile_p,
     close(fdin);
 
     return (res);
+}
+
+const char *ml_strerror(int errnum)
+{
+    switch (errnum) {
+
+    case EGENERAL:
+        return "General";
+
+    default:
+        return strerror(errnum);
+    }
 }
