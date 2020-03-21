@@ -660,7 +660,7 @@ int ml_dd(const char *infile_p,
         return (-errno);
     }
 
-    fdout = ml_open(outfile_p, O_WRONLY);
+    fdout = ml_open(outfile_p, O_WRONLY | O_CREAT | O_TRUNC);
 
     if (fdout == -1) {
         res = -errno;
