@@ -32,6 +32,7 @@
 #include <ftw.h>
 #include <fcntl.h>
 #include <sys/sysmacros.h>
+#include <linux/i2c-dev.h>
 #include <sys/mount.h>
 #include <mntent.h>
 #include <sys/statvfs.h>
@@ -1471,6 +1472,117 @@ TEST(command_dd_error)
 
     ASSERT_EQ(output,
               "dd a b 1000 1000\n"
+              "ERROR(-2: No such file or directory)\n"
+              "$ exit\n");
+}
+
+TEST(i2c_no_args)
+{
+    int fd;
+
+    fd = init_and_start();
+
+    CAPTURE_OUTPUT(output, errput) {
+        input(fd, "i2c\n");
+        input(fd, "exit\n");
+        ml_shell_join();
+    }
+
+    ASSERT_EQ(output,
+              "i2c\n"
+              "Usage: i2c scan <device>\n"
+              "ERROR(-22: Invalid argument)\n"
+              "$ exit\n");
+}
+
+static void mock_prepare_devices_not_present(int fd,
+                                             long first_address,
+                                             long last_address)
+{
+    long address;
+
+    for (address = first_address; address <= last_address; address++)  {
+        ioctl_mock_once(fd, I2C_SLAVE, 0, "%ld", address);
+        read_mock_once(fd, 1, -1);
+        read_mock_set_errno(EACCES);
+    }
+}
+
+static void mock_prepare_devices_present(int fd,
+                                         long first_address,
+                                         long last_address)
+{
+    long address;
+    uint8_t value;
+
+    value = 0;
+
+    for (address = first_address; address <= last_address; address++)  {
+        ioctl_mock_once(fd, I2C_SLAVE, 0, "%ld", address);
+        read_mock_once(fd, 1, 1);
+        read_mock_set_buf_out(&value, sizeof(value));
+    }
+}
+
+static void mock_prepare_set_slave_address_error(int fd, long address)
+{
+    ioctl_mock_once(fd, I2C_SLAVE, -1, "%ld", address);
+}
+
+TEST(i2c_scan)
+{
+    int fd;
+    int i2cfd;
+
+    fd = init_and_start();
+
+    i2cfd = 6;
+    ml_open_mock_once("/dev/i2c1", O_RDWR, i2cfd);
+
+    mock_prepare_devices_not_present(i2cfd, 0x00, 0x0a);
+    mock_prepare_devices_present(i2cfd, 0x0b, 0x0b);
+    mock_prepare_devices_not_present(i2cfd, 0x0c, 0x59);
+    mock_prepare_set_slave_address_error(i2cfd, 0x5a);
+    mock_prepare_devices_present(i2cfd, 0x5b, 0x5d);
+    mock_prepare_devices_not_present(i2cfd, 0x5e, 0x7f);
+    close_mock_once(i2cfd, 0);
+
+    CAPTURE_OUTPUT(output, errput) {
+        input(fd, "i2c scan /dev/i2c1\n");
+        input(fd, "exit\n");
+        ml_shell_join();
+    }
+
+    ASSERT_EQ(output,
+              "i2c scan /dev/i2c1\n"
+              "Found I2C-device with address 0x0b.\n"
+              "Failed to set I2C address 0x5a.\n"
+              "Found I2C-device with address 0x5b.\n"
+              "Found I2C-device with address 0x5c.\n"
+              "Found I2C-device with address 0x5d.\n"
+              "OK\n"
+              "$ exit\n");
+}
+
+TEST(i2c_scan_open_error)
+{
+    int fd;
+
+    fd = init_and_start();
+
+    ml_open_mock_once("/dev/i2c1", O_RDWR, -1);
+    ml_open_mock_set_errno(ENOENT);
+    close_mock_none();
+
+    CAPTURE_OUTPUT(output, errput) {
+        input(fd, "i2c scan /dev/i2c1\n");
+        input(fd, "exit\n");
+        ml_shell_join();
+    }
+
+    ASSERT_EQ(output,
+              "i2c scan /dev/i2c1\n"
+              "Usage: i2c scan <device>\n"
               "ERROR(-2: No such file or directory)\n"
               "$ exit\n");
 }
