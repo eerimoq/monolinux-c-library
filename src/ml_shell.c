@@ -670,7 +670,7 @@ static int command_reboot(int argc, const char *argv[])
     (void)argc;
     (void)argv;
 
-    return(reboot(RB_AUTOBOOT));
+    return (reboot(RB_AUTOBOOT));
 }
 
 static int command_insmod(int argc, const char *argv[])
