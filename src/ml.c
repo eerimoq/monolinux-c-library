@@ -198,7 +198,8 @@ void ml_init(void)
     ml_bus_init(&module.bus);
     ml_worker_pool_init(&module.worker_pool, 4, 32);
     ml_timer_handler_init(&module.timer_handler);
-    ml_log_object_init(&module.log_object, "default", ML_LOG_UPTO(INFO));
+    ml_log_object_init(&module.log_object, "default", ML_LOG_INFO);
+    ml_log_object_register(&module.log_object);
 }
 
 const char *ml_uid_str(struct ml_uid_t *uid_p)
@@ -542,9 +543,9 @@ void ml_log_print(int level, const char *fmt_p, ...)
     va_end(vlist);
 }
 
-void ml_log_set_mask(int mask)
+void ml_log_set_level(int level)
 {
-    ml_log_object_set_mask(&module.log_object, mask);
+    ml_log_object_set_level(&module.log_object, level);
 }
 
 bool ml_log_is_enabled_for(int level)

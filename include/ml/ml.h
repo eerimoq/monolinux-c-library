@@ -61,11 +61,6 @@
 #define ML_LOG_INFO        6
 #define ML_LOG_DEBUG       7
 
-#define ML_LOG_MASK(level) (1 << (ML_LOG_ ## level))
-#define ML_LOG_UPTO(level) ((1 << (ML_LOG_ ## level + 1)) - 1)
-#define ML_LOG_ALL         ML_LOG_UPTO(DEBUG)
-#define ML_LOG_NONE        0x00
-
 /* Requires "self_p->log_object". */
 #define ML_EMERGENCY(fmt_p, ...)                                        \
     ml_log_object_print(&self_p->log_object, ML_LOG_EMERGENCY, fmt_p, ##__VA_ARGS__)
@@ -147,7 +142,8 @@ struct ml_worker_pool_t {
 
 struct ml_log_object_t {
     const char *name_p;
-    int mask;
+    int level;
+    struct ml_log_object_t *next_p;
 };
 
 enum ml_dhcp_client_state_t {
@@ -255,7 +251,7 @@ void ml_spawn(ml_worker_pool_job_entry_t entry, void *arg_p);
  */
 void ml_log_print(int level, const char *fmt_p, ...);
 
-void ml_log_set_mask(int mask);
+void ml_log_set_level(int level);
 
 bool ml_log_is_enabled_for(int level);
 
@@ -372,17 +368,33 @@ void ml_worker_pool_spawn(struct ml_worker_pool_t *self_p,
 void ml_log_object_module_init(void);
 
 /**
- * Initialize given log object with given name and mask.
+ * Register given log object to the list of log objects.
+ */
+void ml_log_object_register(struct ml_log_object_t *self_p);
+
+/**
+ * Find given log object.
+ */
+struct ml_log_object_t *ml_log_object_get_by_name(const char *name_p);
+
+/**
+ * Iterate over all log objects. Give next_p as NULL to get the first
+ * object. List ends when NULL is returned.
+ */
+struct ml_log_object_t *ml_log_object_list_next(struct ml_log_object_t *log_object_p);
+
+/**
+ * Initialize given log object with given name and level.
  */
 void ml_log_object_init(struct ml_log_object_t *self_p,
                         const char *name_p,
-                        int mask);
+                        int level);
 
 /**
  * Set given log mask for given log object.
  */
-void ml_log_object_set_mask(struct ml_log_object_t *self_p,
-                            int mask);
+void ml_log_object_set_level(struct ml_log_object_t *self_p,
+                            int level);
 
 /**
  * Check if given log level is enabled in given log object.
@@ -601,7 +613,7 @@ int ml_ioctl(int fd, unsigned long request, void *data_p);
  */
 void ml_dhcp_client_init(struct ml_dhcp_client_t *self_p,
                          const char *interface_name_p,
-                         int log_mask);
+                         int log_level);
 
 /**
  * Start given client.

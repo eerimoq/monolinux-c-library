@@ -624,7 +624,7 @@ TEST(start_join)
     mock_push_ml_dhcp_client_start();
     mock_push_poll_failure();
 
-    ml_dhcp_client_init(&client, "eth0", ML_LOG_ALL);
+    ml_dhcp_client_init(&client, "eth0", ML_LOG_DEBUG);
     ml_dhcp_client_start(&client);
     ml_dhcp_client_join(&client);
 }
@@ -668,7 +668,7 @@ TEST(start_failure_last_init_step)
     close_mock_once(RENEW_FD, 0);
     close_mock_once(SOCK_FD, 0);
 
-    ml_dhcp_client_init(&client, "eth0", ML_LOG_ALL);
+    ml_dhcp_client_init(&client, "eth0", ML_LOG_DEBUG);
     ml_dhcp_client_start(&client);
 }
 
@@ -682,7 +682,7 @@ TEST(new)
     mock_push_requesting_to_bound();
     mock_push_poll_failure();
 
-    ml_dhcp_client_init(&client, "eth0", ML_LOG_ALL);
+    ml_dhcp_client_init(&client, "eth0", ML_LOG_DEBUG);
     ml_dhcp_client_start(&client);
     ml_dhcp_client_join(&client);
 }
@@ -699,7 +699,7 @@ TEST(renew)
     mock_push_renewing_to_bound();
     mock_push_poll_failure();
 
-    ml_dhcp_client_init(&client, "eth0", ML_LOG_ALL);
+    ml_dhcp_client_init(&client, "eth0", ML_LOG_DEBUG);
     ml_dhcp_client_start(&client);
     ml_dhcp_client_join(&client);
 }
@@ -718,7 +718,7 @@ TEST(renew_nack)
     mock_push_enter_init();
     mock_push_poll_failure();
 
-    ml_dhcp_client_init(&client, "eth0", ML_LOG_ALL);
+    ml_dhcp_client_init(&client, "eth0", ML_LOG_DEBUG);
     ml_dhcp_client_start(&client);
     ml_dhcp_client_join(&client);
 }
@@ -737,7 +737,7 @@ TEST(renew_response_timeout)
     mock_push_enter_init();
     mock_push_poll_failure();
 
-    ml_dhcp_client_init(&client, "eth0", ML_LOG_ALL);
+    ml_dhcp_client_init(&client, "eth0", ML_LOG_DEBUG);
     ml_dhcp_client_start(&client);
     ml_dhcp_client_join(&client);
 }
@@ -756,7 +756,7 @@ TEST(rebind_timeout)
     mock_push_enter_init();
     mock_push_poll_failure();
 
-    ml_dhcp_client_init(&client, "eth0", ML_LOG_ALL);
+    ml_dhcp_client_init(&client, "eth0", ML_LOG_DEBUG);
     ml_dhcp_client_start(&client);
     ml_dhcp_client_join(&client);
 }
@@ -772,7 +772,7 @@ TEST(discovery_response_timeout)
     mock_push_enter_init();
     mock_push_poll_failure();
 
-    ml_dhcp_client_init(&client, "eth0", ML_LOG_ALL);
+    ml_dhcp_client_init(&client, "eth0", ML_LOG_DEBUG);
     ml_dhcp_client_start(&client);
     ml_dhcp_client_join(&client);
 }
@@ -793,7 +793,7 @@ TEST(discard_offers_in_requesting)
     mock_push_requesting_to_bound();
     mock_push_poll_failure();
 
-    ml_dhcp_client_init(&client, "eth0", ML_LOG_ALL);
+    ml_dhcp_client_init(&client, "eth0", ML_LOG_DEBUG);
     ml_dhcp_client_start(&client);
     ml_dhcp_client_join(&client);
 }
@@ -810,7 +810,7 @@ TEST(request_nack)
     mock_push_enter_init();
     mock_push_poll_failure();
 
-    ml_dhcp_client_init(&client, "eth0", ML_LOG_ALL);
+    ml_dhcp_client_init(&client, "eth0", ML_LOG_DEBUG);
     ml_dhcp_client_start(&client);
     ml_dhcp_client_join(&client);
 }

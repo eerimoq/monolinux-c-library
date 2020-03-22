@@ -115,6 +115,79 @@ static struct module_t module;
 static void history_init(void);
 static void show_line(void);
 
+static const char *level_to_string(int level)
+{
+    const char *res_p;
+
+    switch (level) {
+
+    case ML_LOG_EMERGENCY:
+        res_p = "emergency";
+        break;
+
+    case ML_LOG_ALERT:
+        res_p = "alert";
+        break;
+
+    case ML_LOG_CRITICAL:
+        res_p = "critical";
+        break;
+
+    case ML_LOG_ERROR:
+        res_p = "error";
+        break;
+
+    case ML_LOG_WARNING:
+        res_p = "warning";
+        break;
+
+    case ML_LOG_NOTICE:
+        res_p = "notice";
+        break;
+
+    case ML_LOG_INFO:
+        res_p = "info";
+        break;
+
+    case ML_LOG_DEBUG:
+        res_p = "debug";
+        break;
+
+    default:
+        res_p = "*** unknown ***";
+        break;
+    }
+
+    return (res_p);
+}
+
+static int level_to_number(const char *level_p)
+{
+    int level;
+
+    if (strcmp("emergency", level_p) == 0) {
+        level = ML_LOG_EMERGENCY;
+    } else if (strcmp("alert", level_p) == 0) {
+        level = ML_LOG_ALERT;
+    } else if (strcmp("critical", level_p) == 0) {
+        level = ML_LOG_CRITICAL;
+    } else if (strcmp("error", level_p) == 0) {
+        level = ML_LOG_ERROR;
+    } else if (strcmp("warning", level_p) == 0) {
+        level = ML_LOG_WARNING;
+    } else if (strcmp("notice", level_p) == 0) {
+        level = ML_LOG_NOTICE;
+    } else if (strcmp("info", level_p) == 0) {
+        level = ML_LOG_INFO;
+    } else if (strcmp("debug", level_p) == 0) {
+        level = ML_LOG_DEBUG;
+    } else {
+        level = -1;
+    }
+
+    return (level);
+}
+
 static int xgetc(void)
 {
     int ch;
@@ -953,6 +1026,82 @@ static int command_i2c(int argc, const char *argv[])
 
     if (res != 0) {
         printf("Usage: i2c scan <device>\n");
+    }
+
+    return (res);
+}
+
+static int command_log_list(int argc, const char *argv[])
+{
+    (void)argv;
+
+    struct ml_log_object_t *log_object_p;
+
+    if (argc != 2) {
+        return (-EINVAL);
+    }
+
+    printf("OBJECT-NAME       LEVEL\n");
+    log_object_p = NULL;
+
+    while (true) {
+        log_object_p = ml_log_object_list_next(log_object_p);
+
+        if (log_object_p == NULL) {
+            break;
+        }
+
+        printf("%-16s  %s\n",
+               log_object_p->name_p,
+               level_to_string(log_object_p->level));
+    }
+
+    return (0);
+}
+
+static int command_log_set_level(int argc, const char *argv[])
+{
+    struct ml_log_object_t *log_object_p;
+    int level;
+
+    if (argc != 4) {
+        return (-EINVAL);
+    }
+
+    log_object_p = ml_log_object_get_by_name(argv[2]);
+
+    if (log_object_p == NULL) {
+        return (-EINVAL);
+    }
+
+    level = level_to_number(argv[3]);
+
+    if (level == -1) {
+        return (-EINVAL);
+    }
+
+    ml_log_object_set_level(log_object_p, level);
+
+    return (0);
+}
+
+static int command_log(int argc, const char *argv[])
+{
+    int res;
+
+    res = -EINVAL;
+
+    if (argc >= 2) {
+        if (strcmp(argv[1], "list") == 0) {
+            res = command_log_list(argc, argv);
+        } else if (strcmp(argv[1], "set_level") == 0) {
+            res = command_log_set_level(argc, argv);
+        }
+    }
+
+    if (res != 0) {
+        printf("Usage: log list\n");
+        printf("       log set_mask <log-object> <mask>\n");
     }
 
     return (res);
@@ -1882,6 +2031,9 @@ void ml_shell_init(void)
     ml_shell_register_command("i2c",
                               "I2C bus commands.",
                               command_i2c);
+    ml_shell_register_command("log",
+                              "Log control.",
+                              command_log);
 }
 
 void ml_shell_start(void)

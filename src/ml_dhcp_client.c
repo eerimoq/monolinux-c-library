@@ -1328,6 +1328,7 @@ void ml_dhcp_client_init(struct ml_dhcp_client_t *self_p,
     ml_log_object_init(&self_p->log_object,
                        "dhcp_client",
                        log_mask);
+    ml_log_object_register(&self_p->log_object);
 }
 
 int ml_dhcp_client_start(struct ml_dhcp_client_t *self_p)

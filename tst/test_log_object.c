@@ -38,7 +38,7 @@ TEST(format)
 
     ml_log_object_module_init();
 
-    ml_log_object_init(&log_object, "foo", ML_LOG_UPTO(DEBUG));
+    ml_log_object_init(&log_object, "foo", ML_LOG_DEBUG);
 
     /* Emergency. */
     CAPTURE_OUTPUT(output1, errput1) {
@@ -103,29 +103,16 @@ TEST(enable_disable)
 
     ml_log_object_module_init();
 
-    /* Only debug, no info. */
-    ml_log_object_init(&log_object, "foo", ML_LOG_MASK(DEBUG));
-    ASSERT(ml_log_object_is_enabled_for(&log_object, ML_LOG_DEBUG));
-    ASSERT(!ml_log_object_is_enabled_for(&log_object, ML_LOG_INFO));
+    /* No debug, info and up. */
+    ml_log_object_init(&log_object, "foo", ML_LOG_INFO);
+    ASSERT(!ml_log_object_is_enabled_for(&log_object, ML_LOG_DEBUG));
+    ASSERT(ml_log_object_is_enabled_for(&log_object, ML_LOG_INFO));
 
     CAPTURE_OUTPUT(output1, errput1) {
         ml_log_object_print(&log_object, ML_LOG_DEBUG, "bar");
         ml_log_object_print(&log_object, ML_LOG_INFO, "bar");
     }
 
-    ASSERT_SUBSTRING(output1, " DEBUG foo bar\n");
-    ASSERT_NOT_SUBSTRING(output1, " INFO foo bar\n");
-
-    /* Only info, no debug. */
-    ml_log_object_set_mask(&log_object, ML_LOG_MASK(INFO));
-    ASSERT(!ml_log_object_is_enabled_for(&log_object, ML_LOG_DEBUG));
-    ASSERT(ml_log_object_is_enabled_for(&log_object, ML_LOG_INFO));
-
-    CAPTURE_OUTPUT(output2, errput2) {
-        ml_log_object_print(&log_object, ML_LOG_DEBUG, "bar");
-        ml_log_object_print(&log_object, ML_LOG_INFO, "bar");
-    }
-
-    ASSERT_SUBSTRING(output2, " INFO foo bar\n");
-    ASSERT_NOT_SUBSTRING(output2, " DEBUG foo bar\n");
+    ASSERT_SUBSTRING(output1, " INFO foo bar\n");
+    ASSERT_NOT_SUBSTRING(output1, " DEBUG foo bar\n");
 }

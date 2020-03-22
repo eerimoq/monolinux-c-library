@@ -132,6 +132,7 @@ TEST(various_commands)
               "      history   List command history.\n"
               "          i2c   I2C bus commands.\n"
               "       insmod   Insert a kernel module.\n"
+              "          log   Log control.\n"
               "           ls   List directory contents.\n"
               "        mknod   Create a node.\n"
               "        mount   Mount a filesystem.\n"
@@ -1629,5 +1630,37 @@ TEST(i2c_scan_no_device_given)
               "i2c scan\n"
               "Usage: i2c scan <device>\n"
               "ERROR(-22: Invalid argument)\n"
+              "$ exit\n");
+}
+
+TEST(log_list_and_set_mask)
+{
+    int fd;
+    struct ml_log_object_t log_object;
+
+    ml_log_object_module_init();
+    ml_log_object_init(&log_object, "test-object", ML_LOG_INFO);
+    ml_log_object_register(&log_object);
+    fd = init_and_start();
+
+    CAPTURE_OUTPUT(output, errput) {
+        input(fd, "log list\n");
+        input(fd, "log set_level test-object warning\n");
+        input(fd, "log list\n");
+        input(fd, "exit\n");
+        ml_shell_join();
+    }
+
+    ASSERT_EQ(output,
+              "log list\n"
+              "OBJECT-NAME       LEVEL\n"
+              "test-object       info\n"
+              "OK\n"
+              "$ log set_level test-object warning\n"
+              "OK\n"
+              "$ log list\n"
+              "OBJECT-NAME       LEVEL\n"
+              "test-object       warning\n"
+              "OK\n"
               "$ exit\n");
 }

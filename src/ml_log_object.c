@@ -37,10 +37,12 @@
 
 struct module_t {
     int fd;
+    struct ml_log_object_t *head_p;
 };
 
 static struct module_t module = {
-    .fd = STDOUT_FILENO
+    .fd = STDOUT_FILENO,
+    .head_p = NULL
 };
 
 static const char *level_to_string(int level)
@@ -99,24 +101,60 @@ void ml_log_object_module_init(void)
 #endif
 }
 
-void ml_log_object_init(struct ml_log_object_t *self_p,
-                     const char *name_p,
-                     int mask)
+void ml_log_object_register(struct ml_log_object_t *self_p)
 {
-    self_p->name_p = name_p;
-    self_p->mask = mask;
+    self_p->next_p = module.head_p;
+    module.head_p = self_p;
 }
 
-void ml_log_object_set_mask(struct ml_log_object_t *self_p,
-                         int mask)
+struct ml_log_object_t *ml_log_object_get_by_name(const char *name_p)
 {
-    self_p->mask = mask;
+    struct ml_log_object_t *log_object_p;
+
+    log_object_p = NULL;
+
+    while (true) {
+        log_object_p = ml_log_object_list_next(log_object_p);
+
+        if (log_object_p == NULL) {
+            break;
+        }
+
+        if (strcmp(log_object_p->name_p, name_p) == 0) {
+            break;
+        }
+    }
+
+    return (log_object_p);
+}
+
+struct ml_log_object_t *ml_log_object_list_next(struct ml_log_object_t *log_object_p)
+{
+    if (log_object_p == NULL) {
+        return (module.head_p);
+    } else {
+        return (log_object_p->next_p);
+    }
+}
+
+void ml_log_object_init(struct ml_log_object_t *self_p,
+                     const char *name_p,
+                     int level)
+{
+    self_p->name_p = name_p;
+    self_p->level = level;
+}
+
+void ml_log_object_set_level(struct ml_log_object_t *self_p,
+                         int level)
+{
+    self_p->level = level;
 }
 
 bool ml_log_object_is_enabled_for(struct ml_log_object_t *self_p,
-                               int level)
+                                  int level)
 {
-    return ((self_p->mask & (1 << level)) != 0);
+    return (level <= self_p->level);
 }
 
 void ml_log_object_vprint(struct ml_log_object_t *self_p,
@@ -130,7 +168,7 @@ void ml_log_object_vprint(struct ml_log_object_t *self_p,
     size_t length;
     ssize_t written;
 
-    if ((self_p->mask & (1 << level)) == 0) {
+    if (level > self_p->level) {
         return;
     }
 
