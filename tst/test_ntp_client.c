@@ -116,7 +116,7 @@ TEST(getaddrinfo_error)
 {
     getaddrinfo_mock_once("foo", "123", -1);
 
-    ASSERT_EQ(ml_ntp_client_sync("foo"), -1);
+    ASSERT_EQ(ml_ntp_client_sync("foo"), -EGENERAL);
 }
 
 TEST(getaddrinfo_empty)

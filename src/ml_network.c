@@ -607,8 +607,12 @@ int ml_network_interface_add_route(const char *name_p,
         res = ml_ioctl(netfd, SIOCADDRT, &route);
 
         /* Route already exists? */
-        if ((res == -1) && (errno == EEXIST)) {
-            res = 0;
+        if (res == -1) {
+            if (errno == EEXIST) {
+                res = 0;
+            } else {
+                res = -errno;
+            }
         }
 
         net_close(netfd);

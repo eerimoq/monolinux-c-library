@@ -187,7 +187,7 @@ int ml_ntp_client_sync(const char *address_p)
     res = getaddrinfo(address_p, "123", &hints, &infolist_p);
 
     if (res != 0) {
-        return (-1);
+        return (-EGENERAL);
     }
 
     res = -1;
