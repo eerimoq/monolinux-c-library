@@ -142,3 +142,26 @@ TEST(queue_empty_and_full)
 
     pthread_join(pthread, NULL);
 }
+
+static void *queue_on_put_callback_arg_p = NULL;
+
+static void queue_on_put_callback(void *arg_p)
+{
+    queue_on_put_callback_arg_p = arg_p;
+}
+
+TEST(queue_on_put)
+{
+    void *message_p;
+    int arg;
+
+    arg = 6;
+    ml_queue_init(&queue_1, 10);
+    ml_queue_set_on_put(&queue_1,
+                        queue_on_put_callback,
+                        &arg);
+    message_p = ml_message_alloc(&m1, 0);
+    ASSERT(message_p != NULL);
+    ml_queue_put(&queue_1, message_p);
+    ASSERT_EQ(queue_on_put_callback_arg_p, &arg);
+}

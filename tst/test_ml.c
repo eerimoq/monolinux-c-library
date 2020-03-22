@@ -29,6 +29,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/mount.h>
+#include <sys/statvfs.h>
 #include "nala.h"
 #include "nala_mocks.h"
 #include "ml/ml.h"
@@ -277,6 +278,48 @@ TEST(hexdump_file_1_m1)
         "00000021: 33 34 35 36 37 38 39                            '3456789'\n");
 }
 
+TEST(hexdump_file_big)
+{
+    FILE *fin_p;
+
+    init();
+
+    fin_p = fopen("hexdump-big.in", "rb");
+    ASSERT(fin_p != NULL);
+
+    CAPTURE_OUTPUT(output, errput) {
+        /* Bigger than hexdump function buffer. */
+        ml_hexdump_file(fin_p, 1, 350);
+    }
+
+    fclose(fin_p);
+
+    ASSERT_EQ(
+        output,
+        "00000001: 31 32 33 34 35 36 37 38 39 30 31 32 33 34 35 36 '1234567890123456'\n"
+        "00000011: 37 38 39 30 31 32 33 34 35 36 37 38 39 30 31 32 '7890123456789012'\n"
+        "00000021: 33 34 35 36 37 38 39 30 31 32 33 34 35 36 37 38 '3456789012345678'\n"
+        "00000031: 39 30 31 32 33 34 35 36 37 38 39 30 31 32 33 34 '9012345678901234'\n"
+        "00000041: 35 36 37 38 39 30 31 32 33 34 35 36 37 38 39 30 '5678901234567890'\n"
+        "00000051: 31 32 33 34 35 36 37 38 39 30 31 32 33 34 35 36 '1234567890123456'\n"
+        "00000061: 37 38 39 30 31 32 33 34 35 36 37 38 39 30 31 32 '7890123456789012'\n"
+        "00000071: 33 34 35 36 37 38 39 30 31 32 33 34 35 36 37 38 '3456789012345678'\n"
+        "00000081: 39 30 31 32 33 34 35 36 37 38 39 30 31 32 33 34 '9012345678901234'\n"
+        "00000091: 35 36 37 38 39 30 31 32 33 34 35 36 37 38 39 30 '5678901234567890'\n"
+        "000000a1: 31 32 33 34 35 36 37 38 39 30 31 32 33 34 35 36 '1234567890123456'\n"
+        "000000b1: 37 38 39 30 31 32 33 34 35 36 37 38 39 30 31 32 '7890123456789012'\n"
+        "000000c1: 33 34 35 36 37 38 39 30 31 32 33 34 35 36 37 38 '3456789012345678'\n"
+        "000000d1: 39 30 31 32 33 34 35 36 37 38 39 30 31 32 33 34 '9012345678901234'\n"
+        "000000e1: 35 36 37 38 39 30 31 32 33 34 35 36 37 38 39 30 '5678901234567890'\n"
+        "000000f1: 31 32 33 34 35 36 37 38 39 30 31 32 33 34 35 36 '1234567890123456'\n"
+        "00000101: 37 38 39 30 31 32 33 34 35 36 37 38 39 30 31 32 '7890123456789012'\n"
+        "00000111: 33 34 35 36 37 38 39 30 31 32 33 34 35 36 37 38 '3456789012345678'\n"
+        "00000121: 39 30 31 32 33 34 35 36 37 38 39 30 31 32 33 34 '9012345678901234'\n"
+        "00000131: 35 36 37 38 39 30 31 32 33 34 35 36 37 38 39 30 '5678901234567890'\n"
+        "00000141: 31 32 33 34 35 36 37 38 39 30 31 32 33 34 35 36 '1234567890123456'\n"
+        "00000151: 37 38 39 30 31 32 33 34 35 36 37 38 39 30       '78901234567890'\n");
+}
+
 TEST(print_file)
 {
     init();
@@ -347,6 +390,32 @@ TEST(insmod)
     close_mock_once(fd, 0);
 
     ASSERT_EQ(ml_insert_module("foo.ko", ""), 0);
+}
+
+TEST(insmod_open_error)
+{
+    init();
+
+    ml_open_mock_once("foo.ko", O_RDONLY, -1);
+    ml_open_mock_set_errno(ENOENT);
+    close_mock_none();
+
+    ASSERT_EQ(ml_insert_module("foo.ko", ""), -ENOENT);
+}
+
+TEST(insmod_finit_module_error)
+{
+    int fd;
+
+    init();
+
+    fd = 99;
+    ml_open_mock_once("foo.ko", O_RDONLY, fd);
+    ml_finit_module_mock_once(fd, "", 0, -1);
+    ml_finit_module_mock_set_errno(EEXIST);
+    close_mock_once(fd, 0);
+
+    ASSERT_EQ(ml_insert_module("foo.ko", ""), -EEXIST);
 }
 
 static struct ml_queue_t test_spawn_queue;
@@ -682,4 +751,36 @@ TEST(dd_chunk_size_greater_than_total_size)
 TEST(dd_chunk_size_not_multiple_of_total_size)
 {
     ASSERT_EQ(ml_dd("a", "b", 3, 2), -EINVAL);
+}
+
+TEST(file_system_space_usage)
+{
+    unsigned long total;
+    unsigned long used;
+    unsigned long free;
+    struct statvfs stat;
+
+    stat.f_bsize = 512;
+    stat.f_blocks = 40000;
+    stat.f_bfree = 10000;
+    statvfs_mock_once("/mnt/foo", 0);
+    statvfs_mock_set_buf_out(&stat, sizeof(stat));
+
+    ASSERT_EQ(ml_file_system_space_usage("/mnt/foo", &total, &used, &free), 0);
+    ASSERT_EQ(total, 19);
+    ASSERT_EQ(used, 14);
+    ASSERT_EQ(free, 5);
+}
+
+TEST(file_system_space_usage_statvfs_error)
+{
+    unsigned long total;
+    unsigned long used;
+    unsigned long free;
+
+    statvfs_mock_once("/mnt/foo", -1);
+    statvfs_mock_set_errno(EACCES);
+
+    ASSERT_EQ(ml_file_system_space_usage("/mnt/foo", &total, &used, &free),
+              -EACCES);
 }

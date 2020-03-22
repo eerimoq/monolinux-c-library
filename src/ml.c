@@ -335,20 +335,19 @@ int ml_insert_module(const char *path_p, const char *params_p)
     int res;
     int fd;
 
-    res = -EGENERAL;
     fd = ml_open(path_p, O_RDONLY);
 
-    if (fd != -1) {
-        res = ml_finit_module(fd, params_p, 0);
+    if (fd == -1) {
+        return (-errno);
+    }
 
-        if (res != 0) {
-            res = -errno;
-        }
+    res = ml_finit_module(fd, params_p, 0);
 
-        close(fd);
-    } else {
+    if (res != 0) {
         res = -errno;
     }
+
+    close(fd);
 
     return (res);
 }
@@ -366,7 +365,7 @@ int ml_file_system_space_usage(const char *path_p,
     res = statvfs(path_p, &stat);
 
     if (res != 0) {
-        return (res);
+        return (-errno);
     }
 
     total = (stat.f_bsize * stat.f_blocks);

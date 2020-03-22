@@ -117,3 +117,15 @@ TEST(multiple_message_identifiers)
     ASSERT_EQ(message_p, bmessage_p);
     ml_message_free(message_p);
 }
+
+TEST(broadcast_no_subsciber)
+{
+    void *bmessage_p;
+
+    ml_bus_init(&bus);
+
+    /* Broadcast. */
+    bmessage_p = ml_message_alloc(&m1, 0);
+    ASSERT_NE(bmessage_p, NULL);
+    ml_bus_broadcast(&bus, bmessage_p);
+}
