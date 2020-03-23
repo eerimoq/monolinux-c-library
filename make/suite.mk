@@ -25,6 +25,7 @@ TESTS ?= main.c
 LSAN_OPTIONS = \
 	suppressions=$(ML_ROOT)/make/lsan-suppressions.txt \
 	print_suppressions=0
+NO_IMPLEMENTATION += ioctl
 
 .PHONY: all run build coverage clean
 
@@ -46,7 +47,7 @@ $(BUILD)/nala_mocks.ld: $(TESTS)
 	[ -f $(BUILD)/nala_mocks.h ] || touch $(BUILD)/nala_mocks.h
 	cat $(TESTS) > tests.pp.c
 	$(CC) $(INC:%=-I%) -D_GNU_SOURCE=1 -DNALA_GENERATE_MOCKS -E tests.pp.c \
-	    | $(NALA) generate_mocks -o $(BUILD)
+	    | $(NALA) generate_mocks $(NO_IMPLEMENTATION:%=-n %) -o $(BUILD)
 	touch $@
 
 coverage:

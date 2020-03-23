@@ -79,14 +79,3 @@ ml_shell_command_callback_t mock_get_callback(const char *name_p)
 
     return (NULL);
 }
-
-int ioctl_mock_va_arg_real(int __fd,
-                           unsigned long int __request,
-                           va_list __nala_va_list)
-{
-    (void)__fd;
-    (void)__request;
-    (void)__nala_va_list;
-
-    return (-1);
-}
