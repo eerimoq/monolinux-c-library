@@ -89,8 +89,6 @@
 #define ml_info(fmt_p, ...) ml_log_print(ML_LOG_INFO, fmt_p, ##__VA_ARGS__)
 #define ml_debug(fmt_p, ...) ml_log_print(ML_LOG_DEBUG, fmt_p, ##__VA_ARGS__)
 
-#define ML_TIMER_PERIODIC (1 << 0)
-
 #define membersof(array) (sizeof(array) / sizeof((array)[0]))
 
 typedef int (*ml_shell_command_callback_t)(int argc, const char *argv[]);
