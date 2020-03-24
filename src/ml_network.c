@@ -34,8 +34,9 @@
 #include <net/if.h>
 #include <unistd.h>
 #include <arpa/inet.h>
-#include <poll.h>
 #include <errno.h>
+#include <linux/sockios.h>
+#include <linux/ethtool.h>
 #include "ml/ml.h"
 
 #define VERDICT_ACCEPT  (-NF_ACCEPT - 1)
@@ -443,6 +444,165 @@ static int command_route(int argc, const char *argv[])
     return (res);
 }
 
+static const char *duplex_string(int duplex)
+{
+    const char *res_p;
+
+    switch (duplex) {
+
+    case DUPLEX_HALF:
+        res_p = "half";
+        break;
+
+    case DUPLEX_FULL:
+        res_p = "full";
+        break;
+
+    case DUPLEX_UNKNOWN:
+        res_p = "unknown";
+        break;
+
+    default:
+        res_p = "invalid";
+        break;
+    }
+
+    return (res_p);
+}
+
+static const char *autoneg_string(int autoneg)
+{
+    const char *res_p;
+
+    switch (autoneg) {
+
+    case AUTONEG_DISABLE:
+        res_p = "off";
+        break;
+
+    case AUTONEG_ENABLE:
+        res_p = "on";
+        break;
+
+    default:
+        res_p = "invalid";
+        break;
+    }
+
+    return (res_p);
+}
+
+static int command_ethtool_print(const char *name_p)
+{
+    struct ethtool_cmd settings;
+    struct ifreq ifreq;
+    int res;
+    int netfd;
+
+    netfd = net_open(name_p, &ifreq);
+
+    if (netfd == -1) {
+        return (-errno);
+    }
+
+    settings.cmd = ETHTOOL_GSET;
+    ifreq.ifr_data = (char *)&settings;
+
+    res = ioctl(netfd, SIOCETHTOOL, &ifreq);
+
+    if (res == -1) {
+        res = -errno;
+
+        goto out;
+    }
+
+    printf("Speed:           %u Mbps\n", (unsigned)ethtool_cmd_speed(&settings));
+    printf("Duplex:          %s\n", duplex_string(settings.duplex));
+    printf("Autonegotiation: %s\n", autoneg_string(settings.autoneg));
+
+    net_close(netfd);
+
+    return (0);
+
+ out:
+    net_close(netfd);
+
+    return (res);
+}
+
+static bool is_changed(const char *arg_p)
+{
+    return (strcmp(arg_p, "-") != 0);
+}
+
+static int command_ethtool_link_configure(int argc, const char *argv[])
+{
+    int speed;
+    int duplex;
+    int autoneg;
+
+    if (argc != 5) {
+        return (-EINVAL);
+    }
+
+    if (is_changed(argv[2])) {
+        speed = atoi(argv[2]);
+    } else {
+        speed = -1;
+    }
+
+    if (is_changed(argv[3])) {
+        if (strcmp(argv[3], "half") == 0) {
+            duplex = DUPLEX_HALF;
+        } else if (strcmp(argv[3], "full") == 0) {
+            duplex = DUPLEX_FULL;
+        } else {
+            return (-EINVAL);
+        }
+    } else {
+        duplex = -1;
+    }
+
+    if (is_changed(argv[4])) {
+        if (strcmp(argv[4], "on") == 0) {
+            autoneg = AUTONEG_ENABLE;
+        } else if (strcmp(argv[4], "off") == 0) {
+            autoneg = AUTONEG_DISABLE;
+        } else {
+            return (-EINVAL);
+        }
+    } else {
+        autoneg = -1;
+    }
+
+    return (ml_network_interface_link_configure(argv[1],
+                                                speed,
+                                                duplex,
+                                                autoneg));
+}
+
+static int command_ethtool(int argc, const char *argv[])
+{
+    int res;
+
+    if (argc == 2) {
+        res = command_ethtool_print(argv[1]);
+    } else {
+        res = command_ethtool_link_configure(argc, argv);
+    }
+
+    if (res != 0) {
+        printf("Usage: ethtool <interface>\n");
+        printf("       ethtool <interface> <speed> <duplex> <autoneg>\n");
+        printf("         where\n");
+        printf("           <speed> is the speed in Mbps or -\n");
+        printf("           <duplex> is half, full or -\n");
+        printf("           <autoneg> is on, off or -\n");
+    }
+
+    return (res);
+}
+
 void ml_network_init(void)
 {
     ml_shell_register_command("ifconfig",
@@ -451,6 +611,9 @@ void ml_network_init(void)
     ml_shell_register_command("route",
                               "Network routing.",
                               command_route);
+    ml_shell_register_command("ethtool",
+                              "Ethernet link settings.",
+                              command_ethtool);
 }
 
 int ml_network_interface_configure(const char *name_p,
@@ -617,6 +780,74 @@ int ml_network_interface_add_route(const char *name_p,
 
         net_close(netfd);
     }
+
+    return (res);
+}
+
+int ml_network_interface_link_configure(const char *name_p,
+                                        int speed,
+                                        int duplex,
+                                        int autoneg)
+{
+    struct ethtool_cmd settings;
+    struct ifreq ifreq;
+    int res;
+    int netfd;
+
+    netfd = net_open(name_p, &ifreq);
+
+    if (netfd == -1) {
+        return (-errno);
+    }
+
+    /* Get current settings. */
+    settings.cmd = ETHTOOL_GSET;
+    ifreq.ifr_data = (char *)&settings;
+
+    res = ioctl(netfd, SIOCETHTOOL, &ifreq);
+
+    if (res == -1) {
+        res = -errno;
+
+        goto out;
+    }
+
+    /* Overwrite requested settings. Leave the rest unomdified. */
+    settings.cmd = ETHTOOL_SSET;
+
+    ml_info("Setting speed %d, duplex %d and autoneg %d.",
+            speed,
+            duplex,
+            autoneg);
+
+    if (speed != -1) {
+        ethtool_cmd_speed_set(&settings, speed);
+    }
+
+    if (duplex != -1) {
+        settings.duplex = duplex;
+    }
+
+    if (autoneg != -1) {
+        settings.autoneg = autoneg;
+    }
+
+    ifreq.ifr_data = (char *)&settings;
+
+    res = ioctl(netfd, SIOCETHTOOL, &ifreq);
+
+    if (res == -1) {
+        res = -errno;
+
+        goto out;
+    }
+
+    net_close(netfd);
+
+    return (0);
+
+ out:
+    net_close(netfd);
 
     return (res);
 }

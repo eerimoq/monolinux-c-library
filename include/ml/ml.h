@@ -490,6 +490,15 @@ int ml_network_interface_add_route(const char *name_p,
                                    const char *ip_address_p);
 
 /**
+ * Ethernet link settings. See `linux/ethtool.h` for parameter
+ * values. Set to -1 to leave unmodified.
+ */
+int ml_network_interface_link_configure(const char *name_p,
+                                        int speed,
+                                        int duplex,
+                                        int autoneg);
+
+/**
  * Set given IPv4 network filter. Replaces the current filter, if any.
  */
 int ml_network_filter_ipv4_set(const struct ipt_replace *filter_p);

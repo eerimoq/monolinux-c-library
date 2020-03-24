@@ -60,6 +60,8 @@ static void mock_push_ml_network_init(void)
                                    "Network interface management.");
     mock_ml_shell_register_command("route",
                                    "Network routing.");
+    mock_ml_shell_register_command("ethtool",
+                                   "Ethernet link settings.");
 }
 
 static void create_address_request(struct ifreq *ifreq_p,
