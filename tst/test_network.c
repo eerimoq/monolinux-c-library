@@ -27,6 +27,7 @@
  */
 
 #include <unistd.h>
+#include <stddef.h>
 #include <string.h>
 #include <sys/ioctl.h>
 #include <net/if.h>
@@ -36,7 +37,10 @@
 #include "nala.h"
 #include "nala_mocks.h"
 #include "ml/ml.h"
-#include "utils/mock.h"
+
+static int ifconfig_handle;
+static int route_handle;
+static int ethtool_handle;
 
 static void mock_ioctl_ifreq_ok(int fd,
                                 unsigned long request,
@@ -46,21 +50,17 @@ static void mock_ioctl_ifreq_ok(int fd,
     ioctl_mock_set_va_arg_in_at(0, ifreq_p, sizeof(*ifreq_p));
 }
 
-static void mock_ml_shell_register_command(const char *name_p,
-                                           const char *description_p)
-{
-    ml_shell_register_command_mock_once(name_p, description_p);
-    ml_shell_register_command_mock_set_callback(mock_set_callback);
-}
-
 static void mock_push_ml_network_init(void)
 {
-    mock_ml_shell_register_command("ifconfig",
-                                   "Network interface management.");
-    mock_ml_shell_register_command("route",
-                                   "Network routing.");
-    mock_ml_shell_register_command("ethtool",
-                                   "Ethernet link settings.");
+    ifconfig_handle = ml_shell_register_command_mock_once(
+        "ifconfig",
+        "Network interface management.");
+    route_handle = ml_shell_register_command_mock_once(
+        "route",
+        "Network routing.");
+    ethtool_handle = ml_shell_register_command_mock_once(
+        "ethtool",
+        "Ethernet link settings.");
 }
 
 static void create_address_request(struct ifreq *ifreq_p,
@@ -228,7 +228,7 @@ TEST(network_interface_down)
 
 TEST(command_ifconfig_no_args)
 {
-    ml_shell_command_callback_t command_ifconfig;
+    struct nala_ml_shell_register_command_params_t *params_p;
     const char *argv[] = { "ifconfig" };
 
     ml_shell_init();
@@ -236,10 +236,10 @@ TEST(command_ifconfig_no_args)
     mock_push_ml_network_init();
     ml_network_init();
 
-    command_ifconfig = mock_get_callback("ifconfig");
+    params_p = ml_shell_register_command_mock_get_params_in(ifconfig_handle);
 
     CAPTURE_OUTPUT(output, errput) {
-        ASSERT_EQ(command_ifconfig(membersof(argv), argv), -EINVAL);
+        ASSERT_EQ(params_p->callback(membersof(argv), argv), -EINVAL);
     }
 
     ASSERT_EQ(output,
@@ -250,7 +250,7 @@ TEST(command_ifconfig_no_args)
 
 TEST(command_ifconfig_configure)
 {
-    ml_shell_command_callback_t command_ifconfig;
+    struct nala_ml_shell_register_command_params_t *params_p;
     const char *argv[] = {
         "ifconfig", "eth2", "192.168.0.4", "255.255.255.0", "1500"
     };
@@ -260,12 +260,12 @@ TEST(command_ifconfig_configure)
     mock_push_ml_network_init();
     ml_network_init();
 
-    command_ifconfig = mock_get_callback("ifconfig");
+    params_p = ml_shell_register_command_mock_get_params_in(ifconfig_handle);
 
     mock_push_configure("eth2");
 
     CAPTURE_OUTPUT(output, errput) {
-        ASSERT_EQ(command_ifconfig(membersof(argv), argv), 0);
+        ASSERT_EQ(params_p->callback(membersof(argv), argv), 0);
     }
 
     ASSERT_EQ(output, "");
@@ -273,7 +273,7 @@ TEST(command_ifconfig_configure)
 
 TEST(command_ifconfig_up)
 {
-    ml_shell_command_callback_t command_ifconfig;
+    struct nala_ml_shell_register_command_params_t *params_p;
     const char *argv[] = { "ifconfig", "eth2", "up" };
 
     ml_shell_init();
@@ -281,12 +281,12 @@ TEST(command_ifconfig_up)
     mock_push_ml_network_init();
     ml_network_init();
 
-    command_ifconfig = mock_get_callback("ifconfig");
+    params_p = ml_shell_register_command_mock_get_params_in(ifconfig_handle);
 
     mock_push_up("eth2");
 
     CAPTURE_OUTPUT(output, errput) {
-        ASSERT_EQ(command_ifconfig(membersof(argv), argv), 0);
+        ASSERT_EQ(params_p->callback(membersof(argv), argv), 0);
     }
 
     ASSERT_EQ(output, "");
@@ -294,7 +294,7 @@ TEST(command_ifconfig_up)
 
 TEST(command_ifconfig_down)
 {
-    ml_shell_command_callback_t command_ifconfig;
+    struct nala_ml_shell_register_command_params_t *params_p;
     const char *argv[] = { "ifconfig", "eth1", "down" };
 
     ml_shell_init();
@@ -302,12 +302,12 @@ TEST(command_ifconfig_down)
     mock_push_ml_network_init();
     ml_network_init();
 
-    command_ifconfig = mock_get_callback("ifconfig");
+    params_p = ml_shell_register_command_mock_get_params_in(ifconfig_handle);
 
     mock_push_down("eth1");
 
     CAPTURE_OUTPUT(output, errput) {
-        ASSERT_EQ(command_ifconfig(membersof(argv), argv), 0);
+        ASSERT_EQ(params_p->callback(membersof(argv), argv), 0);
     }
 
     ASSERT_EQ(output, "");
@@ -315,7 +315,7 @@ TEST(command_ifconfig_down)
 
 TEST(command_ifconfig_foobar)
 {
-    ml_shell_command_callback_t command_ifconfig;
+    struct nala_ml_shell_register_command_params_t *params_p;
     const char *argv[] = { "ifconfig", "eth1", "foobar" };
 
     ml_shell_init();
@@ -323,10 +323,10 @@ TEST(command_ifconfig_foobar)
     mock_push_ml_network_init();
     ml_network_init();
 
-    command_ifconfig = mock_get_callback("ifconfig");
+    params_p = ml_shell_register_command_mock_get_params_in(ifconfig_handle);
 
     CAPTURE_OUTPUT(output, errput) {
-        ASSERT_EQ(command_ifconfig(membersof(argv), argv), -EINVAL);
+        ASSERT_EQ(params_p->callback(membersof(argv), argv), -EINVAL);
     }
 
     ASSERT_EQ(output,
@@ -337,7 +337,7 @@ TEST(command_ifconfig_foobar)
 
 TEST(command_ifconfig_print)
 {
-    ml_shell_command_callback_t command_ifconfig;
+    struct nala_ml_shell_register_command_params_t *params_p;
     const char *argv[] = { "ifconfig", "eth1" };
     struct in_addr ip_address;
     uint8_t mac_address[6];
@@ -347,7 +347,7 @@ TEST(command_ifconfig_print)
     mock_push_ml_network_init();
     ml_network_init();
 
-    command_ifconfig = mock_get_callback("ifconfig");
+    params_p = ml_shell_register_command_mock_get_params_in(ifconfig_handle);
 
     inet_aton("1.2.3.5", &ip_address);
     mock_push_ml_network_interface_ip_address("eth1", &ip_address, 0);
@@ -362,7 +362,7 @@ TEST(command_ifconfig_print)
     mock_push_ml_network_interface_index("eth1", 5, 0);
 
     CAPTURE_OUTPUT(output, errput) {
-        ASSERT_EQ(command_ifconfig(membersof(argv), argv), 0);
+        ASSERT_EQ(params_p->callback(membersof(argv), argv), 0);
     }
 
     ASSERT_EQ(output,
@@ -374,7 +374,7 @@ TEST(command_ifconfig_print)
 
 TEST(command_ifconfig_print_failures)
 {
-    ml_shell_command_callback_t command_ifconfig;
+    struct nala_ml_shell_register_command_params_t *params_p;
     const char *argv[] = { "ifconfig", "eth1" };
     struct in_addr ip_address;
     uint8_t mac_address[6];
@@ -384,7 +384,7 @@ TEST(command_ifconfig_print_failures)
     mock_push_ml_network_init();
     ml_network_init();
 
-    command_ifconfig = mock_get_callback("ifconfig");
+    params_p = ml_shell_register_command_mock_get_params_in(ifconfig_handle);
 
     inet_aton("1.2.3.5", &ip_address);
     mock_push_ml_network_interface_ip_address("eth1", &ip_address, -1);
@@ -399,7 +399,7 @@ TEST(command_ifconfig_print_failures)
     mock_push_ml_network_interface_index("eth1", 5, -1);
 
     CAPTURE_OUTPUT(output, errput) {
-        ASSERT_EQ(command_ifconfig(membersof(argv), argv), 0);
+        ASSERT_EQ(params_p->callback(membersof(argv), argv), 0);
     }
 
     ASSERT_EQ(output,
@@ -1029,10 +1029,12 @@ TEST(network_interface_link_configure)
     memset(&ifreq, 0, sizeof(ifreq));
     strcpy(&ifreq.ifr_name[0], "eth5");
     ioctl_mock_once(fd, SIOCETHTOOL, 0, "%p");
+
     ifreq.ifr_data = (char *)&settings_gin;
     settings_gin.cmd = ETHTOOL_GSET;
     ioctl_mock_set_va_arg_in_at(0, &ifreq, sizeof(ifreq));
     ioctl_mock_set_va_arg_in_assert_at(0, gset_in_assert);
+
     ifreq.ifr_data = (char *)&settings_gout;
     settings_gout.cmd = ETHTOOL_GSET;
     settings_gout.speed = 1000;

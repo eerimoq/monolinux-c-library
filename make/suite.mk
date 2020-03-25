@@ -16,7 +16,6 @@ INC += $(ML_ROOT)/tst
 INC += $(ML_ROOT)/tst/utils
 INC += $(BUILD)
 SRC += $(ML_ROOT)/tst/utils/nala.c
-SRC += $(ML_ROOT)/tst/utils/mock.c
 SRC += $(ML_ROOT)/tst/utils/utils.c
 SRC += $(BUILD)/nala_mocks.c
 SRC += $(TESTS)

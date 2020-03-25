@@ -3,7 +3,6 @@
 #include "nala.h"
 #include "ml/ml.h"
 #include "utils.h"
-#include "utils/mock.h"
 
 int stdin_pipe(void)
 {
