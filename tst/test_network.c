@@ -104,13 +104,12 @@ static void sset_in_assert(const void *actual_p,
     ASSERT_EQ(actual_settings_p->autoneg, expected_settings_p->autoneg);
 }
 
-static void mock_prepare_network_interface_link_configure(
-    struct ethtool_cmd *settings_gin_p,
-    struct ethtool_cmd *settings_gout_p,
-    struct ethtool_cmd *settings_sin_p,
-    int speed,
-    int duplex,
-    int autoneg)
+static void mock_prepare_network_interface_link(struct ethtool_cmd *settings_gin_p,
+                                                struct ethtool_cmd *settings_gout_p,
+                                                struct ethtool_cmd *settings_sin_p,
+                                                int speed,
+                                                int duplex,
+                                                int autoneg)
 {
     int fd;
     struct ifreq ifreq;
@@ -137,14 +136,16 @@ static void mock_prepare_network_interface_link_configure(
     ioctl_mock_set_va_arg_out_copy_at(0, gset_out_copy);
 
     /* Set new settings. */
-    ifreq.ifr_data = (char *)settings_sin_p;
-    settings_sin_p->cmd = ETHTOOL_SSET;
-    settings_sin_p->speed = speed;
-    settings_sin_p->duplex = duplex;
-    settings_sin_p->autoneg = autoneg;
-    ioctl_mock_once(fd, SIOCETHTOOL, 0, "%p");
-    ioctl_mock_set_va_arg_in_at(0, &ifreq, sizeof(ifreq));
-    ioctl_mock_set_va_arg_in_assert_at(0, sset_in_assert);
+    if (settings_sin_p != NULL) {
+        ifreq.ifr_data = (char *)settings_sin_p;
+        settings_sin_p->cmd = ETHTOOL_SSET;
+        settings_sin_p->speed = speed;
+        settings_sin_p->duplex = duplex;
+        settings_sin_p->autoneg = autoneg;
+        ioctl_mock_once(fd, SIOCETHTOOL, 0, "%p");
+        ioctl_mock_set_va_arg_in_at(0, &ifreq, sizeof(ifreq));
+        ioctl_mock_set_va_arg_in_assert_at(0, sset_in_assert);
+    }
 
     close_mock_once(fd, 0);
 }
@@ -554,12 +555,12 @@ TEST(command_ethtool_configure)
     mock_push_ml_network_init();
     ml_network_init();
 
-    mock_prepare_network_interface_link_configure(&settings_gin,
-                                                  &settings_gout,
-                                                  &settings_sin,
-                                                  100,
-                                                  DUPLEX_FULL,
-                                                  AUTONEG_DISABLE);
+    mock_prepare_network_interface_link(&settings_gin,
+                                        &settings_gout,
+                                        &settings_sin,
+                                        100,
+                                        DUPLEX_FULL,
+                                        AUTONEG_DISABLE);
 
     CAPTURE_OUTPUT(output, errput) {
         params_p = ml_shell_register_command_mock_get_params_in(ethtool_handle);
@@ -582,12 +583,12 @@ TEST(command_ethtool_configure_no_changes)
     mock_push_ml_network_init();
     ml_network_init();
 
-    mock_prepare_network_interface_link_configure(&settings_gin,
-                                                  &settings_gout,
-                                                  &settings_sin,
-                                                  1000,
-                                                  DUPLEX_HALF,
-                                                  AUTONEG_ENABLE);
+    mock_prepare_network_interface_link(&settings_gin,
+                                        &settings_gout,
+                                        &settings_sin,
+                                        1000,
+                                        DUPLEX_HALF,
+                                        AUTONEG_ENABLE);
 
     CAPTURE_OUTPUT(output, errput) {
         params_p = ml_shell_register_command_mock_get_params_in(ethtool_handle);
@@ -595,6 +596,36 @@ TEST(command_ethtool_configure_no_changes)
     }
 
     ASSERT_EQ(output, "");
+}
+
+TEST(command_ethtool_print)
+{
+    struct nala_ml_shell_register_command_params_t *params_p;
+    const char *argv[] = { "ethtool", "eth1" };
+    struct ethtool_cmd settings_gin;
+    struct ethtool_cmd settings_gout;
+
+    ml_shell_init();
+
+    mock_push_ml_network_init();
+    ml_network_init();
+
+    mock_prepare_network_interface_link(&settings_gin,
+                                        &settings_gout,
+                                        NULL,
+                                        0,
+                                        0,
+                                        0);
+
+    CAPTURE_OUTPUT(output, errput) {
+        params_p = ml_shell_register_command_mock_get_params_in(ethtool_handle);
+        ASSERT_EQ(params_p->callback(membersof(argv), argv), 0);
+    }
+
+    ASSERT_EQ(output,
+              "Speed:           1000 Mbps\n"
+              "Duplex:          half\n"
+              "Autonegotiation: on\n");
 }
 
 static void mock_prepare_get_info(struct ipt_getinfo *info_p)
@@ -1146,12 +1177,12 @@ TEST(network_interface_link_configure)
     struct ethtool_cmd settings_gout;
     struct ethtool_cmd settings_sin;
 
-    mock_prepare_network_interface_link_configure(&settings_gin,
-                                                  &settings_gout,
-                                                  &settings_sin,
-                                                  100,
-                                                  DUPLEX_FULL,
-                                                  AUTONEG_DISABLE);
+    mock_prepare_network_interface_link(&settings_gin,
+                                        &settings_gout,
+                                        &settings_sin,
+                                        100,
+                                        DUPLEX_FULL,
+                                        AUTONEG_DISABLE);
 
     ASSERT_EQ(ml_network_interface_link_configure("eth1",
                                                   100,
