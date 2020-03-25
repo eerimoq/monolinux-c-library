@@ -31,6 +31,8 @@
 #include <sys/ioctl.h>
 #include <net/if.h>
 #include <arpa/inet.h>
+#include <linux/ethtool.h>
+#include <linux/sockios.h>
 #include "nala.h"
 #include "nala_mocks.h"
 #include "ml/ml.h"
@@ -40,11 +42,8 @@ static void mock_ioctl_ifreq_ok(int fd,
                                 unsigned long request,
                                 struct ifreq *ifreq_p)
 {
-    ioctl_mock_once(fd, request, 0, "%p", ifreq_p);
-    ioctl_mock_set_va_arg_in_at(0,
-                                ifreq_p,
-                                sizeof(*ifreq_p),
-                                nala_mock_assert_in_struct_ifreq);
+    ioctl_mock_once(fd, request, 0, "%p");
+    ioctl_mock_set_va_arg_in_at(0, ifreq_p, sizeof(*ifreq_p));
 }
 
 static void mock_ml_shell_register_command(const char *name_p,
@@ -138,11 +137,8 @@ static void mock_push_ioctl_get(const char *name_p,
     memcpy(&ifreq_out_p->ifr_name,
            &ifreq_in.ifr_name,
            sizeof(ifreq_out_p->ifr_name));
-    ioctl_mock_once(fd, request, res, "%p", &ifreq_in);
-    ioctl_mock_set_va_arg_in_at(0,
-                                &ifreq_in,
-                                sizeof(ifreq_in),
-                                nala_mock_assert_in_struct_ifreq);
+    ioctl_mock_once(fd, request, res, "%p");
+    ioctl_mock_set_va_arg_in_at(0, &ifreq_in, sizeof(ifreq_in));
     ioctl_mock_set_va_arg_out_at(0, ifreq_out_p, sizeof(*ifreq_out_p));
     close_mock_once(fd, 0);
 }
@@ -954,4 +950,111 @@ TEST(filter_ipv4_drop_all)
     mock_prepare_apply_all(-NF_DROP - 1);
 
     ASSERT_EQ(ml_network_filter_ipv4_drop_all(), 0);
+}
+
+static void gset_in_assert(const void *actual_p,
+                           const void *expected_p,
+                           size_t size)
+{
+    const struct ifreq *actual_ifreq_p;
+    const struct ethtool_cmd *actual_settings_p;
+    const struct ifreq *expected_ifreq_p;
+    const struct ethtool_cmd *expected_settings_p;
+
+    ASSERT_EQ(size, sizeof(*actual_ifreq_p));
+
+    actual_ifreq_p = actual_p;
+    actual_settings_p = (const struct ethtool_cmd *)actual_ifreq_p->ifr_data;
+    expected_ifreq_p = expected_p;
+    expected_settings_p = (const struct ethtool_cmd *)expected_ifreq_p->ifr_data;
+
+    ASSERT_EQ(&actual_ifreq_p->ifr_name[0], &expected_ifreq_p->ifr_name[0]);
+    ASSERT_EQ(actual_settings_p->cmd, expected_settings_p->cmd);
+}
+
+static void gset_out_copy(void *dst_p,
+                          const void *src_p,
+                          size_t size)
+{
+    struct ifreq *dst_ifreq_p;
+    struct ethtool_cmd *dst_settings_p;
+    const struct ifreq *src_ifreq_p;
+    const struct ethtool_cmd *src_settings_p;
+
+    ASSERT_EQ(size, sizeof(*dst_ifreq_p));
+
+    dst_ifreq_p = dst_p;
+    dst_settings_p = (struct ethtool_cmd *)dst_ifreq_p->ifr_data;
+    src_ifreq_p = src_p;
+    src_settings_p = (const struct ethtool_cmd *)src_ifreq_p->ifr_data;
+
+    memcpy(dst_settings_p, src_settings_p, sizeof(*dst_settings_p));
+}
+
+static void sset_in_assert(const void *actual_p,
+                           const void *expected_p,
+                           size_t size)
+{
+    const struct ifreq *actual_ifreq_p;
+    const struct ethtool_cmd *actual_settings_p;
+    const struct ifreq *expected_ifreq_p;
+    const struct ethtool_cmd *expected_settings_p;
+
+    ASSERT_EQ(size, sizeof(*actual_ifreq_p));
+
+    actual_ifreq_p = actual_p;
+    actual_settings_p = (const struct ethtool_cmd *)actual_ifreq_p->ifr_data;
+    expected_ifreq_p = expected_p;
+    expected_settings_p = (const struct ethtool_cmd *)expected_ifreq_p->ifr_data;
+
+    ASSERT_EQ(&actual_ifreq_p->ifr_name[0], &expected_ifreq_p->ifr_name[0]);
+    ASSERT_EQ(actual_settings_p->cmd, expected_settings_p->cmd);
+    ASSERT_EQ(actual_settings_p->speed, expected_settings_p->speed);
+    ASSERT_EQ(actual_settings_p->duplex, expected_settings_p->duplex);
+    ASSERT_EQ(actual_settings_p->autoneg, expected_settings_p->autoneg);
+}
+
+TEST(network_interface_link_configure)
+{
+    int fd;
+    struct ifreq ifreq;
+    struct ethtool_cmd settings_gin;
+    struct ethtool_cmd settings_gout;
+    struct ethtool_cmd settings_sin;
+
+    fd = 7;
+    socket_mock_once(AF_INET, SOCK_DGRAM, 0, fd);
+
+    /* Get current settings. */
+    memset(&ifreq, 0, sizeof(ifreq));
+    strcpy(&ifreq.ifr_name[0], "eth5");
+    ioctl_mock_once(fd, SIOCETHTOOL, 0, "%p");
+    ifreq.ifr_data = (char *)&settings_gin;
+    settings_gin.cmd = ETHTOOL_GSET;
+    ioctl_mock_set_va_arg_in_at(0, &ifreq, sizeof(ifreq));
+    ioctl_mock_set_va_arg_in_assert_at(0, gset_in_assert);
+    ifreq.ifr_data = (char *)&settings_gout;
+    settings_gout.cmd = ETHTOOL_GSET;
+    settings_gout.speed = 1000;
+    settings_gout.duplex = DUPLEX_HALF;
+    settings_gout.autoneg = AUTONEG_ENABLE;
+    ioctl_mock_set_va_arg_out_at(0, &ifreq, sizeof(ifreq));
+    ioctl_mock_set_va_arg_out_copy_at(0, gset_out_copy);
+
+    /* Set new settings. */
+    ifreq.ifr_data = (char *)&settings_sin;
+    settings_sin.cmd = ETHTOOL_SSET;
+    settings_sin.speed = 100;
+    settings_sin.duplex = DUPLEX_FULL;
+    settings_sin.autoneg = AUTONEG_DISABLE;
+    ioctl_mock_once(fd, SIOCETHTOOL, 0, "%p");
+    ioctl_mock_set_va_arg_in_at(0, &ifreq, sizeof(ifreq));
+    ioctl_mock_set_va_arg_in_assert_at(0, sset_in_assert);
+
+    close_mock_once(fd, 0);
+
+    ASSERT_EQ(ml_network_interface_link_configure("eth5",
+                                                  100,
+                                                  DUPLEX_FULL,
+                                                  AUTONEG_DISABLE), 0);
 }

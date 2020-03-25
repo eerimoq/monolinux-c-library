@@ -87,7 +87,7 @@ static void mock_push_create_device(int fd,
     ctl.data_size = sizeof(ctl);
     ctl.flags = EXISTS_FLAG;
     ioctl_mock_once(fd, 3241737475, ioctl_res, "%p");
-    ioctl_mock_set_va_arg_in_at(0, &ctl, sizeof(ctl), NULL);
+    ioctl_mock_set_va_arg_in_at(0, &ctl, sizeof(ctl));
 
     if (ioctl_res != 0) {
         ioctl_mock_set_errno(EPERM);
@@ -128,7 +128,7 @@ static void mock_push_load_table(int control_fd, int res)
            "0000000000000000000000000000000000000000000000000000000000000001 "
            "1111111111111111111111111111111111111111111111111111111111111112");
     ioctl_mock_once(control_fd, 3241737481, res, "%p");
-    ioctl_mock_set_va_arg_in_at(0, &params, sizeof(params), NULL);
+    ioctl_mock_set_va_arg_in_at(0, &params, sizeof(params));
 
     if (res != 0) {
         ioctl_mock_set_errno(EPERM);
@@ -146,7 +146,7 @@ static void mock_push_suspend_device(int control_fd, int res)
     ctl.data_size = sizeof(ctl);
     strncpy(&ctl.name[0], "name", sizeof(ctl.name));
     ioctl_mock_once(control_fd, 3241737478, res, "%p");
-    ioctl_mock_set_va_arg_in_at(0, &ctl, sizeof(ctl), NULL);
+    ioctl_mock_set_va_arg_in_at(0, &ctl, sizeof(ctl));
 
     if (res != 0) {
         ioctl_mock_set_errno(EPERM);
