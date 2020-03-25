@@ -101,6 +101,10 @@ static int up(int netfd, struct ifreq *ifreq_p)
         res = ml_ioctl(netfd, SIOCSIFFLAGS, ifreq_p);
     }
 
+    if (res != 0) {
+        res = -errno;
+    }
+
     return (res);
 }
 
@@ -113,6 +117,10 @@ static int down(int netfd, struct ifreq *ifreq_p)
     if (res == 0) {
         ifreq_p->ifr_flags &= ~IFF_UP;
         res = ml_ioctl(netfd, SIOCSIFFLAGS, ifreq_p);
+    }
+
+    if (res != 0) {
+        res = -errno;
     }
 
     return (res);
