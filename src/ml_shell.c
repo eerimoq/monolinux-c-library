@@ -603,7 +603,7 @@ static int command_ls(int argc, const char *argv[])
     struct stat statbuf;
     char buf[512];
 
-    res = 0;
+    res = -EINVAL;
 
     if (argc == 2) {
         path_p = argv[1];
@@ -646,7 +646,7 @@ static int command_ls(int argc, const char *argv[])
 
         closedir(dir_p);
     } else {
-        res = -EGENERAL;
+        res = -errno;
     }
 
     return (res);
@@ -697,7 +697,7 @@ static int hexdump(const char *name_p, size_t offset, ssize_t size)
         res = ml_hexdump_file(file_p, offset, size);
         fclose(file_p);
     } else {
-        res = -EGENERAL;
+        res = -errno;
     }
 
     return (res);
@@ -1203,7 +1203,7 @@ static int command_sync(int argc, const char *argv[])
     return (0);
 }
 
-static int command_status(int argc, const char *argv[])
+static int command_top(int argc, const char *argv[])
 {
     (void)argv;
 
@@ -1212,7 +1212,7 @@ static int command_status(int argc, const char *argv[])
     int i;
 
     if (argc != 1) {
-        printf("Usage: status\n");
+        printf("Usage: top\n");
 
         return (-EINVAL);
     }
@@ -1220,7 +1220,7 @@ static int command_status(int argc, const char *argv[])
     length = ml_get_cpus_stats(&stats[0], membersof(stats));
 
     if (length <= 0) {
-        return (-EGENERAL);
+        return (length);
     }
 
     printf("CPU  USER  SYSTEM  IDLE\n");
@@ -2019,9 +2019,9 @@ void ml_shell_init(void)
     ml_shell_register_command("sync",
                               "Synchronize cached writes to persistent storage.",
                               command_sync);
-    ml_shell_register_command("status",
+    ml_shell_register_command("top",
                               "System status.",
-                              command_status);
+                              command_top);
     ml_shell_register_command("ntp_sync",
                               "NTP time sync.",
                               command_ntp_sync);

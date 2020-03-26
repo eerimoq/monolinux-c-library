@@ -139,9 +139,9 @@ TEST(various_commands)
               "     ntp_sync   NTP time sync.\n"
               "        print   Print to file.\n"
               "       reboot   Reboot.\n"
-              "       status   System status.\n"
               "      suicide   Process suicide.\n"
               "         sync   Synchronize cached writes to persistent storage.\n"
+              "          top   System status.\n"
               "OK\n"
               "$ history\n"
               "1: help\n"
@@ -1282,7 +1282,7 @@ static void mock_prepare_read_cpus_stats(char **lines_pp, int length)
     fclose_mock_set_stream_in_pointer(&file);
 }
 
-TEST(command_status)
+TEST(command_top)
 {
     int fd;
     char *lines[2][6] = {
@@ -1310,13 +1310,13 @@ TEST(command_status)
     mock_prepare_read_cpus_stats(&lines[1][0], 5);
 
     CAPTURE_OUTPUT(output, errput) {
-        input(fd, "status\n");
+        input(fd, "top\n");
         input(fd, "exit\n");
         ml_shell_join();
     }
 
     ASSERT_EQ(output,
-              "status\n"
+              "top\n"
               "CPU  USER  SYSTEM  IDLE\n"
               "all   43%      2%   53%\n"
               "1     36%      9%   54%\n"
