@@ -10,7 +10,7 @@ CFLAGS += -Wall -Wextra -std=gnu11 -Werror
 CFLAGS += -g -O0
 CFLAGS += -DUNIT_TEST
 CFLAGS += -no-pie
-LDFLAGS_MOCKS = $(shell cat $(BUILD)/nala_mocks.ld)
+LDFLAGS_MOCKS = $(shell cat $(BUILD)/nala_mocks.ldflags)
 COVERAGE_FILTERS +=
 INC += $(ML_ROOT)/tst
 INC += $(ML_ROOT)/tst/utils
@@ -31,7 +31,7 @@ NO_IMPLEMENTATION += ioctl
 all: run
 
 build:
-	$(MAKE) $(BUILD)/nala_mocks.ld
+	$(MAKE) $(BUILD)/nala_mocks.ldflags
 	$(MAKE) $(EXE)
 
 run: build
@@ -40,7 +40,7 @@ run: build
 test: run
 	$(MAKE) coverage
 
-$(BUILD)/nala_mocks.ld: $(TESTS)
+$(BUILD)/nala_mocks.ldflags: $(TESTS)
 	echo "MOCKGEN $^"
 	mkdir -p $(BUILD)
 	[ -f $(BUILD)/nala_mocks.h ] || touch $(BUILD)/nala_mocks.h
