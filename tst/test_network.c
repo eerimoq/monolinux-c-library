@@ -546,21 +546,16 @@ TEST(command_ethtool_configure)
 {
     struct nala_ml_shell_register_command_params_t *params_p;
     const char *argv[] = { "ethtool", "eth1", "100", "full", "off" };
-    struct ethtool_cmd settings_gin;
-    struct ethtool_cmd settings_gout;
-    struct ethtool_cmd settings_sin;
 
     ml_shell_init();
 
     mock_push_ml_network_init();
     ml_network_init();
-
-    mock_prepare_network_interface_link(&settings_gin,
-                                        &settings_gout,
-                                        &settings_sin,
-                                        100,
-                                        DUPLEX_FULL,
-                                        AUTONEG_DISABLE);
+    ml_network_interface_link_configure_mock_once("eth1",
+                                                  100,
+                                                  DUPLEX_FULL,
+                                                  AUTONEG_DISABLE,
+                                                  0);
 
     CAPTURE_OUTPUT(output, errput) {
         params_p = ml_shell_register_command_mock_get_params_in(ethtool_handle);

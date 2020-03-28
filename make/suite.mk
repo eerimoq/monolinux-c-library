@@ -20,6 +20,7 @@ SRC += $(ML_ROOT)/tst/utils/utils.c
 SRC += $(BUILD)/nala_mocks.c
 SRC += $(TESTS)
 NALA = nala
+WRAP_INTERNAL_SYMBOLS = $(NALA) wrap_internal_symbols $(BUILD)/nala_mocks.ldflags
 TESTS ?= main.c
 LSAN_OPTIONS = \
 	suppressions=$(ML_ROOT)/make/lsan-suppressions.txt \

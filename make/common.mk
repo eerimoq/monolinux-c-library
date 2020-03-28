@@ -18,7 +18,6 @@ SRC += $(ML_ROOT)/src/ml_timer.c
 SRC += $(ML_ROOT)/src/ml_worker_pool.c
 OBJ = $(patsubst %,$(BUILD)%,$(abspath $(SRC:%.c=%.o)))
 CFLAGS += $(INC:%=-I%)
-CFLAGS += -ffunction-sections -fdata-sections
 CFLAGS += -D_GNU_SOURCE=1
 LDFLAGS += -Wl,--gc-sections -L$(BUILD)/root/lib $(LIBS:%=-l%)
 STRIP ?= no
@@ -44,5 +43,8 @@ $(patsubst %.c,$(BUILD)%.o,$(abspath $1)): $1
 	mkdir -p $(DEPSDIR)$(abspath $(dir $1))
 	$$(CC) $$(CFLAGS) -c -o $$@ $$<
 	gcc -MM -MT $$@ $$(CFLAGS) -o $(patsubst %.c,$(DEPSDIR)%.o.dep,$(abspath $1)) $$<
+ifneq ($(WRAP_INTERNAL_SYMBOLS),)
+	$(WRAP_INTERNAL_SYMBOLS) $$@
+endif
 endef
 $(foreach file,$(SRC),$(eval $(call COMPILE_template,$(file))))
