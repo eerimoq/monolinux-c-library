@@ -33,19 +33,9 @@
 #include <sys/syscall.h>
 #include "ml/ml.h"
 
-ssize_t ml_write(int fd, const void *buf, size_t count)
-{
-    return (write(fd, buf, count));
-}
-
 int ml_finit_module(int fd, const char *params_p, int flags)
 {
     return (syscall(SYS_finit_module, fd, params_p, flags));
-}
-
-int ml_mknod(const char *path_p, mode_t mode, dev_t dev)
-{
-    return (mknod(path_p, mode, dev));
 }
 
 #if defined(__GNU_LIBRARY__) && (__GLIBC__ <= 2) && (__GLIBC_MINOR__ <= 26)

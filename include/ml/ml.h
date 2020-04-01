@@ -727,11 +727,7 @@ void *xrealloc(void *buf_p, size_t size);
 
 /* For mocking. */
 
-ssize_t ml_write(int fd, const void *buf, size_t count);
-
 int ml_finit_module(int fd, const char *params_p, int flags);
-
-int ml_mknod(const char *path_p, mode_t mode, dev_t dev);
 
 #if defined(__GNU_LIBRARY__) && (__GLIBC__ <= 2) && (__GLIBC_MINOR__ <= 26)
 int memfd_create(const char *name, unsigned flags);

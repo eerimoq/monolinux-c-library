@@ -97,13 +97,13 @@ static void mock_push_create_device(int fd,
 
     ctl.dev = 5;
     ioctl_mock_set_va_arg_out_at(0, &ctl, sizeof(ctl));
-    ml_mknod_mock_once("/dev/mapper/00000000-1111-2222-3333-444444444444",
-                       S_IFBLK,
-                       5,
-                       mknod_res);
+    mknod_mock_once("/dev/mapper/00000000-1111-2222-3333-444444444444",
+                    S_IFBLK,
+                    5,
+                    mknod_res);
 
     if (mknod_res != 0) {
-        ml_mknod_mock_set_errno(EPERM);
+        mknod_mock_set_errno(EPERM);
     }
 }
 

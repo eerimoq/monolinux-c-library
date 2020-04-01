@@ -111,7 +111,7 @@ static int create_device(int control_fd,
 
     snprintf(&buf[0], sizeof(buf), "/dev/mapper/%s", mapping_uuid_p);
 
-    res = ml_mknod(&buf[0], S_IFBLK, ctl.dev);
+    res = mknod(&buf[0], S_IFBLK, ctl.dev);
 
     if (res != 0) {
         ml_info("device-mapper: Failed to create node for mapping device '%s': %s",

@@ -965,7 +965,7 @@ TEST(command_mknod_fifo)
 {
     int fd;
 
-    ml_mknod_mock_once("/dev/foo", S_IFIFO | 0666, 0, 0);
+    mknod_mock_once("/dev/foo", S_IFIFO | 0666, 0, 0);
 
     fd = init_and_start();
 
@@ -985,7 +985,7 @@ TEST(command_mknod_char)
 {
     int fd;
 
-    ml_mknod_mock_once("/dev/bar", S_IFCHR | 0666, makedev(5, 6), 0);
+    mknod_mock_once("/dev/bar", S_IFCHR | 0666, makedev(5, 6), 0);
 
     fd = init_and_start();
 
@@ -1024,7 +1024,7 @@ TEST(command_mknod_block)
 {
     int fd;
 
-    ml_mknod_mock_once("/dev/sda1", S_IFBLK | 0666, makedev(8, 1), 0);
+    mknod_mock_once("/dev/sda1", S_IFBLK | 0666, makedev(8, 1), 0);
 
     fd = init_and_start();
 
