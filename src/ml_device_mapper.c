@@ -205,7 +205,7 @@ int ml_device_mapper_verity_create(const char *mapping_name_p,
     int control_fd;
     int res;
 
-    control_fd = ml_open("/dev/mapper/control", O_RDWR);
+    control_fd = open("/dev/mapper/control", O_RDWR);
 
     if (control_fd == -1) {
         res = -errno;

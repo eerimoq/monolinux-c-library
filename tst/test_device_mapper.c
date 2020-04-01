@@ -158,7 +158,7 @@ TEST(create_mapping_device_ok)
     int control_fd;
 
     control_fd = 7;
-    ml_open_mock_once("/dev/mapper/control", O_RDWR, control_fd);
+    open_mock_once("/dev/mapper/control", O_RDWR, control_fd, "");
     mock_push_create_device(control_fd, 0, 0);
     mock_push_load_table(control_fd, 0);
     mock_push_suspend_device(control_fd, 0);
@@ -178,8 +178,8 @@ TEST(create_mapping_device_ok)
 
 TEST(create_mapping_device_open_control_error)
 {
-    ml_open_mock_once("/dev/mapper/control", O_RDWR, -1);
-    ml_open_mock_set_errno(EPERM);
+    open_mock_once("/dev/mapper/control", O_RDWR, -1, "");
+    open_mock_set_errno(EPERM);
     close_mock_none();
 
     ASSERT_EQ(ml_device_mapper_verity_create(
@@ -199,7 +199,7 @@ TEST(create_mapping_device_error_create_device_ioctl)
     int control_fd;
 
     control_fd = 7;
-    ml_open_mock_once("/dev/mapper/control", O_RDWR, control_fd);
+    open_mock_once("/dev/mapper/control", O_RDWR, control_fd, "");
     mock_push_create_device(control_fd, -1, 0);
     close_mock_once(control_fd, 0);
 
@@ -220,7 +220,7 @@ TEST(create_mapping_device_error_create_device_mknod)
     int control_fd;
 
     control_fd = 7;
-    ml_open_mock_once("/dev/mapper/control", O_RDWR, control_fd);
+    open_mock_once("/dev/mapper/control", O_RDWR, control_fd, "");
     mock_push_create_device(control_fd, 0, -1);
     close_mock_once(control_fd, 0);
 
@@ -241,7 +241,7 @@ TEST(create_mapping_device_error_load_table)
     int control_fd;
 
     control_fd = 7;
-    ml_open_mock_once("/dev/mapper/control", O_RDWR, control_fd);
+    open_mock_once("/dev/mapper/control", O_RDWR, control_fd, "");
     mock_push_create_device(control_fd, 0, 0);
     mock_push_load_table(control_fd, -1);
     close_mock_once(control_fd, 0);
@@ -263,7 +263,7 @@ TEST(create_mapping_device_error_suspend_device)
     int control_fd;
 
     control_fd = 7;
-    ml_open_mock_once("/dev/mapper/control", O_RDWR, control_fd);
+    open_mock_once("/dev/mapper/control", O_RDWR, control_fd, "");
     mock_push_create_device(control_fd, 0, 0);
     mock_push_load_table(control_fd, 0);
     mock_push_suspend_device(control_fd, -1);

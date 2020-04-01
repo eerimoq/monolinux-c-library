@@ -336,7 +336,7 @@ int ml_insert_module(const char *path_p, const char *params_p)
     int res;
     int fd;
 
-    fd = ml_open(path_p, O_RDONLY);
+    fd = open(path_p, O_RDONLY);
 
     if (fd == -1) {
         return (-errno);
@@ -661,13 +661,13 @@ int ml_dd(const char *infile_p,
         return (-EINVAL);
     }
 
-    fdin = ml_open(infile_p, O_RDONLY);
+    fdin = open(infile_p, O_RDONLY);
 
     if (fdin == -1) {
         return (-errno);
     }
 
-    fdout = ml_open(outfile_p, O_WRONLY | O_CREAT | O_TRUNC);
+    fdout = open(outfile_p, O_WRONLY | O_CREAT | O_TRUNC);
 
     if (fdout == -1) {
         res = -errno;

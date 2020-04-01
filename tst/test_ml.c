@@ -385,7 +385,7 @@ TEST(insmod)
     init();
 
     fd = 99;
-    ml_open_mock_once("foo.ko", O_RDONLY, fd);
+    open_mock_once("foo.ko", O_RDONLY, fd, "");
     ml_finit_module_mock_once(fd, "", 0, 0);
     close_mock_once(fd, 0);
 
@@ -396,8 +396,8 @@ TEST(insmod_open_error)
 {
     init();
 
-    ml_open_mock_once("foo.ko", O_RDONLY, -1);
-    ml_open_mock_set_errno(ENOENT);
+    open_mock_once("foo.ko", O_RDONLY, -1, "");
+    open_mock_set_errno(ENOENT);
     close_mock_none();
 
     ASSERT_EQ(ml_insert_module("foo.ko", ""), -ENOENT);
@@ -410,7 +410,7 @@ TEST(insmod_finit_module_error)
     init();
 
     fd = 99;
-    ml_open_mock_once("foo.ko", O_RDONLY, fd);
+    open_mock_once("foo.ko", O_RDONLY, fd, "");
     ml_finit_module_mock_once(fd, "", 0, -1);
     ml_finit_module_mock_set_errno(EEXIST);
     close_mock_once(fd, 0);
@@ -645,8 +645,8 @@ TEST(dd)
         buf[i] = i;
     }
 
-    ml_open_mock_once("a", O_RDONLY, fdin);
-    ml_open_mock_once("b", O_WRONLY | O_CREAT | O_TRUNC, fdout);
+    open_mock_once("a", O_RDONLY, fdin, "");
+    open_mock_once("b", O_WRONLY | O_CREAT | O_TRUNC, fdout, "");
 
     /* First 500 bytes. */
     read_mock_once(fdin, 500, 500);
@@ -668,8 +668,8 @@ TEST(dd)
 
 TEST(dd_infile_open_error)
 {
-    ml_open_mock_once("a", O_RDONLY, -1);
-    ml_open_mock_set_errno(ENOENT);
+    open_mock_once("a", O_RDONLY, -1, "");
+    open_mock_set_errno(ENOENT);
     close_mock_none();
 
     ASSERT_EQ(ml_dd("a", "b", 1000, 1000), -ENOENT);
@@ -680,9 +680,9 @@ TEST(dd_outfile_open_error)
     int fdin;
 
     fdin = 4;
-    ml_open_mock_once("a", O_RDONLY, fdin);
-    ml_open_mock_once("b", O_WRONLY | O_CREAT | O_TRUNC, -1);
-    ml_open_mock_set_errno(ENOENT);
+    open_mock_once("a", O_RDONLY, fdin, "");
+    open_mock_once("b", O_WRONLY | O_CREAT | O_TRUNC, -1, "");
+    open_mock_set_errno(ENOENT);
     close_mock_once(fdin, 0);
 
     ASSERT_EQ(ml_dd("a", "b", 1000, 1000), -ENOENT);
@@ -696,8 +696,8 @@ TEST(dd_read_error)
     fdin = 30;
     fdout = 40;
 
-    ml_open_mock_once("a", O_RDONLY, fdin);
-    ml_open_mock_once("b", O_WRONLY | O_CREAT | O_TRUNC, fdout);
+    open_mock_once("a", O_RDONLY, fdin, "");
+    open_mock_once("b", O_WRONLY | O_CREAT | O_TRUNC, fdout, "");
     read_mock_once(fdin, 1, -1);
     read_mock_set_errno(EACCES);
     close_mock_once(fdout, 0);
@@ -714,8 +714,8 @@ TEST(dd_short_read_error)
     fdin = 30;
     fdout = 40;
 
-    ml_open_mock_once("a", O_RDONLY, fdin);
-    ml_open_mock_once("b", O_WRONLY | O_CREAT | O_TRUNC, fdout);
+    open_mock_once("a", O_RDONLY, fdin, "");
+    open_mock_once("b", O_WRONLY | O_CREAT | O_TRUNC, fdout, "");
     read_mock_once(fdin, 1, 0);
     read_mock_set_errno(EACCES);
     close_mock_once(fdout, 0);
@@ -732,8 +732,8 @@ TEST(dd_write_error)
     fdin = 30;
     fdout = 40;
 
-    ml_open_mock_once("a", O_RDONLY, fdin);
-    ml_open_mock_once("b", O_WRONLY | O_CREAT | O_TRUNC, fdout);
+    open_mock_once("a", O_RDONLY, fdin, "");
+    open_mock_once("b", O_WRONLY | O_CREAT | O_TRUNC, fdout, "");
     read_mock_once(fdin, 1, 1);
     write_mock_once(fdout, 1, -1);
     write_mock_set_errno(EACCES);

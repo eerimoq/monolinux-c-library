@@ -50,7 +50,7 @@ TEST(get_time)
     rtm.tm_yday = 8;
     rtm.tm_isdst = 9;
 
-    ml_open_mock_once("/dev/rtc99", O_RDONLY, 5);
+    open_mock_once("/dev/rtc99", O_RDONLY, 5, "");
     ioctl_mock_once(5, RTC_RD_TIME, 0, "%p", &rtm);
     ioctl_mock_set_va_arg_out_at(0, &rtm, sizeof(rtm));
     close_mock_once(5, 0);
@@ -71,7 +71,7 @@ TEST(get_time_open_error)
 {
     struct tm tm;
 
-    ml_open_mock_once("/dev/rtc99", O_RDONLY, -1);
+    open_mock_once("/dev/rtc99", O_RDONLY, -1, "");
     ioctl_mock_none();
     close_mock_none();
 
@@ -82,7 +82,7 @@ TEST(get_time_ioctl_error)
 {
     struct tm tm;
 
-    ml_open_mock_once("/dev/rtc99", O_RDONLY, 1);
+    open_mock_once("/dev/rtc99", O_RDONLY, 1, "");
     ioctl_mock_once(1, RTC_RD_TIME, -1, "");
     close_mock_once(1, 0);
 
@@ -104,7 +104,7 @@ TEST(set_time)
     rtm.tm_yday = 8;
     rtm.tm_isdst = 9;
 
-    ml_open_mock_once("/dev/rtc99", O_WRONLY, 6);
+    open_mock_once("/dev/rtc99", O_WRONLY, 6, "");
     ioctl_mock_once(6, RTC_SET_TIME, 0, "%p", &rtm);
     ioctl_mock_set_va_arg_in_at(0, &rtm, sizeof(rtm));
     close_mock_once(6, 0);
@@ -126,7 +126,7 @@ TEST(set_time_open_error)
 {
     struct tm tm;
 
-    ml_open_mock_once("/dev/rtc99", O_WRONLY, -1);
+    open_mock_once("/dev/rtc99", O_WRONLY, -1, "");
     ioctl_mock_none();
     close_mock_none();
 
@@ -147,7 +147,7 @@ TEST(set_time_ioctl_error)
 {
     struct tm tm;
 
-    ml_open_mock_once("/dev/rtc99", O_WRONLY, 1);
+    open_mock_once("/dev/rtc99", O_WRONLY, 1, "");
     ioctl_mock_once(1, RTC_SET_TIME, -1, "");
     close_mock_once(1, 0);
 

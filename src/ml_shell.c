@@ -976,7 +976,7 @@ static int command_i2c_scan(int argc, const char *argv[])
         return (-EINVAL);
     }
 
-    fd = ml_open(argv[2], O_RDWR);
+    fd = open(argv[2], O_RDWR);
 
     if (fd < 0) {
         return (-errno);
@@ -1171,7 +1171,7 @@ static int command_dmesg(int argc, const char *argv[])
     ssize_t size;
     int fd;
 
-    fd = ml_open("/dev/kmsg", O_RDONLY | O_NONBLOCK);
+    fd = open("/dev/kmsg", O_RDONLY | O_NONBLOCK);
 
     if (fd == -1) {
         return (-errno);

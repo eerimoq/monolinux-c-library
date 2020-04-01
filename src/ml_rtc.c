@@ -40,7 +40,7 @@ int ml_rtc_get_time(const char *device_p, struct tm *tm_p)
     struct rtc_time rtm;
 
     res = -1;
-    fd = ml_open(device_p, O_RDONLY);
+    fd = open(device_p, O_RDONLY);
 
     if (fd != -1) {
         res = ioctl(fd, RTC_RD_TIME, &rtm);
@@ -70,7 +70,7 @@ int ml_rtc_set_time(const char *device_p, struct tm *tm_p)
     struct rtc_time rtm;
 
     res = -1;
-    fd = ml_open(device_p, O_WRONLY);
+    fd = open(device_p, O_WRONLY);
 
     if (fd != -1) {
         rtm.tm_sec = tm_p->tm_sec;

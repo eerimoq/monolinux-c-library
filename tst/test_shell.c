@@ -690,12 +690,12 @@ TEST(command_insmod)
     int fd;
 
     fd = 99;
-    ml_open_mock_once("foo.ko", O_RDONLY, fd);
+    open_mock_once("foo.ko", O_RDONLY, fd, "");
     ml_finit_module_mock_once(fd, "", 0, 0);
     close_mock_once(fd, 0);
 
     fd = 98;
-    ml_open_mock_once("bar.ko", O_RDONLY, fd);
+    open_mock_once("bar.ko", O_RDONLY, fd, "");
     ml_finit_module_mock_once(fd, "fie=fum", 0, 0);
     close_mock_once(fd, 0);
 
@@ -1197,7 +1197,7 @@ TEST(command_dmesg)
 
     fd = init_and_start();
 
-    ml_open_mock_once("/dev/kmsg", O_RDONLY | O_NONBLOCK, 5);
+    open_mock_once("/dev/kmsg", O_RDONLY | O_NONBLOCK, 5, "");
     read_mock_once(5, 1023, 54);
     read_mock_set_buf_out(
         "6,838,4248863,-;intel_rapl: Found RAPL domain package\n",
@@ -1229,8 +1229,8 @@ TEST(command_dmesg_open_error)
 
     fd = init_and_start();
 
-    ml_open_mock_once("/dev/kmsg", O_RDONLY | O_NONBLOCK, -1);
-    ml_open_mock_set_errno(55);
+    open_mock_once("/dev/kmsg", O_RDONLY | O_NONBLOCK, -1, "");
+    open_mock_set_errno(55);
 
     CAPTURE_OUTPUT(output, errput) {
         input(fd, "dmesg\n");
@@ -1538,7 +1538,7 @@ TEST(i2c_scan)
     fd = init_and_start();
 
     i2cfd = 6;
-    ml_open_mock_once("/dev/i2c1", O_RDWR, i2cfd);
+    open_mock_once("/dev/i2c1", O_RDWR, i2cfd, "");
 
     mock_prepare_devices_not_present(i2cfd, 0x00, 0x0a);
     mock_prepare_devices_present(i2cfd, 0x0b, 0x0b);
@@ -1573,7 +1573,7 @@ TEST(i2c_scan_no_devices_found)
     fd = init_and_start();
 
     i2cfd = 6;
-    ml_open_mock_once("/dev/i2c2", O_RDWR, i2cfd);
+    open_mock_once("/dev/i2c2", O_RDWR, i2cfd, "");
 
     mock_prepare_devices_not_present(i2cfd, 0x00, 0x7f);
     close_mock_once(i2cfd, 0);
@@ -1597,8 +1597,8 @@ TEST(i2c_scan_open_error)
 
     fd = init_and_start();
 
-    ml_open_mock_once("/dev/i2c1", O_RDWR, -1);
-    ml_open_mock_set_errno(ENOENT);
+    open_mock_once("/dev/i2c1", O_RDWR, -1, "");
+    open_mock_set_errno(ENOENT);
     close_mock_none();
 
     CAPTURE_OUTPUT(output, errput) {

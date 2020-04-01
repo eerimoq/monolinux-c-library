@@ -33,11 +33,6 @@
 #include <sys/syscall.h>
 #include "ml/ml.h"
 
-int ml_open(const char *path_p, int flags)
-{
-    return (open(path_p, flags));
-}
-
 ssize_t ml_write(int fd, const void *buf, size_t count)
 {
     return (write(fd, buf, count));
