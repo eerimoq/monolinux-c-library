@@ -382,6 +382,8 @@ __attribute__ ((weak)) int nala_print_call_mask = 0;
 
 static bool continue_on_failure = false;
 
+static const char *report_json_file_p = "report.json";
+
 static const char *get_node(void)
 {
     static char buf[128];
@@ -687,9 +689,13 @@ static void write_report_json(struct nala_test_t *test_p)
 {
     FILE *file_p;
 
-    file_p = fopen("report.json", "w");
+    file_p = fopen(report_json_file_p, "w");
 
     if (file_p == NULL) {
+        fprintf(stderr,
+                "error: Failed to open JSON report '%s' with '%s'.\n",
+                report_json_file_p,
+                strerror(errno));
         exit(1);
     }
 
@@ -856,15 +862,15 @@ static const char *display_inline_diff(FILE *file_p,
         if (use_original) {
             snprintf(line_prefix,
                      sizeof(line_prefix),
-                     COLOR(RED, "- ") COLOR_BOLD(RED, "%ld"),
+                     "- " BOLD("%ld"),
                      *line_number);
-            fprintf(file_p, " %37s" COLOR(RED, " |  "), line_prefix);
+            fprintf(file_p, " %19s" " |  ", line_prefix);
         } else {
             snprintf(line_prefix,
                      sizeof(line_prefix),
-                     COLOR(GREEN, "+ ") COLOR_BOLD(GREEN, "%ld"),
+                     COLOR(RED, "+ ") COLOR_BOLD(RED, "%ld"),
                      *line_number);
-            fprintf(file_p, " %37s" COLOR(GREEN, " |  "), line_prefix);
+            fprintf(file_p, " %37s" COLOR(RED, " |  "), line_prefix);
         }
 
         while (index - line_index < line_length) {
@@ -881,12 +887,12 @@ static const char *display_inline_diff(FILE *file_p,
             } else if (characters > 0) {
                 if (use_original) {
                     fprintf(file_p,
-                            COLOR_BOLD(RED, "%.*s"),
+                            BOLD("%.*s"),
                             (int)characters,
                             string + index - line_index);
                 } else {
                     fprintf(file_p,
-                            COLOR_BOLD(GREEN, "%.*s"),
+                            COLOR_BOLD(RED, "%.*s"),
                             (int)characters,
                             string + index - line_index);
                 }
@@ -998,11 +1004,11 @@ static void print_string_diff(FILE *file_p,
                 char line_prefix[64];
                 snprintf(line_prefix,
                          sizeof(line_prefix),
-                         COLOR(GREEN, "+ ") COLOR_BOLD(GREEN, "%ld"),
+                         "+ " BOLD("%ld"),
                          line_number);
 
-                fprintf(file_p, " %37s", line_prefix);
-                fprintf(file_p, COLOR(GREEN, " |  ") COLOR_BOLD(GREEN, "%.*s\n"),
+                fprintf(file_p, " %19s", line_prefix);
+                fprintf(file_p, COLOR(RED, " |  ") COLOR_BOLD(RED, "%.*s\n"),
                         (int)(modified_next - modified),
                         modified);
 
@@ -1241,7 +1247,9 @@ static void print_usage_and_exit(const char *program_name_p, int exit_code)
            "  -h, --help                    Show this help message and exit.\n"
            "  -v, --version                 Print version information.\n"
            "  -c, --continue-on-failure     Always run all tests.\n"
-           "  -a, --print-all-calls         Print all calls to ease debugging.\n",
+           "  -a, --print-all-calls         Print all calls to ease debugging.\n"
+           "  -r, --report-json-file        JSON test report file (default: "
+           "report.json).\n",
            program_name_p);
     exit(exit_code);
 }
@@ -1276,11 +1284,12 @@ static void filter_tests(const char *test_pattern_p)
 __attribute__((weak)) int main(int argc, char *argv[])
 {
     static struct option long_options[] = {
-        { "help",                no_argument, NULL, 'h' },
-        { "version",             no_argument, NULL, 'v' },
-        { "continue-on-failure", no_argument, NULL, 'c' },
-        { "print-all-calls",     no_argument, NULL, 'a' },
-        { NULL,                  no_argument, NULL, 0 }
+        { "help",                no_argument,       NULL, 'h' },
+        { "version",             no_argument,       NULL, 'v' },
+        { "continue-on-failure", no_argument,       NULL, 'c' },
+        { "print-all-calls",     no_argument,       NULL, 'a' },
+        { "report-json-file",    required_argument, NULL, 'r' },
+        { NULL,                  no_argument,       NULL, 0 }
     };
     int option;
 
@@ -1288,7 +1297,7 @@ __attribute__((weak)) int main(int argc, char *argv[])
     nala_suspend_all_mocks();
 
     while (1) {
-        option = getopt_long(argc, argv, "hvca", &long_options[0], NULL);
+        option = getopt_long(argc, argv, "hvcar:", &long_options[0], NULL);
 
         if (option == -1) {
             break;
@@ -1310,6 +1319,10 @@ __attribute__((weak)) int main(int argc, char *argv[])
 
         case 'a':
             nala_print_call_mask = 0xff;
+            break;
+
+        case 'r':
+            report_json_file_p = optarg;
             break;
 
         default:
