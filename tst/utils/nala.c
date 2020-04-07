@@ -142,7 +142,7 @@ void nala_subprocess_result_free(struct nala_subprocess_result_t *self_p);
 
 #include <stdbool.h>
 
-#define NALA_TRACEBACK_VERSION "0.7.0"
+#define NALA_TRACEBACK_VERSION "0.8.0"
 
 typedef bool (*nala_traceback_skip_filter_t)(void *arg_p, const char *line_p);
 
@@ -153,20 +153,23 @@ typedef bool (*nala_traceback_skip_filter_t)(void *arg_p, const char *line_p);
 char *nala_traceback_format(void **buffer_pp,
                        int depth,
                        const char *prefix_p,
+                       const char *header_p,
                        nala_traceback_skip_filter_t skip_filter,
                        void *arg_p);
 
 /**
  * Create a traceback string.
  */
-char *nala_traceback_string(const char *prefix_pp,
+char *nala_traceback_string(const char *prefix_p,
+                       const char *header_p,
                        nala_traceback_skip_filter_t skip_filter,
                        void *arg_p);
 
 /**
  * Print a traceback.
  */
-void nala_traceback_print(const char *prefix_pp,
+void nala_traceback_print(const char *prefix_p,
+                     const char *header_p,
                      nala_traceback_skip_filter_t skip_filter,
                      void *arg_p);
 
@@ -749,12 +752,7 @@ static void test_entry(void *arg_p)
     capture_output_init(&capture_stderr, stderr);
     nala_reset_all_mocks();
     test_p->func();
-    nala_assert_all_mocks_completed();
-    nala_reset_all_mocks();
-    nala_suspend_all_mocks();
-    capture_output_destroy(&capture_stdout);
-    capture_output_destroy(&capture_stderr);
-    exit(0);
+    nala_exit(0);
 }
 
 static int run_test(struct nala_test_t *test_p)
@@ -1042,6 +1040,7 @@ static int run_tests(struct nala_test_t *tests_p)
     gettimeofday(&end_time, NULL);
     timersub(&end_time, &start_time, &elapsed_time);
     print_summary(tests_p, timeval_to_ms(&elapsed_time));
+    fflush(stdout);
     write_report_json(tests_p);
 
     return (exit_code);
@@ -1432,7 +1431,10 @@ void nala_test_failure(const char *message_p)
     printf("  Test:  " COLOR_BOLD(CYAN, "%s\n"), full_test_name(current_test_p));
     printf("  Error: %s", message_p);
     printf("\n");
-    nala_traceback_print("  ", traceback_skip_filter, NULL);
+    nala_traceback_print("  ",
+                         "Assert traceback (most recent call last):",
+                         traceback_skip_filter,
+                         NULL);
     print_test_failure_report_end();
     free((void *)message_p);
     exit(1);
@@ -1478,8 +1480,10 @@ static void print_usage_and_exit(const char *program_name_p, int exit_code)
            "\n"
            "positional arguments:\n"
            "  test-pattern                  Only run tests matching given pattern. "
-           "'$' matches\n"
-           "                                the end of the test name.\n"
+           "'^' matches\n"
+           "                                the beginning and '$' matches the end "
+           "of the test\n"
+           "                                name.\n"
            "\n"
            "optional arguments:\n"
            "  -h, --help                    Show this help message and exit.\n"
@@ -1503,37 +1507,68 @@ static void print_version_and_exit(void)
     exit(0);
 }
 
-static bool is_test_match(struct nala_test_t *test_p, const char *pattern_p)
+static bool is_test_match(struct nala_test_t *test_p, const char *full_pattern_p)
 {
     const char *full_test_name_p;
-    int full_test_name_length;
-    int pattern_length;
-    int offset;
+    size_t full_test_name_length;
+    size_t pattern_length;
+    size_t offset;
+    bool match_beginning;
+    bool match_end;
+    char *pattern_p;
 
-    pattern_length = (int)strlen(pattern_p);
+    pattern_length = strlen(full_pattern_p);
 
     if (pattern_length == 0) {
         return (true);
     }
 
+    match_beginning = (full_pattern_p[0] == '^');
+    match_end = (full_pattern_p[pattern_length - 1] == '$');
+    pattern_p = alloca(pattern_length + 1);
+    strcpy(pattern_p, full_pattern_p);
+
+    if (match_beginning) {
+        pattern_p++;
+        pattern_length--;
+    }
+
+    if (match_end) {
+        pattern_length--;
+    }
+
     full_test_name_p = full_test_name(test_p);
-    full_test_name_length = (int)strlen(full_test_name_p);
+    full_test_name_length = strlen(full_test_name_p);
 
-    if (pattern_p[pattern_length - 1] == '$') {
-        offset = (full_test_name_length - pattern_length + 1);
+    if (pattern_length > full_test_name_length) {
+        return (false);
+    }
 
-        if (offset < 0) {
+    if (match_beginning || match_end) {
+        if ((pattern_length == 0) && match_beginning && match_end) {
             return (false);
         }
 
-        return (strncmp(&full_test_name_p[offset],
+        if (match_beginning) {
+            if (strncmp(full_test_name_p, pattern_p, pattern_length) != 0) {
+                return (false);
+            }
+        }
+
+        if (match_end) {
+            offset = (full_test_name_length - pattern_length);
+
+            if (strncmp(&full_test_name_p[offset],
                         pattern_p,
-                        (size_t)pattern_length - 1) == 0);
-    } else if (strstr(full_test_name_p, pattern_p) != NULL) {
-        return (true);
+                        pattern_length) != 0) {
+                return (false);
+            }
+        }
+    } else if (strstr(full_test_name_p, pattern_p) == NULL) {
+        return (false);
     }
 
-    return (false);
+    return (true);
 }
 
 static void filter_tests(const char *test_pattern_p)
@@ -1703,6 +1738,7 @@ char *nala_mock_traceback_format(void **buffer_pp, int depth)
     return (nala_traceback_format(buffer_pp,
                                   depth,
                                   "  ",
+                                  "Mock traceback (most recent call last):",
                                   mock_traceback_skip_filter,
                                   NULL));
 }
@@ -2336,6 +2372,18 @@ void nala_fail(const char *message_p)
     strcat(&message[0], "\n");
     nala_test_failure(nala_format(&message[0]));
 }
+
+void nala_exit(int status)
+{
+    (void)status;
+
+    nala_assert_all_mocks_completed();
+    nala_reset_all_mocks();
+    nala_suspend_all_mocks();
+    capture_output_destroy(&capture_stdout);
+    capture_output_destroy(&capture_stderr);
+    exit(0);
+}
 /*
  * The MIT License (MIT)
  *
@@ -2753,13 +2801,13 @@ static void *fixaddr(void *address_p)
     return ((void *)(((uintptr_t)address_p) - 1));
 }
 
-static bool is_nala_traceback_line(const char *line_p)
+static bool is_traceback_line(const char *line_p)
 {
-    if (strncmp(line_p, "nala_traceback_print at ", 19) == 0) {
+    if (strncmp(line_p, "traceback_print at ", 19) == 0) {
         return (true);
     }
 
-    if (strncmp(line_p, "nala_traceback_string at ", 20) == 0) {
+    if (strncmp(line_p, "traceback_string at ", 20) == 0) {
         return (true);
     }
 
@@ -2807,6 +2855,7 @@ static void print_line(FILE *stream_p, const char *prefix_p, char *line_p)
 char *nala_traceback_format(void **buffer_pp,
                        int depth,
                        const char *prefix_p,
+                       const char *header_p,
                        nala_traceback_skip_filter_t skip_filter,
                        void *arg_p)
 {
@@ -2823,6 +2872,10 @@ char *nala_traceback_format(void **buffer_pp,
         prefix_p = "";
     }
 
+    if (header_p == NULL) {
+        header_p = "Traceback (most recent call last):";
+    }
+
     size = readlink("/proc/self/exe", &exe[0], sizeof(exe) - 1);
 
     if (size == -1) {
@@ -2837,7 +2890,7 @@ char *nala_traceback_format(void **buffer_pp,
         return (NULL);
     }
 
-    fprintf(stream_p, "%sTraceback (most recent call last):\n", prefix_p);
+    fprintf(stream_p, "%s%s\n", prefix_p, header_p);
 
     for (i = (depth - 1); i >= 0; i--) {
         snprintf(&command[0],
@@ -2853,7 +2906,7 @@ char *nala_traceback_format(void **buffer_pp,
             continue;
         }
 
-        if (is_nala_traceback_line(result_p->stdout.buf_p)) {
+        if (is_traceback_line(result_p->stdout.buf_p)) {
             nala_subprocess_result_free(result_p);
             continue;
         }
@@ -2877,6 +2930,7 @@ char *nala_traceback_format(void **buffer_pp,
 }
 
 char *nala_traceback_string(const char *prefix_p,
+                       const char *header_p,
                        nala_traceback_skip_filter_t skip_filter,
                        void *arg_p)
 {
@@ -2888,17 +2942,19 @@ char *nala_traceback_string(const char *prefix_p,
     return (nala_traceback_format(addresses,
                              depth,
                              prefix_p,
+                             header_p,
                              skip_filter,
                              arg_p));
 }
 
 void nala_traceback_print(const char *prefix_p,
+                       const char *header_p,
                      nala_traceback_skip_filter_t skip_filter,
                      void *arg_p)
 {
     char *string_p;
 
-    string_p = nala_traceback_string(prefix_p, skip_filter, arg_p);
+    string_p = nala_traceback_string(prefix_p, header_p, skip_filter, arg_p);
     printf("%s", string_p);
     free(string_p);
 }
