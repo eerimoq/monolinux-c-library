@@ -347,18 +347,15 @@ static uint8_t nak_udp[1024] = {
     0x35, 0x01, 0x06, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
-static void __fds_in_assert(struct pollfd *__fds,
-                            const void *buf_p,
-                            size_t size)
+static void fds_in_assert(struct pollfd *actual_p,
+                          struct pollfd *expected_p,
+                          size_t size)
 {
-    const struct pollfd *expected_p;
     size_t i;
 
-    expected_p = buf_p;
-
-    for (i = 0; i < (size / sizeof(*__fds)); i++) {
-        ASSERT_EQ(__fds[i].fd, expected_p[i].fd);
-        ASSERT_EQ(__fds[i].events, expected_p[i].events);
+    for (i = 0; i < (size / sizeof(*actual_p)); i++) {
+        ASSERT_EQ(actual_p[i].fd, expected_p[i].fd);
+        ASSERT_EQ(actual_p[i].events, expected_p[i].events);
         /* revents are out parameter. */
     }
 }
@@ -385,7 +382,7 @@ static void mock_push_poll_fd(int index)
     init_pollfds(&fds[0]);
     poll_mock_once(5, -1, 1);
     poll_mock_set_fds_in(&fds[0], sizeof(fds));
-    poll_mock_set_fds_in_assert(__fds_in_assert);
+    poll_mock_set_fds_in_assert(fds_in_assert);
     fds[index].revents = POLLIN;
     poll_mock_set_fds_out(&fds[0], sizeof(fds));
 }
@@ -613,7 +610,7 @@ static void mock_push_poll_failure(void)
     init_pollfds(&fds[0]);
     poll_mock_once(5, -1, -1);
     poll_mock_set_fds_in(&fds[0], sizeof(fds));
-    poll_mock_set_fds_in_assert(__fds_in_assert);
+    poll_mock_set_fds_in_assert(fds_in_assert);
     poll_mock_set_fds_out(&fds[0], sizeof(fds));
 }
 
