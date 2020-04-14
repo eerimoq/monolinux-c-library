@@ -1,5 +1,6 @@
 |buildstatus|_
 |codecov|_
+|nala|_
 
 Monolinux C library
 ===================
@@ -62,5 +63,8 @@ Execute one test suite.
 
 .. |codecov| image:: https://codecov.io/gh/eerimoq/monolinux-c-library/branch/master/graph/badge.svg
 .. _codecov: https://codecov.io/gh/eerimoq/monolinux-c-library
+
+.. |nala| image:: https://img.shields.io/badge/nala-test-blue.svg
+.. _nala: https://github.com/eerimoq/nala
 
 .. _Monolinux: https://github.com/eerimoq/monolinux
