@@ -811,8 +811,3 @@ TEST(request_nack)
     ml_dhcp_client_start(&client);
     ml_dhcp_client_join(&client);
 }
-
-void __wrap_ml_timer_handler_init(struct ml_timer_handler_t *self_p)
-{
-    (void)self_p;
-}

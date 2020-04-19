@@ -107,6 +107,9 @@ TEST(set_time)
     open_mock_once("/dev/rtc99", O_WRONLY, 6, "");
     ioctl_mock_once(6, RTC_SET_TIME, 0, "%p", &rtm);
     ioctl_mock_set_va_arg_in_at(0, &rtm, sizeof(rtm));
+    ioctl_mock_set_va_arg_in_assert_at(
+        0,
+        (nala_mock_in_assert_t)nala_mock_assert_struct_rtc_time);
     close_mock_once(6, 0);
 
     tm.tm_sec = 1;

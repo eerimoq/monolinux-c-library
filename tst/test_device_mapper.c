@@ -33,50 +33,14 @@
 #include <errno.h>
 #include "nala.h"
 #include "nala_mocks.h"
+#include "utils/utils.h"
 #include "ml/ml.h"
-
-#define NAME_LEN_MAX   127
-#define UUID_LEN_MAX   128
-#define TYPE_NAME_MAX  15
-
-struct ioctl_t {
-    uint32_t version[3];
-    uint32_t data_size;
-    uint32_t data_start;
-    uint32_t target_count;
-    int32_t open_count;
-    uint32_t flags;
-    uint32_t event_nr;
-    uint32_t padding;
-    uint64_t dev;
-    char name[NAME_LEN_MAX + 1];
-    char uuid[UUID_LEN_MAX + 1];
-    char padding2[7];
-};
-
-struct target_t {
-    uint64_t sector_start;
-    uint64_t length;
-    int32_t status;
-    uint32_t next;
-    char target_type[TYPE_NAME_MAX + 1];
-};
-
-struct load_table_t {
-    struct ioctl_t ctl;
-    struct target_t target;
-    char string[512];
-};
-
-#define READONLY_FLAG     (1 << 0)
-#define EXISTS_FLAG       (1 << 2)
-#define SECURE_DATA_FLAG  (1 << 15)
 
 static void mock_push_create_device(int fd,
                                     int ioctl_res,
                                     int mknod_res)
 {
-    struct ioctl_t ctl;
+    struct utils_ioctl_t ctl;
 
     memset(&ctl, 0, sizeof(ctl));
     ctl.version[0] = 4;
@@ -85,9 +49,12 @@ static void mock_push_create_device(int fd,
     strncpy(&ctl.name[0], "name", sizeof(ctl.name));
     strncpy(&ctl.uuid[0], "00000000-1111-2222-3333-444444444444", sizeof(ctl.uuid));
     ctl.data_size = sizeof(ctl);
-    ctl.flags = EXISTS_FLAG;
+    ctl.flags = UTILS_EXISTS_FLAG;
     ioctl_mock_once(fd, 3241737475, ioctl_res, "%p");
     ioctl_mock_set_va_arg_in_at(0, &ctl, sizeof(ctl));
+    ioctl_mock_set_va_arg_in_assert_at(
+        0,
+        (nala_mock_in_assert_t)nala_mock_assert_struct_utils_ioctl_t);
 
     if (ioctl_res != 0) {
         ioctl_mock_set_errno(EPERM);
@@ -109,7 +76,7 @@ static void mock_push_create_device(int fd,
 
 static void mock_push_load_table(int control_fd, int res)
 {
-    struct load_table_t params;
+    struct utils_load_table_t params;
 
     memset(&params, 0, sizeof(params));
     params.ctl.version[0] = 4;
@@ -119,7 +86,9 @@ static void mock_push_load_table(int control_fd, int res)
     params.ctl.data_start = sizeof(params.ctl);
     strncpy(&params.ctl.name[0], "name", sizeof(params.ctl.name));
     params.ctl.target_count = 1;
-    params.ctl.flags = (READONLY_FLAG | EXISTS_FLAG | SECURE_DATA_FLAG);
+    params.ctl.flags = (UTILS_READONLY_FLAG
+                        | UTILS_EXISTS_FLAG
+                        | UTILS_SECURE_DATA_FLAG);
     params.target.sector_start = 0;
     params.target.length = 0x6000;
     strcpy(&params.target.target_type[0], "verity");
@@ -129,6 +98,9 @@ static void mock_push_load_table(int control_fd, int res)
            "1111111111111111111111111111111111111111111111111111111111111112");
     ioctl_mock_once(control_fd, 3241737481, res, "%p");
     ioctl_mock_set_va_arg_in_at(0, &params, sizeof(params));
+    ioctl_mock_set_va_arg_in_assert_at(
+        0,
+        (nala_mock_in_assert_t)nala_mock_assert_struct_utils_load_table_t);
 
     if (res != 0) {
         ioctl_mock_set_errno(EPERM);
@@ -137,7 +109,7 @@ static void mock_push_load_table(int control_fd, int res)
 
 static void mock_push_suspend_device(int control_fd, int res)
 {
-    struct ioctl_t ctl;
+    struct utils_ioctl_t ctl;
 
     memset(&ctl, 0, sizeof(ctl));
     ctl.version[0] = 4;
