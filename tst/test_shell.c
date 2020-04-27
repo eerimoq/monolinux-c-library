@@ -38,7 +38,6 @@
 #include <sys/statvfs.h>
 #include <sys/time.h>
 #include "nala.h"
-#include "nala_mocks.h"
 #include "utils/utils.h"
 #include "ml/ml.h"
 

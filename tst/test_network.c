@@ -35,7 +35,6 @@
 #include <linux/ethtool.h>
 #include <linux/sockios.h>
 #include "nala.h"
-#include "nala_mocks.h"
 #include "ml/ml.h"
 
 static int ifconfig_handle;

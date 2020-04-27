@@ -32,7 +32,6 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include "nala.h"
-#include "nala_mocks.h"
 #include "ml/ml.h"
 
 static uint8_t request[48] = {

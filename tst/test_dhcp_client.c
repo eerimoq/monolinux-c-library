@@ -34,7 +34,6 @@
 #include <linux/if_packet.h>
 #include <string.h>
 #include "nala.h"
-#include "nala_mocks.h"
 #include "ml/ml.h"
 
 /* File descriptors. */

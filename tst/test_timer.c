@@ -29,7 +29,6 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include "nala.h"
-#include "nala_mocks.h"
 #include "ml/ml.h"
 
 static ML_UID(timeout);

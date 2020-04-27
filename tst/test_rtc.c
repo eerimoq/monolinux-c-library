@@ -32,7 +32,6 @@
 #include <fcntl.h>
 #include <linux/rtc.h>
 #include "nala.h"
-#include "nala_mocks.h"
 #include "ml/ml.h"
 
 TEST(get_time)

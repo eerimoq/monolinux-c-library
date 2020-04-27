@@ -31,7 +31,6 @@
 #include <sys/mount.h>
 #include <sys/statvfs.h>
 #include "nala.h"
-#include "nala_mocks.h"
 #include "ml/ml.h"
 
 static void init(void)

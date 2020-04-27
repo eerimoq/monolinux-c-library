@@ -29,7 +29,6 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include "nala.h"
-#include "nala_mocks.h"
 #include "ml/ml.h"
 
 TEST(format)
