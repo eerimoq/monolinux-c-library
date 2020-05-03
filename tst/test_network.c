@@ -826,7 +826,7 @@ TEST(filter_ipv4_log)
     /* Get entries. */
     fd = 5;
     size = sizeof(*entries_p) + entries_size;
-    entries_p = malloc(size);
+    entries_p = nala_alloc(size);
     memset(entries_p, 0, size);
     strcpy(&entries_p->name[0], "filter");
     entries_p->size = entries_size;
@@ -1061,8 +1061,6 @@ TEST(filter_ipv4_log)
 
     ASSERT_NOT_SUBSTRING(output, "network:   Entry 0:");
     ASSERT_NOT_SUBSTRING(output, "network:   Entry 8:");
-
-    free(entries_p);
 }
 
 struct standard_entry_t {
