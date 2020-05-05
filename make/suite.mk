@@ -47,7 +47,7 @@ $(BUILD)/nala_mocks.ldflags: $(TESTS)
 	echo "MOCKGEN $^"
 	mkdir -p $(BUILD)
 	[ -f $(BUILD)/nala_mocks.h ] || touch $(BUILD)/nala_mocks.h
-	cat $(TESTS) > tests.pp.c
+	$(NALA) cat $(TESTS) > tests.pp.c
 	$(CC) $(INC:%=-I%) -D_GNU_SOURCE=1 -DNALA_GENERATE_MOCKS -E tests.pp.c \
 	    | $(NALA) generate_mocks $(NO_IMPLEMENTATION:%=-n %) -o $(BUILD)
 	touch $@
