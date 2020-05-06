@@ -104,8 +104,8 @@ TEST(enable_disable)
 
     /* No debug, info and up. */
     ml_log_object_init(&log_object, "foo", ML_LOG_INFO);
-    ASSERT(!ml_log_object_is_enabled_for(&log_object, ML_LOG_DEBUG));
-    ASSERT(ml_log_object_is_enabled_for(&log_object, ML_LOG_INFO));
+    ASSERT_FALSE(ml_log_object_is_enabled_for(&log_object, ML_LOG_DEBUG));
+    ASSERT_TRUE(ml_log_object_is_enabled_for(&log_object, ML_LOG_INFO));
 
     CAPTURE_OUTPUT(output1, errput1) {
         ml_log_object_print(&log_object, ML_LOG_DEBUG, "bar");

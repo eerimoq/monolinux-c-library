@@ -47,12 +47,12 @@ TEST(multiple_put_get)
 
     /* Put first message. */
     message_1_p = ml_message_alloc(&m1, 0);
-    ASSERT(message_1_p != NULL);
+    ASSERT_NE(message_1_p, NULL);
     ml_queue_put(&queue, message_1_p);
 
     /* Put second message. */
     message_2_p = ml_message_alloc(&m2, 0);
-    ASSERT(message_2_p != NULL);
+    ASSERT_NE(message_2_p, NULL);
     ml_queue_put(&queue, message_2_p);
 
     /* Get first message. */
@@ -69,7 +69,7 @@ TEST(multiple_put_get)
 
     /* Put a third message. */
     message_1_p = ml_message_alloc(&m1, 0);
-    ASSERT(message_1_p != NULL);
+    ASSERT_NE(message_1_p, NULL);
     ml_queue_put(&queue, message_1_p);
 
     /* Get the third message. */
@@ -105,7 +105,7 @@ static void *queue_empty_and_full_main(void *arg_p)
 
     for (i = 0; i < 5; i++) {
         message_p = ml_message_alloc(&m2, 0);
-        ASSERT(message_p != NULL);
+        ASSERT_NE(message_p, NULL);
         ml_queue_put(&queue_2, message_p);
     }
 
@@ -130,7 +130,7 @@ TEST(queue_empty_and_full)
 
     for (i = 0; i < 5; i++) {
         message_p = ml_message_alloc(&m1, 0);
-        ASSERT(message_p != NULL);
+        ASSERT_NE(message_p, NULL);
         ml_queue_put(&queue_1, message_p);
     }
 
@@ -161,7 +161,7 @@ TEST(queue_on_put)
                         queue_on_put_callback,
                         &arg);
     message_p = ml_message_alloc(&m1, 0);
-    ASSERT(message_p != NULL);
+    ASSERT_NE(message_p, NULL);
     ml_queue_put(&queue_1, message_p);
     ASSERT_EQ(queue_on_put_callback_arg_p, &arg);
 }

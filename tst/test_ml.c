@@ -182,7 +182,7 @@ TEST(hexdump_file_0_0)
     init();
 
     fin_p = fopen("hexdump.in", "rb");
-    ASSERT(fin_p != NULL);
+    ASSERT_NE(fin_p, NULL);
 
     CAPTURE_OUTPUT(output, errput) {
         ml_hexdump_file(fin_p, 0, 0);
@@ -200,7 +200,7 @@ TEST(hexdump_file_0_16)
     init();
 
     fin_p = fopen("hexdump.in", "rb");
-    ASSERT(fin_p != NULL);
+    ASSERT_NE(fin_p, NULL);
 
     CAPTURE_OUTPUT(output, errput) {
         ml_hexdump_file(fin_p, 0, 16);
@@ -220,7 +220,7 @@ TEST(hexdump_file_1_16)
     init();
 
     fin_p = fopen("hexdump.in", "rb");
-    ASSERT(fin_p != NULL);
+    ASSERT_NE(fin_p, NULL);
 
     CAPTURE_OUTPUT(output, errput) {
         ml_hexdump_file(fin_p, 1, 16);
@@ -240,7 +240,7 @@ TEST(hexdump_file_0_m1)
     init();
 
     fin_p = fopen("hexdump.in", "rb");
-    ASSERT(fin_p != NULL);
+    ASSERT_NE(fin_p, NULL);
 
     CAPTURE_OUTPUT(output, errput) {
         ml_hexdump_file(fin_p, 0, -1);
@@ -262,7 +262,7 @@ TEST(hexdump_file_1_m1)
     init();
 
     fin_p = fopen("hexdump.in", "rb");
-    ASSERT(fin_p != NULL);
+    ASSERT_NE(fin_p, NULL);
 
     CAPTURE_OUTPUT(output, errput) {
         ml_hexdump_file(fin_p, 1, -1);
@@ -284,7 +284,7 @@ TEST(hexdump_file_big)
     init();
 
     fin_p = fopen("hexdump-big.in", "rb");
-    ASSERT(fin_p != NULL);
+    ASSERT_NE(fin_p, NULL);
 
     CAPTURE_OUTPUT(output, errput) {
         /* Bigger than hexdump function buffer. */
