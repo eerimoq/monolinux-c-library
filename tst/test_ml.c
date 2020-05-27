@@ -634,13 +634,13 @@ TEST(dd)
 {
     int fdin;
     int fdout;
-    char buf[1000];
+    char buf[1001];
     int i;
 
     fdin = 30;
     fdout = 40;
 
-    for (i = 0; i < 1000; i++) {
+    for (i = 0; i < 1001; i++) {
         buf[i] = i;
     }
 
@@ -649,20 +649,26 @@ TEST(dd)
 
     /* First 500 bytes. */
     read_mock_once(fdin, 500, 500);
-    read_mock_set_buf_out(&buf[0], sizeof(buf) / 2);
+    read_mock_set_buf_out(&buf[0], 500);
     write_mock_once(fdout, 500, 500);
-    write_mock_set_buf_in(&buf[0], sizeof(buf) / 2);
+    write_mock_set_buf_in(&buf[0], 500);
 
-    /* Last 500 bytes. */
+    /* Next 500 bytes. */
     read_mock_once(fdin, 500, 500);
-    read_mock_set_buf_out(&buf[500], sizeof(buf) / 2);
+    read_mock_set_buf_out(&buf[500], 500);
     write_mock_once(fdout, 500, 500);
-    write_mock_set_buf_in(&buf[500], sizeof(buf) / 2);
+    write_mock_set_buf_in(&buf[500], 500);
+
+    /* Last byte. */
+    read_mock_once(fdin, 1, 1);
+    read_mock_set_buf_out(&buf[1000], 1);
+    write_mock_once(fdout, 1, 1);
+    write_mock_set_buf_in(&buf[1000], 1);
 
     close_mock_once(fdin, 0);
     close_mock_once(fdout, 0);
 
-    ASSERT_EQ(ml_dd("a", "b", 1000, 500), 0);
+    ASSERT_EQ(ml_dd("a", "b", 1001, 500), 0);
 }
 
 TEST(dd_infile_open_error)
@@ -740,16 +746,6 @@ TEST(dd_write_error)
     close_mock_once(fdin, 0);
 
     ASSERT_EQ(ml_dd("a", "b", 1, 1), -EACCES);
-}
-
-TEST(dd_chunk_size_greater_than_total_size)
-{
-    ASSERT_EQ(ml_dd("a", "b", 1, 2), -EINVAL);
-}
-
-TEST(dd_chunk_size_not_multiple_of_total_size)
-{
-    ASSERT_EQ(ml_dd("a", "b", 3, 2), -EINVAL);
 }
 
 TEST(file_system_space_usage)

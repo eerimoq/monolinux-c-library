@@ -649,18 +649,6 @@ int ml_dd(const char *infile_p,
     void *buf_p;
     int res;
 
-    if (chunk_size > 1024 * 1024 * 1024) {
-        return (-EINVAL);
-    }
-
-    if (chunk_size > total_size) {
-        return (-EINVAL);
-    }
-
-    if ((total_size % chunk_size) != 0) {
-        return (-EINVAL);
-    }
-
     fdin = open(infile_p, O_RDONLY);
 
     if (fdin == -1) {
@@ -682,6 +670,10 @@ int ml_dd(const char *infile_p,
     }
 
     while (total_size > 0) {
+        if (chunk_size > total_size) {
+            chunk_size = total_size;
+        }
+
         res = dd_copy_chunk(chunk_size, fdin, fdout, buf_p);
 
         if (res != 0) {
