@@ -121,7 +121,7 @@ TEST(hexdump_empty)
     init();
 
     CAPTURE_OUTPUT(output, errput) {
-        ml_hexdump("", 0);
+        ml_hexdump("", 0, stdout);
     }
 
     ASSERT_EQ(output, "");
@@ -132,7 +132,7 @@ TEST(hexdump_short)
     init();
 
     CAPTURE_OUTPUT(output, errput) {
-        ml_hexdump("1", 1);
+        ml_hexdump("1", 1, stdout);
     }
 
     ASSERT_EQ(
@@ -151,7 +151,8 @@ TEST(hexdump_long)
             "567890123456789012345678901234567890123456789012345678901234567"
             "890123456789012345678901234567890123456789012345678901234567890"
             "12345678901234567",
-            257);
+            257,
+            stdout);
     }
 
     ASSERT_EQ(
@@ -185,7 +186,7 @@ TEST(hexdump_file_0_0)
     ASSERT_NE(fin_p, NULL);
 
     CAPTURE_OUTPUT(output, errput) {
-        ml_hexdump_file(fin_p, 0, 0);
+        ml_hexdump_file(fin_p, 0, 0, stdout);
     }
 
     fclose(fin_p);
@@ -203,7 +204,7 @@ TEST(hexdump_file_0_16)
     ASSERT_NE(fin_p, NULL);
 
     CAPTURE_OUTPUT(output, errput) {
-        ml_hexdump_file(fin_p, 0, 16);
+        ml_hexdump_file(fin_p, 0, 16, stdout);
     }
 
     fclose(fin_p);
@@ -223,7 +224,7 @@ TEST(hexdump_file_1_16)
     ASSERT_NE(fin_p, NULL);
 
     CAPTURE_OUTPUT(output, errput) {
-        ml_hexdump_file(fin_p, 1, 16);
+        ml_hexdump_file(fin_p, 1, 16, stdout);
     }
 
     fclose(fin_p);
@@ -243,7 +244,7 @@ TEST(hexdump_file_0_m1)
     ASSERT_NE(fin_p, NULL);
 
     CAPTURE_OUTPUT(output, errput) {
-        ml_hexdump_file(fin_p, 0, -1);
+        ml_hexdump_file(fin_p, 0, -1, stdout);
     }
 
     fclose(fin_p);
@@ -265,7 +266,7 @@ TEST(hexdump_file_1_m1)
     ASSERT_NE(fin_p, NULL);
 
     CAPTURE_OUTPUT(output, errput) {
-        ml_hexdump_file(fin_p, 1, -1);
+        ml_hexdump_file(fin_p, 1, -1, stdout);
     }
 
     fclose(fin_p);
@@ -288,7 +289,7 @@ TEST(hexdump_file_big)
 
     CAPTURE_OUTPUT(output, errput) {
         /* Bigger than hexdump function buffer. */
-        ml_hexdump_file(fin_p, 1, 350);
+        ml_hexdump_file(fin_p, 1, 350, stdout);
     }
 
     fclose(fin_p);
@@ -324,7 +325,7 @@ TEST(print_file)
     init();
 
     CAPTURE_OUTPUT(output, errput) {
-        ml_print_file("hexdump.in");
+        ml_print_file("hexdump.in", stdout);
     }
 
     ASSERT_EQ(output, "0123456789012345678901234567890123456789");

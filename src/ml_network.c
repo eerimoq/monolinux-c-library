@@ -353,66 +353,67 @@ static const char *format_ipv4(char *buf_p, uint32_t address)
     return (buf_p);
 }
 
-static int command_ifconfig_print(const char *name_p)
+static int command_ifconfig_print(const char *name_p, FILE *fout_p)
 {
     int res;
     uint8_t mac_address[6];
     int index;
     struct in_addr in_addr;
 
-    printf("IPAddress:  ");
+    fprintf(fout_p, "IPAddress:  ");
     res = ml_network_interface_ip_address(name_p, &in_addr);
 
     if (res == 0) {
         puts(inet_ntoa(in_addr));
     } else {
-        printf("failure\n");
+        fprintf(fout_p, "failure\n");
     }
 
-    printf("MACAddress: ");
+    fprintf(fout_p, "MACAddress: ");
     res = ml_network_interface_mac_address(name_p, &mac_address[0]);
 
     if (res == 0) {
-        printf("%02x:%02x:%02x:%02x:%02x:%02x\n",
-               mac_address[0],
-               mac_address[1],
-               mac_address[2],
-               mac_address[3],
-               mac_address[4],
-               mac_address[5]);
+        fprintf(fout_p,
+                "%02x:%02x:%02x:%02x:%02x:%02x\n",
+                mac_address[0],
+                mac_address[1],
+                mac_address[2],
+                mac_address[3],
+                mac_address[4],
+                mac_address[5]);
     } else {
-        printf("failure\n");
+        fprintf(fout_p, "failure\n");
     }
 
-    printf("MTU:        ");
+    fprintf(fout_p, "MTU:        ");
     res = ml_network_interface_mtu(name_p);
 
     if (res > 0) {
-        printf("%d\n", res);
+        fprintf(fout_p, "%d\n", res);
     } else {
-        printf("failure\n");
+        fprintf(fout_p, "failure\n");
     }
 
-    printf("Index:      ");
+    fprintf(fout_p, "Index:      ");
     res = ml_network_interface_index(name_p, &index);
 
     if (res == 0) {
-        printf("%d\n", index);
+        fprintf(fout_p, "%d\n", index);
     } else {
-        printf("failure\n");
+        fprintf(fout_p, "failure\n");
     }
 
     return (0);
 }
 
-static int command_ifconfig(int argc, const char *argv[])
+static int command_ifconfig(int argc, const char *argv[], FILE *fout_p)
 {
     int res;
 
     res = -EINVAL;
 
     if (argc == 2) {
-        res = command_ifconfig_print(argv[1]);
+        res = command_ifconfig_print(argv[1], fout_p);
     } else if (argc == 3) {
         if (strcmp(argv[2], "up") == 0) {
             res = ml_network_interface_up(argv[1]);
@@ -427,15 +428,16 @@ static int command_ifconfig(int argc, const char *argv[])
     }
 
     if (res != 0) {
-        printf("Usage: ifconfig <interface>\n"
-               "       ifconfig <interface> up/down\n"
-               "       ifconfig <interface> <ip-address> <netmask> <mtu>\n");
+        fprintf(fout_p,
+                "Usage: ifconfig <interface>\n"
+                "       ifconfig <interface> up/down\n"
+                "       ifconfig <interface> <ip-address> <netmask> <mtu>\n");
     }
 
     return (res);
 }
 
-static int command_route(int argc, const char *argv[])
+static int command_route(int argc, const char *argv[], FILE *fout_p)
 {
     int res;
 
@@ -446,7 +448,7 @@ static int command_route(int argc, const char *argv[])
     }
 
     if (res != 0) {
-        printf("Usage: route <interface> <ip-address>\n");
+        fprintf(fout_p, "Usage: route <interface> <ip-address>\n");
     }
 
     return (res);
@@ -500,7 +502,7 @@ static const char *autoneg_string(int autoneg)
     return (res_p);
 }
 
-static int command_ethtool_print(const char *name_p)
+static int command_ethtool_print(const char *name_p, FILE *fout_p)
 {
     struct ethtool_cmd settings;
     struct ifreq ifreq;
@@ -524,9 +526,11 @@ static int command_ethtool_print(const char *name_p)
         goto out;
     }
 
-    printf("Speed:           %u Mbps\n", (unsigned)ethtool_cmd_speed(&settings));
-    printf("Duplex:          %s\n", duplex_string(settings.duplex));
-    printf("Autonegotiation: %s\n", autoneg_string(settings.autoneg));
+    fprintf(fout_p,
+            "Speed:           %u Mbps\n",
+            (unsigned)ethtool_cmd_speed(&settings));
+    fprintf(fout_p, "Duplex:          %s\n", duplex_string(settings.duplex));
+    fprintf(fout_p, "Autonegotiation: %s\n", autoneg_string(settings.autoneg));
 
     net_close(netfd);
 
@@ -589,23 +593,24 @@ static int command_ethtool_link_configure(int argc, const char *argv[])
                                                 autoneg));
 }
 
-static int command_ethtool(int argc, const char *argv[])
+static int command_ethtool(int argc, const char *argv[], FILE *fout_p)
 {
     int res;
 
     if (argc == 2) {
-        res = command_ethtool_print(argv[1]);
+        res = command_ethtool_print(argv[1], fout_p);
     } else {
         res = command_ethtool_link_configure(argc, argv);
     }
 
     if (res != 0) {
-        printf("Usage: ethtool <interface>\n");
-        printf("       ethtool <interface> <speed> <duplex> <autoneg>\n");
-        printf("         where\n");
-        printf("           <speed> is the speed in Mbps or -\n");
-        printf("           <duplex> is half, full or -\n");
-        printf("           <autoneg> is on, off or -\n");
+        fprintf(fout_p,
+                "Usage: ethtool <interface>\n"
+                "       ethtool <interface> <speed> <duplex> <autoneg>\n"
+                "         where\n"
+                "           <speed> is the speed in Mbps or -\n"
+                "           <duplex> is half, full or -\n"
+                "           <autoneg> is on, off or -\n");
     }
 
     return (res);

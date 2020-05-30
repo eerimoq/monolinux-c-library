@@ -345,38 +345,6 @@ static int parse_command(char *line_p, const char *argv[])
     return (argc);
 }
 
-static int execute_command(char *line_p)
-{
-    struct command_t *command_p;
-    const char *name_p;
-    int res;
-    const char *argv[32];
-    int argc;
-
-    argc = parse_command(line_p, &argv[0]);
-
-    if (argc < 1) {
-        return (-1);
-    }
-
-    name_p = argv[0];
-
-    if (name_p == NULL) {
-        name_p = "";
-    }
-
-    command_p = find_command(name_p);
-
-    if (command_p != NULL) {
-        res = command_p->callback(argc, &argv[0]);
-    } else {
-        printf("%s: command not found\n", name_p);
-        res = -EINVAL;
-    }
-
-    return (res);
-}
-
 static bool is_comment(const char *line_p)
 {
     return (*line_p == '#');
@@ -498,52 +466,54 @@ static void line_seek_end(struct line_t *self_p)
     self_p->cursor = self_p->length;
 }
 
-static int command_help(int argc, const char *argv[])
+static int command_help(int argc, const char *argv[], FILE *fout_p)
 {
     (void)argc;
     (void)argv;
 
     int i;
 
-    printf("Cursor movement\n"
-           "\n"
-           "         LEFT   Go left one character.\n"
-           "        RIGHT   Go right one character.\n"
-           "  HOME/Ctrl+A   Go to the beginning of the line.\n"
-           "   END/Ctrl+E   Go to the end of the line.\n"
-           "\n"
-           "Edit\n"
-           "\n"
-           "        Alt+D   Delete the word at the cursor.\n"
-           "       Ctrl+D   Delete the chracter at the cursor.\n"
-           "       Ctrl+K   Cut the line from cursor to end.\n"
-           "       Ctrl+T   Swap the last two characters before the cursor "
-           "(typo).\n"
-           "          TAB   Tab completion for command names.\n"
-           "    BACKSPACE   Delete the character before the cursor.\n"
-           "\n"
-           "History\n"
-           "\n"
-           "           UP   Previous command.\n"
-           "         DOWN   Next command.\n"
-           "       Ctrl+R   Recall the last command including the specified "
-           "character(s)\n"
-           "                searches the command history as you type.\n"
-           "       Ctrl+G   Escape from history searching mode.\n"
-           "\n"
-           "Commands\n"
-           "\n");
+    fprintf(fout_p,
+            "Cursor movement\n"
+            "\n"
+            "         LEFT   Go left one character.\n"
+            "        RIGHT   Go right one character.\n"
+            "  HOME/Ctrl+A   Go to the beginning of the line.\n"
+            "   END/Ctrl+E   Go to the end of the line.\n"
+            "\n"
+            "Edit\n"
+            "\n"
+            "        Alt+D   Delete the word at the cursor.\n"
+            "       Ctrl+D   Delete the chracter at the cursor.\n"
+            "       Ctrl+K   Cut the line from cursor to end.\n"
+            "       Ctrl+T   Swap the last two characters before the cursor "
+            "(typo).\n"
+            "          TAB   Tab completion for command names.\n"
+            "    BACKSPACE   Delete the character before the cursor.\n"
+            "\n"
+            "History\n"
+            "\n"
+            "           UP   Previous command.\n"
+            "         DOWN   Next command.\n"
+            "       Ctrl+R   Recall the last command including the specified "
+            "character(s)\n"
+            "                searches the command history as you type.\n"
+            "       Ctrl+G   Escape from history searching mode.\n"
+            "\n"
+            "Commands\n"
+            "\n");
 
     for (i = 0; i < module.number_of_commands; i++) {
-        printf("%13s   %s\n",
-               module.commands_p[i].name_p,
-               module.commands_p[i].description_p);
+        fprintf(fout_p,
+                "%13s   %s\n",
+                module.commands_p[i].name_p,
+                module.commands_p[i].description_p);
     }
 
     return (0);
 }
 
-static int command_history(int argc, const char *argv[])
+static int command_history(int argc, const char *argv[], FILE *fout_p)
 {
     (void)argc;
     (void)argv;
@@ -555,7 +525,7 @@ static int command_history(int argc, const char *argv[])
     i = 1;
 
     while (current_p != NULL) {
-        printf("%d: %s\n", i, current_p->buf);
+        fprintf(fout_p, "%d: %s\n", i, current_p->buf);
         current_p = current_p->next_p;
         i++;
     }
@@ -563,15 +533,16 @@ static int command_history(int argc, const char *argv[])
     return (0);
 }
 
-static int command_exit(int argc, const char *argv[])
+static int command_exit(int argc, const char *argv[], FILE *fout_p)
 {
     (void)argc;
     (void)argv;
+    (void)fout_p;
 
     return (0);
 }
 
-static int command_suicide(int argc, const char *argv[])
+static int command_suicide(int argc, const char *argv[], FILE *fout_p)
 {
     int res;
     uint8_t *null_p;
@@ -588,13 +559,13 @@ static int command_suicide(int argc, const char *argv[])
     }
 
     if (res != 0) {
-        printf("Usage: suicide {exit,segfault}\n");
+        fprintf(fout_p, "Usage: suicide {exit,segfault}\n");
     }
 
     return (res);
 }
 
-static int command_ls(int argc, const char *argv[])
+static int command_ls(int argc, const char *argv[], FILE *fout_p)
 {
     int res;
     DIR *dir_p;
@@ -624,23 +595,26 @@ static int command_ls(int argc, const char *argv[])
             }
 
             if (S_ISCHR(statbuf.st_mode)) {
-                printf("c ");
+                fprintf(fout_p, "c ");
             } else if (S_ISBLK(statbuf.st_mode)) {
-                printf("b ");
+                fprintf(fout_p, "b ");
             } else if (S_ISDIR(statbuf.st_mode)) {
-                printf("d ");
+                fprintf(fout_p, "d ");
             } else {
-                printf("- ");
+                fprintf(fout_p, "- ");
             }
 
             if (S_ISCHR(statbuf.st_mode) || S_ISBLK(statbuf.st_mode)) {
-                printf("%3d, %3d ", major(statbuf.st_rdev), minor(statbuf.st_rdev));
+                fprintf(fout_p,
+                        "%3d, %3d ",
+                        major(statbuf.st_rdev),
+                        minor(statbuf.st_rdev));
             }
 
             if (S_ISDIR(statbuf.st_mode)) {
-                printf("%s/\n", dirent_p->d_name);
+                fprintf(fout_p, "%s/\n", dirent_p->d_name);
             } else {
-                puts(dirent_p->d_name);
+                fprintf(fout_p, "%s\n", dirent_p->d_name);
             }
         }
 
@@ -652,7 +626,7 @@ static int command_ls(int argc, const char *argv[])
     return (res);
 }
 
-static int command_cat(int argc, const char *argv[])
+static int command_cat(int argc, const char *argv[], FILE *fout_p)
 {
     FILE *file_p;
     int res;
@@ -662,7 +636,7 @@ static int command_cat(int argc, const char *argv[])
     res = 0;
 
     if (argc != 2) {
-        printf("Usage: cat <file>\n");
+        fprintf(fout_p, "Usage: cat <file>\n");
 
         return (-EINVAL);
     }
@@ -671,7 +645,7 @@ static int command_cat(int argc, const char *argv[])
 
     if (file_p != NULL) {
         while ((size = fread(&buf[0], 1, membersof(buf), file_p)) > 0) {
-            if (fwrite(&buf[0], 1, size, stdout) != size) {
+            if (fwrite(&buf[0], 1, size, fout_p) != size) {
                 res = -errno;
                 break;
             }
@@ -685,7 +659,7 @@ static int command_cat(int argc, const char *argv[])
     return (res);
 }
 
-static int hexdump(const char *name_p, size_t offset, ssize_t size)
+static int hexdump(const char *name_p, size_t offset, ssize_t size, FILE *fout_p)
 {
     int res;
     FILE *file_p;
@@ -694,7 +668,7 @@ static int hexdump(const char *name_p, size_t offset, ssize_t size)
     file_p = fopen(name_p, "rb");
 
     if (file_p != NULL) {
-        res = ml_hexdump_file(file_p, offset, size);
+        res = ml_hexdump_file(file_p, offset, size, fout_p);
         fclose(file_p);
     } else {
         res = -errno;
@@ -703,7 +677,7 @@ static int hexdump(const char *name_p, size_t offset, ssize_t size)
     return (res);
 }
 
-static int command_hexdump(int argc, const char *argv[])
+static int command_hexdump(int argc, const char *argv[], FILE *fout_p)
 {
     int res;
     ssize_t offset;
@@ -712,12 +686,12 @@ static int command_hexdump(int argc, const char *argv[])
     res = -EINVAL;
 
     if (argc == 2) {
-        res = hexdump(argv[1], 0, -1);
+        res = hexdump(argv[1], 0, -1, fout_p);
     } else if (argc == 3) {
         size = atoi(argv[1]);
 
         if (size >= 0) {
-            res = hexdump(argv[2], 0, size);
+            res = hexdump(argv[2], 0, size, fout_p);
         } else {
             res = -EINVAL;
         }
@@ -726,28 +700,29 @@ static int command_hexdump(int argc, const char *argv[])
         size = atoi(argv[2]);
 
         if ((offset >= 0 ) && (size >= 0)) {
-            res = hexdump(argv[3], offset, size);
+            res = hexdump(argv[3], offset, size, fout_p);
         } else {
             res = -EINVAL;
         }
     }
 
     if (res != 0) {
-        printf("Usage: hexdump [[<offset>] <size>] <file>\n");
+        fprintf(fout_p, "Usage: hexdump [[<offset>] <size>] <file>\n");
     }
 
     return (res);
 }
 
-static int command_reboot(int argc, const char *argv[])
+static int command_reboot(int argc, const char *argv[], FILE *fout_p)
 {
     (void)argc;
     (void)argv;
+    (void)fout_p;
 
     return (reboot(RB_AUTOBOOT));
 }
 
-static int command_insmod(int argc, const char *argv[])
+static int command_insmod(int argc, const char *argv[], FILE *fout_p)
 {
     int res;
 
@@ -760,13 +735,13 @@ static int command_insmod(int argc, const char *argv[])
     }
 
     if (res != 0) {
-        printf("Usage: insmod <file> [<params>]\n");
+        fprintf(fout_p, "Usage: insmod <file> [<params>]\n");
     }
 
     return (res);
 }
 
-static int command_mknod(int argc, const char *argv[])
+static int command_mknod(int argc, const char *argv[], FILE *fout_p)
 {
     int res;
     mode_t mode;
@@ -790,13 +765,13 @@ static int command_mknod(int argc, const char *argv[])
     }
 
     if (res != 0) {
-        printf("Usage: mknod <path> <type> [<major>] [<minor>]\n");
+        fprintf(fout_p, "Usage: mknod <path> <type> [<major>] [<minor>]\n");
     }
 
     return (res);
 }
 
-static int command_mount(int argc, const char *argv[])
+static int command_mount(int argc, const char *argv[], FILE *fout_p)
 {
     int res;
 
@@ -809,18 +784,18 @@ static int command_mount(int argc, const char *argv[])
     }
 
     if (res != 0) {
-        printf("Usage: mount [<device> <dir> <type> [<options>]]\n");
+        fprintf(fout_p, "Usage: mount [<device> <dir> <type> [<options>]]\n");
     }
 
     return (res);
 }
 
-static int command_df(int argc, const char *argv[])
+static int command_df(int argc, const char *argv[], FILE *fout_p)
 {
     (void)argc;
     (void)argv;
 
-    return (ml_print_file_systems_space_usage());
+    return (ml_print_file_systems_space_usage(fout_p));
 }
 
 static int print_info(const char *fpath_p,
@@ -832,7 +807,7 @@ static int print_info(const char *fpath_p,
     (void)ftwbuf_p;
 
     if (S_ISDIR(stat_p->st_mode)) {
-        printf("%s/\n", fpath_p);
+        fprintf(stdout, "%s/\n", fpath_p);
     } else {
         puts(fpath_p);
     }
@@ -840,8 +815,10 @@ static int print_info(const char *fpath_p,
     return (0);
 }
 
-static int command_find(int argc, const char *argv[])
+static int command_find(int argc, const char *argv[], FILE *fout_p)
 {
+    (void)fout_p;
+
     int res;
 
     res = -EINVAL;
@@ -853,13 +830,13 @@ static int command_find(int argc, const char *argv[])
     }
 
     if (res != 0) {
-        printf("Usage: find [<path>]\n");
+        fprintf(fout_p, "Usage: find [<path>]\n");
     }
 
     return (res);
 }
 
-static int command_date(int argc, const char *argv[])
+static int command_date(int argc, const char *argv[], FILE *fout_p)
 {
     int res;
     time_t now;
@@ -871,7 +848,7 @@ static int command_date(int argc, const char *argv[])
         now = time(NULL);
 
         if (now != (time_t)(-1)) {
-            printf("%s", asctime(gmtime(&now)));
+            fprintf(fout_p, "%s", asctime(gmtime(&now)));
             res = 0;
         }
     } else if (argc == 2) {
@@ -883,13 +860,13 @@ static int command_date(int argc, const char *argv[])
             res = -errno;
         }
     } else {
-        printf("Usage: date [<unix-time>]\n");
+        fprintf(fout_p, "Usage: date [<unix-time>]\n");
     }
 
     return (res);
 }
 
-static int command_print(int argc, const char *argv[])
+static int command_print(int argc, const char *argv[], FILE *fout_p)
 {
     FILE *file_p;
     int res;
@@ -898,7 +875,7 @@ static int command_print(int argc, const char *argv[])
     res = 0;
 
     if (argc != 3) {
-        printf("Usage: print <text> <file>\n");
+        fprintf(fout_p, "Usage: print <text> <file>\n");
 
         return (-EINVAL);
     }
@@ -929,7 +906,7 @@ static int command_print(int argc, const char *argv[])
     return (res);
 }
 
-static int command_ntp_sync(int argc, const char *argv[])
+static int command_ntp_sync(int argc, const char *argv[], FILE *fout_p)
 {
     const char *server_p;
 
@@ -938,7 +915,7 @@ static int command_ntp_sync(int argc, const char *argv[])
     } else if (argc == 2) {
         server_p = argv[1];
     } else {
-        printf("Usage: ntp_sync [<server>]\n");
+        fprintf(fout_p, "Usage: ntp_sync [<server>]\n");
 
         return (-EINVAL);
     }
@@ -948,7 +925,8 @@ static int command_ntp_sync(int argc, const char *argv[])
 
 static void command_dd_summary(size_t total_size,
                                struct timeval *start_time_p,
-                               struct timeval *end_time_p)
+                               struct timeval *end_time_p,
+                               FILE *fout_p)
 {
     float time_elapsed_ms;
     float transfer_rate;
@@ -958,13 +936,14 @@ static void command_dd_summary(size_t total_size,
     time_elapsed_ms = ml_timeval_to_ms(&elapsed_time);
     transfer_rate = ((float)total_size / time_elapsed_ms / 1000.0f);
 
-    printf("%lu bytes copied in %.03f ms (%.03f MB/s).\n",
-           (unsigned long)total_size,
-           time_elapsed_ms,
-           transfer_rate);
+    fprintf(fout_p,
+            "%lu bytes copied in %.03f ms (%.03f MB/s).\n",
+            (unsigned long)total_size,
+            time_elapsed_ms,
+            transfer_rate);
 }
 
-static int command_i2c_scan(int argc, const char *argv[])
+static int command_i2c_scan(int argc, const char *argv[], FILE *fout_p)
 {
     int fd;
     long address;
@@ -988,7 +967,7 @@ static int command_i2c_scan(int argc, const char *argv[])
         res = ioctl(fd, I2C_SLAVE, address);
 
         if (res < 0) {
-            printf("Failed to set address 0x%02lx.\n", address);
+            fprintf(fout_p, "Failed to set address 0x%02lx.\n", address);
 
             continue;
         }
@@ -999,20 +978,20 @@ static int command_i2c_scan(int argc, const char *argv[])
             continue;
         }
 
-        printf("Found device with address 0x%02lx.\n", address);
+        fprintf(fout_p, "Found device with address 0x%02lx.\n", address);
         number_of_found_devices++;
     }
 
     close(fd);
 
     if (number_of_found_devices == 0) {
-        printf("No devices found.\n");
+        fprintf(fout_p, "No devices found.\n");
     }
 
     return (0);
 }
 
-static int command_i2c(int argc, const char *argv[])
+static int command_i2c(int argc, const char *argv[], FILE *fout_p)
 {
     int res;
 
@@ -1020,18 +999,18 @@ static int command_i2c(int argc, const char *argv[])
 
     if (argc >= 2) {
         if (strcmp(argv[1], "scan") == 0) {
-            res = command_i2c_scan(argc, argv);
+            res = command_i2c_scan(argc, argv, fout_p);
         }
     }
 
     if (res != 0) {
-        printf("Usage: i2c scan <device>\n");
+        fprintf(fout_p, "Usage: i2c scan <device>\n");
     }
 
     return (res);
 }
 
-static int command_log_list(int argc, const char *argv[])
+static int command_log_list(int argc, const char *argv[], FILE *fout_p)
 {
     (void)argv;
 
@@ -1041,7 +1020,7 @@ static int command_log_list(int argc, const char *argv[])
         return (-EINVAL);
     }
 
-    printf("OBJECT-NAME       LEVEL\n");
+    fprintf(fout_p, "OBJECT-NAME       LEVEL\n");
     log_object_p = NULL;
 
     while (true) {
@@ -1051,7 +1030,7 @@ static int command_log_list(int argc, const char *argv[])
             break;
         }
 
-        printf("%-16s  %s\n",
+        fprintf(fout_p, "%-16s  %s\n",
                log_object_p->name_p,
                level_to_string(log_object_p->level));
     }
@@ -1085,7 +1064,7 @@ static int command_log_set_level(int argc, const char *argv[])
     return (0);
 }
 
-static int command_log(int argc, const char *argv[])
+static int command_log(int argc, const char *argv[], FILE *fout_p)
 {
     int res;
 
@@ -1093,21 +1072,21 @@ static int command_log(int argc, const char *argv[])
 
     if (argc >= 2) {
         if (strcmp(argv[1], "list") == 0) {
-            res = command_log_list(argc, argv);
+            res = command_log_list(argc, argv, fout_p);
         } else if (strcmp(argv[1], "set_level") == 0) {
             res = command_log_set_level(argc, argv);
         }
     }
 
     if (res != 0) {
-        printf("Usage: log list\n");
-        printf("       log set_mask <log-object> <mask>\n");
+        fprintf(fout_p, "Usage: log list\n");
+        fprintf(fout_p, "       log set_mask <log-object> <mask>\n");
     }
 
     return (res);
 }
 
-static int command_dd(int argc, const char *argv[])
+static int command_dd(int argc, const char *argv[], FILE *fout_p)
 {
     int res;
     struct timeval start_time;
@@ -1116,7 +1095,7 @@ static int command_dd(int argc, const char *argv[])
     size_t chunk_size;
 
     if (argc != 5) {
-        printf("Usage: dd <infile> <outfile> <total-size> <chunk-size>\n");
+        fprintf(fout_p, "Usage: dd <infile> <outfile> <total-size> <chunk-size>\n");
 
         return (-EINVAL);
     }
@@ -1132,12 +1111,12 @@ static int command_dd(int argc, const char *argv[])
     }
 
     gettimeofday(&end_time, NULL);
-    command_dd_summary(total_size, &start_time, &end_time);
+    command_dd_summary(total_size, &start_time, &end_time, fout_p);
 
     return (0);
 }
 
-static void print_kernel_message(char *message_p)
+static void print_kernel_message(char *message_p, FILE *fout_p)
 {
     unsigned long long secs;
     unsigned long long usecs;
@@ -1159,10 +1138,10 @@ static void print_kernel_message(char *message_p)
     secs = (usecs / 1000000);
     usecs %= 1000000;
 
-    printf("[%5lld.%06lld] %s\n", secs, usecs, text_p);
+    fprintf(fout_p, "[%5lld.%06lld] %s\n", secs, usecs, text_p);
 }
 
-static int command_dmesg(int argc, const char *argv[])
+static int command_dmesg(int argc, const char *argv[], FILE *fout_p)
 {
     (void)argc;
     (void)argv;
@@ -1185,7 +1164,7 @@ static int command_dmesg(int argc, const char *argv[])
         }
 
         message[size] = '\0';
-        print_kernel_message(&message[0]);
+        print_kernel_message(&message[0], fout_p);
     }
 
     close(fd);
@@ -1193,17 +1172,18 @@ static int command_dmesg(int argc, const char *argv[])
     return (0);
 }
 
-static int command_sync(int argc, const char *argv[])
+static int command_sync(int argc, const char *argv[], FILE *fout_p)
 {
     (void)argc;
     (void)argv;
+    (void)fout_p;
 
     sync();
 
     return (0);
 }
 
-static int command_top(int argc, const char *argv[])
+static int command_top(int argc, const char *argv[], FILE *fout_p)
 {
     (void)argv;
 
@@ -1212,7 +1192,7 @@ static int command_top(int argc, const char *argv[])
     int i;
 
     if (argc != 1) {
-        printf("Usage: top\n");
+        fprintf(fout_p, "Usage: top\n");
 
         return (-EINVAL);
     }
@@ -1223,14 +1203,14 @@ static int command_top(int argc, const char *argv[])
         return (length);
     }
 
-    printf("CPU  USER  SYSTEM  IDLE\n");
-    printf("all  %3u%%    %3u%%  %3u%%\n",
+    fprintf(fout_p, "CPU  USER  SYSTEM  IDLE\n");
+    fprintf(fout_p, "all  %3u%%    %3u%%  %3u%%\n",
            stats[0].user,
            stats[0].system,
            stats[0].idle);
 
     for (i = 1; i < length; i++) {
-        printf("%-3d  %3u%%    %3u%%  %3u%%\n",
+        fprintf(fout_p, "%-3d  %3u%%    %3u%%  %3u%%\n",
                i,
                stats[i].user,
                stats[i].system,
@@ -1925,11 +1905,6 @@ void *shell_main(void *arg_p)
     int res;
     char *stripped_line_p;
 
-    qsort(module.commands_p,
-          module.number_of_commands,
-          sizeof(*module.commands_p),
-          compare_qsort);
-
     pthread_setname_np(pthread_self(), "ml_shell");
 
     while (true) {
@@ -1944,7 +1919,7 @@ void *shell_main(void *arg_p)
             } else if (is_exit(stripped_line_p)) {
                 break;
             } else {
-                res = execute_command(stripped_line_p);
+                res = ml_shell_execute_command(stripped_line_p, stdout);
 
                 if (res == 0) {
                     printf("OK\n");
@@ -2038,6 +2013,11 @@ void ml_shell_init(void)
 
 void ml_shell_start(void)
 {
+    qsort(module.commands_p,
+          module.number_of_commands,
+          sizeof(*module.commands_p),
+          compare_qsort);
+
     pthread_create(&module.pthread,
                    NULL,
                    (void *(*)(void *))shell_main,
@@ -2063,4 +2043,36 @@ void ml_shell_register_command(const char *name_p,
     command_p->name_p = name_p;
     command_p->description_p = description_p;
     command_p->callback = callback;
+}
+
+int ml_shell_execute_command(char *line_p, FILE *fout_p)
+{
+    struct command_t *command_p;
+    const char *name_p;
+    int res;
+    const char *argv[32];
+    int argc;
+
+    argc = parse_command(line_p, &argv[0]);
+
+    if (argc < 1) {
+        return (-1);
+    }
+
+    name_p = argv[0];
+
+    if (name_p == NULL) {
+        name_p = "";
+    }
+
+    command_p = find_command(name_p);
+
+    if (command_p != NULL) {
+        res = command_p->callback(argc, &argv[0], fout_p);
+    } else {
+        fprintf(fout_p, "%s: command not found\n", name_p);
+        res = -EINVAL;
+    }
+
+    return (res);
 }

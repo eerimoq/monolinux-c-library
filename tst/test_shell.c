@@ -55,7 +55,7 @@ static int init_and_start(void)
     return (fd);
 }
 
-static int command_hello(int argc, const char *argv[])
+static int command_hello(int argc, const char *argv[], FILE *fout_p)
 {
     const char *name_p;
 
@@ -65,7 +65,7 @@ static int command_hello(int argc, const char *argv[])
         name_p = "stranger";
     }
 
-    printf("Hello %s!\n", name_p);
+    fprintf(fout_p, "Hello %s!\n", name_p);
 
     return (0);
 }
@@ -304,8 +304,10 @@ TEST(command_editing)
         "$ exit\n");
 }
 
-static int command_quotes(int argc, const char *argv[])
+static int command_quotes(int argc, const char *argv[], FILE *fout_p)
 {
+    (void)fout_p;
+
     ASSERT_EQ(argc, 3);
     ASSERT_EQ(strcmp(argv[0], "quotes"), 0);
     ASSERT_EQ(strcmp(argv[1], "ba\" \\r"), 0);

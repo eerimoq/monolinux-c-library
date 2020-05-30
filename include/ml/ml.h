@@ -91,7 +91,9 @@
 
 #define membersof(array) (sizeof(array) / sizeof((array)[0]))
 
-typedef int (*ml_shell_command_callback_t)(int argc, const char *argv[]);
+typedef int (*ml_shell_command_callback_t)(int argc,
+                                           const char *argv[],
+                                           FILE *fout_p);
 
 typedef void (*ml_worker_pool_job_entry_t)(void *arg_p);
 
@@ -439,6 +441,12 @@ void ml_shell_register_command(const char *name_p,
                                ml_shell_command_callback_t callback);
 
 /**
+ * Execute given command and print its output to given file
+ * object. Must not be called before start is called.
+ */
+int ml_shell_execute_command(char *line_p, FILE *fout_p);
+
+/**
  * Initialize the motwork module.
  */
 void ml_network_init(void);
@@ -564,17 +572,17 @@ void ml_rstrip(char *str_p, const char *strip_p);
 /**
  * Print a hexdump of given buffer.
  */
-void ml_hexdump(const void *buf_p, size_t size);
+void ml_hexdump(const void *buf_p, size_t size, FILE *fout_p);
 
 /**
  * Print a hexdump of given file to given file.
  */
-int ml_hexdump_file(FILE *fin_p, size_t offset, ssize_t size);
+int ml_hexdump_file(FILE *fin_p, size_t offset, ssize_t size, FILE *fout_p);
 
 /**
- * Print given file.
+ * Print given file to given file.
  */
-void ml_print_file(const char *name_p);
+void ml_print_file(const char *name_p, FILE *fout_p);
 
 /**
  * Print system uptime.
@@ -597,7 +605,7 @@ int ml_file_system_space_usage(const char *path_p,
 /**
  * Print file systems space usage.
  */
-int ml_print_file_systems_space_usage(void);
+int ml_print_file_systems_space_usage(FILE *fout_p);
 
 int ml_mount(const char *source_p,
              const char *target_p,

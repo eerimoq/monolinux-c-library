@@ -73,24 +73,24 @@ static inline bool char_in_string(char c, const char *str_p)
     return (false);
 }
 
-static void print_ascii(const uint8_t *buf_p, size_t size)
+static void print_ascii(FILE *fout_p, const uint8_t *buf_p, size_t size)
 {
     size_t i;
 
     for (i = 0; i < 16 - size; i++) {
-        printf("   ");
+        fprintf(fout_p, "   ");
     }
 
-    printf("'");
+    fprintf(fout_p, "'");
 
     for (i = 0; i < size; i++) {
-        printf("%c", isprint((int)buf_p[i]) ? buf_p[i] : '.');
+        fprintf(fout_p, "%c", isprint((int)buf_p[i]) ? buf_p[i] : '.');
     }
 
-    printf("'");
+    fprintf(fout_p, "'");
 }
 
-static void hexdump(const uint8_t *buf_p, size_t size, int offset)
+static void hexdump(const uint8_t *buf_p, size_t size, int offset, FILE *fout_p)
 {
     int pos;
 
@@ -98,14 +98,14 @@ static void hexdump(const uint8_t *buf_p, size_t size, int offset)
 
     while (size > 0) {
         if ((pos % 16) == 0) {
-            printf("%08x: ", offset + pos);
+            fprintf(fout_p, "%08x: ", offset + pos);
         }
 
-        printf("%02x ", buf_p[pos] & 0xff);
+        fprintf(fout_p, "%02x ", buf_p[pos] & 0xff);
 
         if ((pos % 16) == 15) {
-            print_ascii(&buf_p[pos - 15], 16);
-            printf("\n");
+            print_ascii(fout_p, &buf_p[pos - 15], 16);
+            fprintf(fout_p, "\n");
         }
 
         pos++;
@@ -113,8 +113,8 @@ static void hexdump(const uint8_t *buf_p, size_t size, int offset)
     }
 
     if ((pos % 16) != 0) {
-        print_ascii(&buf_p[pos - (pos % 16)], pos % 16);
-        printf("\n");
+        print_ascii(fout_p, &buf_p[pos - (pos % 16)], pos % 16);
+        fprintf(fout_p, "\n");
     }
 }
 
@@ -266,12 +266,12 @@ void ml_rstrip(char *str_p, const char *strip_p)
     }
 }
 
-void ml_hexdump(const void *buf_p, size_t size)
+void ml_hexdump(const void *buf_p, size_t size, FILE *fout_p)
 {
-    hexdump(buf_p, size, 0);
+    hexdump(buf_p, size, 0, fout_p);
 }
 
-int ml_hexdump_file(FILE *fin_p, size_t offset, ssize_t size)
+int ml_hexdump_file(FILE *fin_p, size_t offset, ssize_t size, FILE *fout_p)
 {
     uint8_t buf[256];
     size_t chunk_size;
@@ -292,7 +292,7 @@ int ml_hexdump_file(FILE *fin_p, size_t offset, ssize_t size)
         }
 
         chunk_size = fread(&buf[0], 1, chunk_size, fin_p);
-        hexdump(&buf[0], chunk_size, offset);
+        hexdump(&buf[0], chunk_size, offset, fout_p);
 
         if (chunk_size < sizeof(buf)) {
             break;
@@ -305,7 +305,7 @@ int ml_hexdump_file(FILE *fin_p, size_t offset, ssize_t size)
     return (0);
 }
 
-void ml_print_file(const char *name_p)
+void ml_print_file(const char *name_p, FILE *fout_p)
 {
     FILE *fin_p;
     uint8_t buf[256];
@@ -315,7 +315,7 @@ void ml_print_file(const char *name_p)
 
     if (fin_p != NULL) {
         while ((size = fread(&buf[0], 1, membersof(buf), fin_p)) > 0) {
-            if (fwrite(&buf[0], 1, size, stdout) != size) {
+            if (fwrite(&buf[0], 1, size, fout_p) != size) {
                 break;
             }
         }
@@ -327,7 +327,7 @@ void ml_print_file(const char *name_p)
 void ml_print_uptime(void)
 {
     printf("Uptime: ");
-    ml_print_file("/proc/uptime");
+    ml_print_file("/proc/uptime", stdout);
     printf("\n");
 }
 
@@ -378,7 +378,7 @@ int ml_file_system_space_usage(const char *path_p,
     return (0);
 }
 
-int ml_print_file_systems_space_usage(void)
+int ml_print_file_systems_space_usage(FILE *fout_p)
 {
     int res;
     FILE *fin_p;
@@ -393,7 +393,7 @@ int ml_print_file_systems_space_usage(void)
     fin_p = setmntent("/proc/mounts", "r");
 
     if (fin_p != NULL) {
-        printf("MOUNTED ON               TOTAL      USED      FREE\n");
+        fprintf(fout_p, "MOUNTED ON               TOTAL      USED      FREE\n");
 
         while ((mntent_p = getmntent(fin_p)) != NULL) {
             res = ml_file_system_space_usage(mntent_p->mnt_dir,
@@ -405,11 +405,12 @@ int ml_print_file_systems_space_usage(void)
                 break;
             }
 
-            printf("%-20s %6lu MB %6lu MB %6lu MB\n",
-                   mntent_p->mnt_dir,
-                   total,
-                   used,
-                   available);
+            fprintf(fout_p,
+                    "%-20s %6lu MB %6lu MB %6lu MB\n",
+                    mntent_p->mnt_dir,
+                    total,
+                    used,
+                    available);
         }
 
         endmntent(fin_p);

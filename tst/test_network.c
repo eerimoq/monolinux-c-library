@@ -346,7 +346,7 @@ TEST(command_ifconfig_no_args)
     params_p = ml_shell_register_command_mock_get_params_in(ifconfig_handle);
 
     CAPTURE_OUTPUT(output, errput) {
-        ASSERT_EQ(params_p->callback(membersof(argv), argv), -EINVAL);
+        ASSERT_EQ(params_p->callback(membersof(argv), argv, stdout), -EINVAL);
     }
 
     ASSERT_EQ(output,
@@ -372,7 +372,7 @@ TEST(command_ifconfig_configure)
     mock_push_configure("eth2");
 
     CAPTURE_OUTPUT(output, errput) {
-        ASSERT_EQ(params_p->callback(membersof(argv), argv), 0);
+        ASSERT_EQ(params_p->callback(membersof(argv), argv, stdout), 0);
     }
 
     ASSERT_EQ(output, "");
@@ -393,7 +393,7 @@ TEST(command_ifconfig_up)
     mock_push_up("eth2");
 
     CAPTURE_OUTPUT(output, errput) {
-        ASSERT_EQ(params_p->callback(membersof(argv), argv), 0);
+        ASSERT_EQ(params_p->callback(membersof(argv), argv, stdout), 0);
     }
 
     ASSERT_EQ(output, "");
@@ -414,7 +414,7 @@ TEST(command_ifconfig_down)
     mock_push_down("eth1");
 
     CAPTURE_OUTPUT(output, errput) {
-        ASSERT_EQ(params_p->callback(membersof(argv), argv), 0);
+        ASSERT_EQ(params_p->callback(membersof(argv), argv, stdout), 0);
     }
 
     ASSERT_EQ(output, "");
@@ -433,7 +433,7 @@ TEST(command_ifconfig_foobar)
     params_p = ml_shell_register_command_mock_get_params_in(ifconfig_handle);
 
     CAPTURE_OUTPUT(output, errput) {
-        ASSERT_EQ(params_p->callback(membersof(argv), argv), -EINVAL);
+        ASSERT_EQ(params_p->callback(membersof(argv), argv, stdout), -EINVAL);
     }
 
     ASSERT_EQ(output,
@@ -469,7 +469,7 @@ TEST(command_ifconfig_print)
     mock_push_ml_network_interface_index("eth1", 5, 0);
 
     CAPTURE_OUTPUT(output, errput) {
-        ASSERT_EQ(params_p->callback(membersof(argv), argv), 0);
+        ASSERT_EQ(params_p->callback(membersof(argv), argv, stdout), 0);
     }
 
     ASSERT_EQ(output,
@@ -506,7 +506,7 @@ TEST(command_ifconfig_print_failures)
     mock_push_ml_network_interface_index("eth1", 5, -1);
 
     CAPTURE_OUTPUT(output, errput) {
-        ASSERT_EQ(params_p->callback(membersof(argv), argv), 0);
+        ASSERT_EQ(params_p->callback(membersof(argv), argv, stdout), 0);
     }
 
     ASSERT_EQ(output,
@@ -529,7 +529,7 @@ TEST(command_ethtool_no_args)
     params_p = ml_shell_register_command_mock_get_params_in(ethtool_handle);
 
     CAPTURE_OUTPUT(output, errput) {
-        ASSERT_EQ(params_p->callback(membersof(argv), argv), -EINVAL);
+        ASSERT_EQ(params_p->callback(membersof(argv), argv, stdout), -EINVAL);
     }
 
     ASSERT_EQ(output,
@@ -558,7 +558,7 @@ TEST(command_ethtool_configure)
 
     CAPTURE_OUTPUT(output, errput) {
         params_p = ml_shell_register_command_mock_get_params_in(ethtool_handle);
-        ASSERT_EQ(params_p->callback(membersof(argv), argv), 0);
+        ASSERT_EQ(params_p->callback(membersof(argv), argv, stdout), 0);
     }
 
     ASSERT_EQ(output, "");
@@ -586,7 +586,7 @@ TEST(command_ethtool_configure_no_changes)
 
     CAPTURE_OUTPUT(output, errput) {
         params_p = ml_shell_register_command_mock_get_params_in(ethtool_handle);
-        ASSERT_EQ(params_p->callback(membersof(argv), argv), 0);
+        ASSERT_EQ(params_p->callback(membersof(argv), argv, stdout), 0);
     }
 
     ASSERT_EQ(output, "");
@@ -613,7 +613,7 @@ TEST(command_ethtool_print)
 
     CAPTURE_OUTPUT(output, errput) {
         params_p = ml_shell_register_command_mock_get_params_in(ethtool_handle);
-        ASSERT_EQ(params_p->callback(membersof(argv), argv), 0);
+        ASSERT_EQ(params_p->callback(membersof(argv), argv, stdout), 0);
     }
 
     ASSERT_EQ(output,
