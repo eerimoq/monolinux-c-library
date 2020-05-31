@@ -364,7 +364,7 @@ static int command_ifconfig_print(const char *name_p, FILE *fout_p)
     res = ml_network_interface_ip_address(name_p, &in_addr);
 
     if (res == 0) {
-        puts(inet_ntoa(in_addr));
+        fprintf(fout_p, "%s\n", inet_ntoa(in_addr));
     } else {
         fprintf(fout_p, "failure\n");
     }
