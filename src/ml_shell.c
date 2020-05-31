@@ -108,6 +108,8 @@ struct module_t {
     int number_of_commands;
     struct command_t *commands_p;
     pthread_t pthread;
+    pthread_mutex_t mutex;
+    FILE *find_fout_p;
 };
 
 static struct module_t module;
@@ -807,9 +809,9 @@ static int print_info(const char *fpath_p,
     (void)ftwbuf_p;
 
     if (S_ISDIR(stat_p->st_mode)) {
-        fprintf(stdout, "%s/\n", fpath_p);
+        fprintf(module.find_fout_p, "%s/\n", fpath_p);
     } else {
-        puts(fpath_p);
+        fprintf(module.find_fout_p, "%s\n", fpath_p);
     }
 
     return (0);
@@ -823,11 +825,17 @@ static int command_find(int argc, const char *argv[], FILE *fout_p)
 
     res = -EINVAL;
 
+    pthread_mutex_lock(&module.mutex);
+
+    module.find_fout_p = fout_p;
+
     if (argc == 1) {
         res = nftw(".", print_info, 20, FTW_PHYS);
     } else if (argc == 2) {
         res = nftw(argv[1], print_info, 20, FTW_PHYS);
     }
+
+    pthread_mutex_unlock(&module.mutex);
 
     if (res != 0) {
         fprintf(fout_p, "Usage: find [<path>]\n");
@@ -1942,6 +1950,7 @@ void ml_shell_init(void)
     module.number_of_commands = 0;
     module.commands_p = xmalloc(1);
     history_init();
+    pthread_mutex_init(&module.mutex, NULL);
 
     ml_shell_register_command("help",
                               "Print this help.",
