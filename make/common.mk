@@ -1,9 +1,7 @@
 INC += $(ML_ROOT)/include
-INC += $(ML_INC)
 MAIN_C ?=
 SRC += $(MAIN_C)
 SRC += $(ML_ROOT)/src/ml.c
-SRC += $(ML_ROOT)/src/ml_bunga_server.c
 SRC += $(ML_ROOT)/src/ml_bus.c
 SRC += $(ML_ROOT)/src/ml_device_mapper.c
 SRC += $(ML_ROOT)/src/ml_dhcp_client.c

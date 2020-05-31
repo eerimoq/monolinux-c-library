@@ -447,12 +447,6 @@ void ml_shell_register_command(const char *name_p,
 int ml_shell_execute_command(char *line_p, FILE *fout_p);
 
 /**
- * Create the Bunga server. Must not be called before the shell is
- * started.
- */
-void ml_bunga_server_create(void);
-
-/**
  * Initialize the motwork module.
  */
 void ml_network_init(void);
