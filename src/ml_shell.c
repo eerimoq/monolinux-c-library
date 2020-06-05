@@ -573,6 +573,51 @@ static int command_ls(int argc, const char *argv[], FILE *fout_p)
     DIR *dir_p;
     struct dirent *dirent_p;
     const char *path_p;
+    char *delim_p;
+
+    res = -EINVAL;
+
+    if (argc == 2) {
+        path_p = argv[1];
+    } else {
+        path_p = ".";
+    }
+
+    dir_p = opendir(path_p);
+
+    if (dir_p != NULL) {
+        delim_p = "";
+
+        while ((dirent_p = readdir(dir_p)) != NULL) {
+            if (strcmp(dirent_p->d_name, ".") == 0) {
+                continue;
+            }
+
+            if (strcmp(dirent_p->d_name, "..") == 0) {
+                continue;
+            }
+
+            fprintf(fout_p, "%s%s", delim_p, dirent_p->d_name);
+            delim_p = " ";
+        }
+
+        printf("\n");
+
+        closedir(dir_p);
+        res = 0;
+    } else {
+        res = -errno;
+    }
+
+    return (res);
+}
+
+static int command_ll(int argc, const char *argv[], FILE *fout_p)
+{
+    int res;
+    DIR *dir_p;
+    struct dirent *dirent_p;
+    const char *path_p;
     struct stat statbuf;
     char buf[512];
 
@@ -1967,6 +2012,9 @@ void ml_shell_init(void)
     ml_shell_register_command("ls",
                               "List directory contents.",
                               command_ls);
+    ml_shell_register_command("ll",
+                              "List detailed directory contents.",
+                              command_ll);
     ml_shell_register_command("cat",
                               "Print a file.",
                               command_cat);

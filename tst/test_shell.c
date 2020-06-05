@@ -131,6 +131,7 @@ TEST(various_commands)
               "      history   List command history.\n"
               "          i2c   I2C bus commands.\n"
               "       insmod   Insert a kernel module.\n"
+              "           ll   List detailed directory contents.\n"
               "          log   Log control.\n"
               "           ls   List directory contents.\n"
               "        mknod   Create a node.\n"
@@ -163,6 +164,22 @@ TEST(command_ls)
 
     CAPTURE_OUTPUT(output, errput) {
         input(fd, "ls\n");
+        input(fd, "exit\n");
+        ml_shell_join();
+    }
+
+    ASSERT_NOT_SUBSTRING(output, "..");
+    ASSERT_SUBSTRING(output, "OK\n$ ");
+}
+
+TEST(command_ll)
+{
+    int fd;
+
+    fd = init_and_start();
+
+    CAPTURE_OUTPUT(output, errput) {
+        input(fd, "ll\n");
         input(fd, "exit\n");
         ml_shell_join();
     }
