@@ -601,8 +601,7 @@ static int command_ls(int argc, const char *argv[], FILE *fout_p)
             delim_p = " ";
         }
 
-        printf("\n");
-
+        fprintf(fout_p, "\n");
         closedir(dir_p);
         res = 0;
     } else {
