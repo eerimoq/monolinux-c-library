@@ -141,7 +141,7 @@ static void *handler_main(struct ml_timer_handler_t *handler_p)
     uint64_t value;
     ssize_t res;
 
-    pthread_setname_np(pthread_self(), "ml_timer_handler");
+    pthread_setname_np(pthread_self(), "ml_timer_hndlr");
 
     handler_p->fd = timerfd_create(CLOCK_REALTIME, 0);
 
@@ -150,9 +150,9 @@ static void *handler_main(struct ml_timer_handler_t *handler_p)
     }
 
     timeout.it_value.tv_sec = 0;
-    timeout.it_value.tv_nsec = 10000000;
+    timeout.it_value.tv_nsec = 100000000;
     timeout.it_interval.tv_sec= 0;
-    timeout.it_interval.tv_nsec = 10000000;
+    timeout.it_interval.tv_nsec = 100000000;
     timerfd_settime(handler_p->fd, 0, &timeout, NULL);
 
     while (true) {
@@ -200,8 +200,8 @@ void ml_timer_handler_timer_start(struct ml_timer_t *self_p,
 {
     ml_timer_stop(self_p);
 
-    self_p->initial_ticks = DIV_CEIL(initial, 10);
-    self_p->repeat_ticks = DIV_CEIL(repeat, 10);
+    self_p->initial_ticks = DIV_CEIL(initial, 100);
+    self_p->repeat_ticks = DIV_CEIL(repeat, 100);
     self_p->delta = self_p->initial_ticks;
 
     /* Must wait at least two ticks to ensure the timer does not
