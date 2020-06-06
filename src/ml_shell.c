@@ -705,6 +705,25 @@ static int command_cat(int argc, const char *argv[], FILE *fout_p)
     return (res);
 }
 
+static int command_rm(int argc, const char *argv[], FILE *fout_p)
+{
+    int res;
+
+    if (argc != 2) {
+        fprintf(fout_p, "Usage: rm <file or directory>\n");
+
+        return (-EINVAL);
+    }
+
+    res = remove(argv[1]);
+
+    if (res != 0) {
+        res = -errno;
+    }
+
+    return (res);
+}
+
 static int hexdump(const char *name_p, size_t offset, ssize_t size, FILE *fout_p)
 {
     int res;
@@ -2017,6 +2036,9 @@ void ml_shell_init(void)
     ml_shell_register_command("cat",
                               "Print a file.",
                               command_cat);
+    ml_shell_register_command("rm",
+                              "Remove files and directories.",
+                              command_rm);
     ml_shell_register_command("hexdump",
                               "Hexdump a file.",
                               command_hexdump);

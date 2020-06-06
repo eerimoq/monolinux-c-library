@@ -139,6 +139,7 @@ TEST(various_commands)
               "     ntp_sync   NTP time sync.\n"
               "        print   Print to file.\n"
               "       reboot   Reboot.\n"
+              "           rm   Remove files and directories.\n"
               "      suicide   Process suicide.\n"
               "         sync   Synchronize cached writes to persistent storage.\n"
               "          top   System status.\n"
@@ -211,6 +212,41 @@ TEST(command_cat)
         "OK\n"
         "$ cat foobar\n"
         "ERROR(-2: No such file or directory)\n"
+        "$ exit\n");
+}
+
+TEST(command_rm)
+{
+    int fd;
+
+    fd = init_and_start();
+
+    remove_mock_once("foobar", 0);
+    remove_mock_once("foobar", -1);
+    remove_mock_set_errno(ENOENT);
+    remove_mock_once("utils", -1);
+    remove_mock_set_errno(ENOTEMPTY);
+
+    CAPTURE_OUTPUT(output, errput) {
+        input(fd, "rm\n");
+        input(fd, "rm foobar\n");
+        input(fd, "rm foobar\n");
+        input(fd, "rm utils\n");
+        input(fd, "exit\n");
+        ml_shell_join();
+    }
+
+    ASSERT_EQ(
+        output,
+        "rm\n"
+        "Usage: rm <file or directory>\n"
+        "ERROR(-22: Invalid argument)\n"
+        "$ rm foobar\n"
+        "OK\n"
+        "$ rm foobar\n"
+        "ERROR(-2: No such file or directory)\n"
+        "$ rm utils\n"
+        "ERROR(-39: Directory not empty)\n"
         "$ exit\n");
 }
 
