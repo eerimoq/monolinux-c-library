@@ -140,6 +140,7 @@ TEST(various_commands)
               "        print   Print to file.\n"
               "       reboot   Reboot.\n"
               "           rm   Remove files and directories.\n"
+              "        rmmod   Remove a kernel module.\n"
               "      suicide   Process suicide.\n"
               "         sync   Synchronize cached writes to persistent storage.\n"
               "          top   System status.\n"

@@ -806,6 +806,25 @@ static int command_insmod(int argc, const char *argv[], FILE *fout_p)
     return (res);
 }
 
+static int command_rmmod(int argc, const char *argv[], FILE *fout_p)
+{
+    int res;
+
+    res = -EINVAL;
+
+    if (argc == 2) {
+        res = ml_remove_module(argv[1], 0);
+    } else if (argc == 3) {
+        res = ml_remove_module(argv[1], atoi(argv[2]));
+    }
+
+    if (res != 0) {
+        fprintf(fout_p, "Usage: rmmod <module> [<flags>]\n");
+    }
+
+    return (res);
+}
+
 static int command_mknod(int argc, const char *argv[], FILE *fout_p)
 {
     int res;
@@ -2048,6 +2067,9 @@ void ml_shell_init(void)
     ml_shell_register_command("insmod",
                               "Insert a kernel module.",
                               command_insmod);
+    ml_shell_register_command("rmmod",
+                              "Remove a kernel module.",
+                              command_rmmod);
     ml_shell_register_command("mknod",
                               "Create a node.",
                               command_mknod);

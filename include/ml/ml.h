@@ -595,6 +595,11 @@ void ml_print_uptime(void);
 int ml_insert_module(const char *path_p, const char *params_p);
 
 /**
+ * Remove given kernel module.
+ */
+int ml_remove_module(const char *module_p, int flags);
+
+/**
  * Get file system space usage.
  */
 int ml_file_system_space_usage(const char *path_p,

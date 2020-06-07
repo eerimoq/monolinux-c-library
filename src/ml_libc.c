@@ -38,6 +38,11 @@ int ml_finit_module(int fd, const char *params_p, int flags)
     return (syscall(SYS_finit_module, fd, params_p, flags));
 }
 
+int ml_remove_module(const char *module_p, int flags)
+{
+    return (syscall(__NR_delete_module, module_p, flags));
+}
+
 #if defined(__GNU_LIBRARY__) && (__GLIBC__ <= 2) && (__GLIBC_MINOR__ <= 26)
 
 int memfd_create(const char *name, unsigned flags)
