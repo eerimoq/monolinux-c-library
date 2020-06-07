@@ -1170,7 +1170,7 @@ static int command_log(int argc, const char *argv[], FILE *fout_p)
 
     if (res != 0) {
         fprintf(fout_p, "Usage: log list\n");
-        fprintf(fout_p, "       log set_mask <log-object> <mask>\n");
+        fprintf(fout_p, "       log set_level <log-object> <mask>\n");
     }
 
     return (res);
