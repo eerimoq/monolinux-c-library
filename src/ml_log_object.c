@@ -94,10 +94,10 @@ static const char *level_to_string(int level)
 void ml_log_object_module_init(void)
 {
 #ifndef UNIT_TEST
-    /* Use /dev/kmsg without rate limiting. */
-    if (ml_file_write_string("/proc/sys/kernel/printk_devkmsg", "on\n") == 0) {
-        module.fd = open("/dev/kmsg", O_WRONLY);
-    }
+    /* Assumes "printk_devkmsg" in "on" by default in the Linux
+       kernel. If not, lots of log messages will be dropped due to
+       rate limiting. */
+    module.fd = open("/dev/kmsg", O_WRONLY);
 #endif
 }
 
