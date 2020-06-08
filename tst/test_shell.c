@@ -134,6 +134,7 @@ TEST(various_commands)
               "           ll   List detailed directory contents.\n"
               "          log   Log control.\n"
               "           ls   List directory contents.\n"
+              "        mkdir   Create a directory.\n"
               "        mknod   Create a node.\n"
               "        mount   Mount a filesystem.\n"
               "     ntp_sync   NTP time sync.\n"

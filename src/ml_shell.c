@@ -634,9 +634,10 @@ static int command_ll(int argc, const char *argv[], FILE *fout_p)
         while ((dirent_p = readdir(dir_p)) != NULL) {
             snprintf(&buf[0], sizeof(buf), "%s/%s", path_p, dirent_p->d_name);
 
-            res = stat(&buf[0], &statbuf);
+            res = lstat(&buf[0], &statbuf);
 
             if (res != 0) {
+                res = -errno;
                 break;
             }
 
@@ -820,6 +821,27 @@ static int command_rmmod(int argc, const char *argv[], FILE *fout_p)
 
     if (res != 0) {
         fprintf(fout_p, "Usage: rmmod <module> [<flags>]\n");
+    }
+
+    return (res);
+}
+
+static int command_mkdir(int argc, const char *argv[], FILE *fout_p)
+{
+    int res;
+
+    res = -EINVAL;
+
+    if (argc == 2) {
+        res = mkdir(argv[1], 0777);
+
+        if (res != 0) {
+            res = -errno;
+        }
+    }
+
+    if (res != 0) {
+        fprintf(fout_p, "Usage: mkdir <directory>\n");
     }
 
     return (res);
@@ -2070,6 +2092,9 @@ void ml_shell_init(void)
     ml_shell_register_command("rmmod",
                               "Remove a kernel module.",
                               command_rmmod);
+    ml_shell_register_command("mkdir",
+                              "Create a directory.",
+                              command_mkdir);
     ml_shell_register_command("mknod",
                               "Create a node.",
                               command_mknod);
