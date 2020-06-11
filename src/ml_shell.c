@@ -788,6 +788,24 @@ static int command_reboot(int argc, const char *argv[], FILE *fout_p)
     return (reboot(RB_AUTOBOOT));
 }
 
+static int command_halt(int argc, const char *argv[], FILE *fout_p)
+{
+    (void)argc;
+    (void)argv;
+    (void)fout_p;
+
+    return (reboot(RB_HALT_SYSTEM));
+}
+
+static int command_poweroff(int argc, const char *argv[], FILE *fout_p)
+{
+    (void)argc;
+    (void)argv;
+    (void)fout_p;
+
+    return (reboot(RB_POWER_OFF));
+}
+
 static int command_insmod(int argc, const char *argv[], FILE *fout_p)
 {
     int res;
@@ -2084,8 +2102,14 @@ void ml_shell_init(void)
                               "Hexdump a file.",
                               command_hexdump);
     ml_shell_register_command("reboot",
-                              "Reboot.",
+                              "Reboot the system.",
                               command_reboot);
+    ml_shell_register_command("halt",
+                              "Halt the system.",
+                              command_halt);
+    ml_shell_register_command("poweroff",
+                              "Power off the system.",
+                              command_poweroff);
     ml_shell_register_command("insmod",
                               "Insert a kernel module.",
                               command_insmod);
