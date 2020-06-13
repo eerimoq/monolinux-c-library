@@ -147,6 +147,7 @@ TEST(various_commands)
               "      suicide   Process suicide.\n"
               "         sync   Synchronize cached writes to persistent storage.\n"
               "          top   System status.\n"
+              "       umount   Unmount a filesystem.\n"
               "OK\n"
               "$ history\n"
               "1: help\n"

@@ -914,6 +914,23 @@ static int command_mount(int argc, const char *argv[], FILE *fout_p)
     return (res);
 }
 
+static int command_umount(int argc, const char *argv[], FILE *fout_p)
+{
+    int res;
+
+    res = -EINVAL;
+
+    if (argc == 2) {
+        res = umount(argv[1]);
+    }
+
+    if (res != 0) {
+        fprintf(fout_p, "Usage: umount <dir>\n");
+    }
+
+    return (res);
+}
+
 static int command_df(int argc, const char *argv[], FILE *fout_p)
 {
     (void)argc;
@@ -2125,6 +2142,9 @@ void ml_shell_init(void)
     ml_shell_register_command("mount",
                               "Mount a filesystem.",
                               command_mount);
+    ml_shell_register_command("umount",
+                              "Unmount a filesystem.",
+                              command_umount);
     ml_shell_register_command("df",
                               "Disk space usage.",
                               command_df);
