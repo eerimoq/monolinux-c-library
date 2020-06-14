@@ -115,3 +115,43 @@ TEST(enable_disable)
     ASSERT_SUBSTRING(output1, " INFO foo bar\n");
     ASSERT_NOT_SUBSTRING(output1, " DEBUG foo bar\n");
 }
+
+TEST(load)
+{
+    FILE *file_p;
+    struct ml_log_object_t log_object;
+
+    ml_log_object_module_init();
+
+    file_p = fopen("log_object.txt", "w");
+    ASSERT_NE(file_p, NULL);
+    fprintf(file_p, "foo info\n");
+    fprintf(file_p,
+            "123456789012345678901234567890123456789012345678901234567890123 "
+            "notice\n");
+    /* Unknown name skipped. */
+    fprintf(file_p, "bar alert\n");
+    /* Unknown level skipped. */
+    fprintf(file_p, "fie kalle\n");
+    /* Long name aborts. */
+    fprintf(file_p,
+            "1234567890123456789012345678901234567890123456789012345678901230 "
+            "debug\n");
+    /* Not reached. */
+    fprintf(file_p, "gam info\n");
+    fclose(file_p);
+
+    ml_log_object_get_by_name_mock_once("foo", &log_object);
+    ml_log_object_set_level_mock_once(ML_LOG_INFO);
+
+    ml_log_object_get_by_name_mock_once(
+        "123456789012345678901234567890123456789012345678901234567890123",
+        &log_object);
+    ml_log_object_set_level_mock_once(ML_LOG_NOTICE);
+
+    ml_log_object_get_by_name_mock_once("bar", NULL);
+
+    ml_log_object_get_by_name_mock_once("fie", &log_object);
+
+    ml_log_object_load();
+}

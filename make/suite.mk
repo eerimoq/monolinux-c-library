@@ -11,6 +11,7 @@ CFLAGS += -g -O0
 CFLAGS += -DUNIT_TEST
 CFLAGS += -no-pie
 CFLAGS += -DNALA_INCLUDE_NALA_MOCKS_H
+CFLAGS += -DML_LOG_OBJECT_TXT='"log_object.txt"'
 LDFLAGS_MOCKS = $(shell cat $(BUILD)/nala_mocks.ldflags)
 COVERAGE_FILTERS +=
 INC += $(ML_ROOT)/tst
@@ -49,7 +50,8 @@ $(BUILD)/nala_mocks.ldflags: $(TESTS)
 	[ -f $(BUILD)/nala_mocks.h ] || touch $(BUILD)/nala_mocks.h
 	$(NALA) cat $(TESTS) > tests.pp.c
 	$(CC) $(INC:%=-I%) -D_GNU_SOURCE=1 -DNALA_GENERATE_MOCKS -E tests.pp.c \
-	    | $(NALA) generate_mocks $(NO_IMPLEMENTATION:%=-n %) -o $(BUILD)
+	    | $(NALA) generate_mocks \
+	          $(IMPLEMENTATION:%=-i %) $(NO_IMPLEMENTATION:%=-n %) -o $(BUILD)
 	touch $@
 
 coverage:

@@ -130,7 +130,11 @@ void ml_log_object_load(void)
         return;
     }
 
-    while (fscanf(file_p, "%64s %16s\n", &name[0], &level[0]) == 2) {
+    while (fscanf(file_p, "%63s %15s", &name[0], &level[0]) == 2) {
+        if (fgetc(file_p) != '\n') {
+            break;
+        }
+
         log_object_p = ml_log_object_get_by_name(&name[0]);
 
         if (log_object_p == NULL) {

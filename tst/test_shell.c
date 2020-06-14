@@ -1725,3 +1725,54 @@ TEST(log_list_and_set_mask)
               "OK\n"
               "$ exit\n");
 }
+
+TEST(log_store)
+{
+    int fd;
+
+    fd = init_and_start();
+
+    ml_log_object_store_mock_once(0);
+    ml_log_object_store_mock_once(-ENOENT);
+
+    CAPTURE_OUTPUT(output, errput) {
+        input(fd, "log store\n");
+        input(fd, "log store\n");
+        input(fd, "exit\n");
+        ml_shell_join();
+    }
+
+    ASSERT_EQ(output,
+              "log store\n"
+              "OK\n"
+              "$ log store\n"
+              "Usage: log list\n"
+              "       log set_level <log-object> <mask>\n"
+              "       log store\n"
+              "ERROR(-2: No such file or directory)\n"
+              "$ exit\n");
+}
+
+TEST(log_print)
+{
+    int fd;
+
+    fd = init_and_start();
+
+    ml_log_object_vprint_mock_once(ML_LOG_INFO, "hello");
+    ml_log_object_vprint_mock_once(ML_LOG_ERROR, "hi");
+
+    CAPTURE_OUTPUT(output, errput) {
+        input(fd, "log print hello\n");
+        input(fd, "log print error hi\n");
+        input(fd, "exit\n");
+        ml_shell_join();
+    }
+
+    ASSERT_EQ(output,
+              "log print hello\n"
+              "OK\n"
+              "$ log print error hi\n"
+              "OK\n"
+              "$ exit\n");
+}
