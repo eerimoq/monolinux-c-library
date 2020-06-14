@@ -1714,12 +1714,14 @@ TEST(log_list_and_set_mask)
               "log list\n"
               "OBJECT-NAME       LEVEL\n"
               "test-object       info\n"
+              "log-object        info\n"
               "OK\n"
               "$ log set_level test-object warning\n"
               "OK\n"
               "$ log list\n"
               "OBJECT-NAME       LEVEL\n"
               "test-object       warning\n"
+              "log-object        info\n"
               "OK\n"
               "$ exit\n");
 }

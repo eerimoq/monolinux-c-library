@@ -35,8 +35,16 @@
 #include "ml/ml.h"
 #include "internal.h"
 
+/**
+ * Module state (log levels).
+ */
+#ifndef ML_LOG_OBJECT_TXT
+#    define ML_LOG_OBJECT_TXT            "/tmp/log_object.txt"
+#endif
+
 struct module_t {
     int fd;
+    struct ml_log_object_t log_object;
     struct ml_log_object_t *head_p;
 };
 
@@ -45,7 +53,7 @@ static struct module_t module = {
     .head_p = NULL
 };
 
-static const char *level_to_string(int level)
+static const char *level_to_string_upper(int level)
 {
     const char *name_p;
 
@@ -99,6 +107,83 @@ void ml_log_object_module_init(void)
        rate limiting. */
     module.fd = open("/dev/kmsg", O_WRONLY);
 #endif
+
+    ml_log_object_init(&module.log_object, "log-object", ML_LOG_INFO);
+    ml_log_object_register(&module.log_object);
+}
+
+void ml_log_object_load(void)
+{
+    FILE *file_p;
+    char name[64];
+    char level[16];
+    struct ml_log_object_t *log_object_p;
+    int value;
+
+    file_p = fopen(ML_LOG_OBJECT_TXT, "r");
+
+    if (file_p == NULL) {
+        ml_log_object_print(&module.log_object,
+                            ML_LOG_ERROR,
+                            "Failed to open " ML_LOG_OBJECT_TXT ".");
+
+        return;
+    }
+
+    while (fscanf(file_p, "%64s %16s\n", &name[0], &level[0]) == 2) {
+        log_object_p = ml_log_object_get_by_name(&name[0]);
+
+        if (log_object_p == NULL) {
+            ml_warning("No log object called %s.", &name[0]);
+            continue;
+        }
+
+        value = ml_log_object_level_from_string(&level[0]);
+
+        if (value == -1) {
+            ml_error("Invalid log level %s.", &level[0]);
+            continue;
+        }
+
+        ml_log_object_set_level(log_object_p, value);
+    }
+
+    fclose(file_p);
+}
+
+int ml_log_object_store(void)
+{
+    FILE *file_p;
+    struct ml_log_object_t *log_object_p;
+
+    file_p = fopen(ML_LOG_OBJECT_TXT, "w");
+
+    if (file_p == NULL) {
+        ml_log_object_print(&module.log_object,
+                            ML_LOG_ERROR,
+                            "Failed to open " ML_LOG_OBJECT_TXT ".");
+
+        return (-EGENERAL);
+    }
+
+    log_object_p = NULL;
+
+    while (true) {
+        log_object_p = ml_log_object_list_next(log_object_p);
+
+        if (log_object_p == NULL) {
+            break;
+        }
+
+        fprintf(file_p,
+                "%s %s\n",
+                log_object_p->name_p,
+                ml_log_object_level_to_string(log_object_p->level));
+    }
+
+    fclose(file_p);
+
+    return (0);
 }
 
 void ml_log_object_register(struct ml_log_object_t *self_p)
@@ -137,16 +222,89 @@ struct ml_log_object_t *ml_log_object_list_next(struct ml_log_object_t *log_obje
     }
 }
 
+const char *ml_log_object_level_to_string(int level)
+{
+    const char *res_p;
+
+    switch (level) {
+
+    case ML_LOG_EMERGENCY:
+        res_p = "emergency";
+        break;
+
+    case ML_LOG_ALERT:
+        res_p = "alert";
+        break;
+
+    case ML_LOG_CRITICAL:
+        res_p = "critical";
+        break;
+
+    case ML_LOG_ERROR:
+        res_p = "error";
+        break;
+
+    case ML_LOG_WARNING:
+        res_p = "warning";
+        break;
+
+    case ML_LOG_NOTICE:
+        res_p = "notice";
+        break;
+
+    case ML_LOG_INFO:
+        res_p = "info";
+        break;
+
+    case ML_LOG_DEBUG:
+        res_p = "debug";
+        break;
+
+    default:
+        res_p = "*** unknown ***";
+        break;
+    }
+
+    return (res_p);
+}
+
+int ml_log_object_level_from_string(const char *level_p)
+{
+    int level;
+
+    if (strcmp("emergency", level_p) == 0) {
+        level = ML_LOG_EMERGENCY;
+    } else if (strcmp("alert", level_p) == 0) {
+        level = ML_LOG_ALERT;
+    } else if (strcmp("critical", level_p) == 0) {
+        level = ML_LOG_CRITICAL;
+    } else if (strcmp("error", level_p) == 0) {
+        level = ML_LOG_ERROR;
+    } else if (strcmp("warning", level_p) == 0) {
+        level = ML_LOG_WARNING;
+    } else if (strcmp("notice", level_p) == 0) {
+        level = ML_LOG_NOTICE;
+    } else if (strcmp("info", level_p) == 0) {
+        level = ML_LOG_INFO;
+    } else if (strcmp("debug", level_p) == 0) {
+        level = ML_LOG_DEBUG;
+    } else {
+        level = -1;
+    }
+
+    return (level);
+}
+
 void ml_log_object_init(struct ml_log_object_t *self_p,
-                     const char *name_p,
-                     int level)
+                        const char *name_p,
+                        int level)
 {
     self_p->name_p = name_p;
     self_p->level = level;
 }
 
 void ml_log_object_set_level(struct ml_log_object_t *self_p,
-                         int level)
+                             int level)
 {
     self_p->level = level;
 }
@@ -179,7 +337,7 @@ void ml_log_object_vprint(struct ml_log_object_t *self_p,
     length += snprintf(&buf[length],
                        sizeof(buf) - length,
                        " %s %s ",
-                       level_to_string(level),
+                       level_to_string_upper(level),
                        self_p->name_p);
     length += vsnprintf(&buf[length], sizeof(buf) - length, fmt_p, vlist);
 

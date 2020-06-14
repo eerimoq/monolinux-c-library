@@ -368,6 +368,16 @@ void ml_worker_pool_spawn(struct ml_worker_pool_t *self_p,
 void ml_log_object_module_init(void);
 
 /**
+ * Load log object state from disk. Loads log levels.
+ */
+void ml_log_object_load(void);
+
+/**
+ * Store log object state to disk. Stores log levels.
+ */
+int ml_log_object_store(void);
+
+/**
  * Register given log object to the list of log objects.
  */
 void ml_log_object_register(struct ml_log_object_t *self_p);
@@ -382,6 +392,16 @@ struct ml_log_object_t *ml_log_object_get_by_name(const char *name_p);
  * object. List ends when NULL is returned.
  */
 struct ml_log_object_t *ml_log_object_list_next(struct ml_log_object_t *log_object_p);
+
+/**
+ * Get the string for given numerical level.
+ */
+const char *ml_log_object_level_to_string(int level);
+
+/**
+ * Get the numerical level from given string.
+ */
+int ml_log_object_level_from_string(const char *level_p);
 
 /**
  * Initialize given log object with given name and level.

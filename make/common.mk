@@ -20,6 +20,7 @@ OBJ = $(patsubst %,$(BUILD)%,$(abspath $(SRC:%.c=%.o)))
 CFLAGS += $(INC:%=-I%)
 CFLAGS += -D_GNU_SOURCE=1
 CFLAGS += -ffunction-sections -fdata-sections
+CFLAGS += $(CFLAGS_EXTRA)
 LDFLAGS += -Wl,--gc-sections -L$(BUILD)/root/lib $(LIBS:%=-l%)
 STRIP ?= no
 DEPSDIR = $(BUILD)/deps

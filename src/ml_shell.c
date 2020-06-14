@@ -117,79 +117,6 @@ static struct module_t module;
 static void history_init(void);
 static void show_line(void);
 
-static const char *level_to_string(int level)
-{
-    const char *res_p;
-
-    switch (level) {
-
-    case ML_LOG_EMERGENCY:
-        res_p = "emergency";
-        break;
-
-    case ML_LOG_ALERT:
-        res_p = "alert";
-        break;
-
-    case ML_LOG_CRITICAL:
-        res_p = "critical";
-        break;
-
-    case ML_LOG_ERROR:
-        res_p = "error";
-        break;
-
-    case ML_LOG_WARNING:
-        res_p = "warning";
-        break;
-
-    case ML_LOG_NOTICE:
-        res_p = "notice";
-        break;
-
-    case ML_LOG_INFO:
-        res_p = "info";
-        break;
-
-    case ML_LOG_DEBUG:
-        res_p = "debug";
-        break;
-
-    default:
-        res_p = "*** unknown ***";
-        break;
-    }
-
-    return (res_p);
-}
-
-static int level_to_number(const char *level_p)
-{
-    int level;
-
-    if (strcmp("emergency", level_p) == 0) {
-        level = ML_LOG_EMERGENCY;
-    } else if (strcmp("alert", level_p) == 0) {
-        level = ML_LOG_ALERT;
-    } else if (strcmp("critical", level_p) == 0) {
-        level = ML_LOG_CRITICAL;
-    } else if (strcmp("error", level_p) == 0) {
-        level = ML_LOG_ERROR;
-    } else if (strcmp("warning", level_p) == 0) {
-        level = ML_LOG_WARNING;
-    } else if (strcmp("notice", level_p) == 0) {
-        level = ML_LOG_NOTICE;
-    } else if (strcmp("info", level_p) == 0) {
-        level = ML_LOG_INFO;
-    } else if (strcmp("debug", level_p) == 0) {
-        level = ML_LOG_DEBUG;
-    } else {
-        level = -1;
-    }
-
-    return (level);
-}
-
 static int xgetc(void)
 {
     int ch;
@@ -1179,7 +1106,7 @@ static int command_log_list(int argc, const char *argv[], FILE *fout_p)
 
         fprintf(fout_p, "%-16s  %s\n",
                log_object_p->name_p,
-               level_to_string(log_object_p->level));
+               ml_log_object_level_to_string(log_object_p->level));
     }
 
     return (0);
@@ -1200,13 +1127,48 @@ static int command_log_set_level(int argc, const char *argv[])
         return (-EINVAL);
     }
 
-    level = level_to_number(argv[3]);
+    level = ml_log_object_level_from_string(argv[3]);
 
     if (level == -1) {
         return (-EINVAL);
     }
 
     ml_log_object_set_level(log_object_p, level);
+
+    return (0);
+}
+
+static int command_log_store(int argc, const char *argv[])
+{
+    (void)argv;
+
+    if (argc != 2) {
+        return (-EINVAL);
+    }
+
+    return (ml_log_object_store());
+}
+
+static int command_log_print(int argc, const char *argv[])
+{
+    int level;
+    const char *message_p;
+
+    if (argc == 3) {
+        level = ML_LOG_INFO;
+        message_p = argv[2];
+    } else if (argc == 4) {
+        level = ml_log_object_level_from_string(argv[2]);
+        message_p = argv[3];
+    } else {
+        level = -1;
+    }
+
+    if (level == -1) {
+        return (-EINVAL);
+    }
+
+    ml_log_print(level, message_p);
 
     return (0);
 }
@@ -1222,12 +1184,18 @@ static int command_log(int argc, const char *argv[], FILE *fout_p)
             res = command_log_list(argc, argv, fout_p);
         } else if (strcmp(argv[1], "set_level") == 0) {
             res = command_log_set_level(argc, argv);
+        } else if (strcmp(argv[1], "store") == 0) {
+            res = command_log_store(argc, argv);
+        } else if (strcmp(argv[1], "print") == 0) {
+            res = command_log_print(argc, argv);
         }
     }
 
     if (res != 0) {
-        fprintf(fout_p, "Usage: log list\n");
-        fprintf(fout_p, "       log set_level <log-object> <mask>\n");
+        fprintf(fout_p,
+                "Usage: log list\n"
+                "       log set_level <log-object> <mask>\n"
+                "       log store\n");
     }
 
     return (res);
