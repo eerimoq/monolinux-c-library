@@ -1842,6 +1842,8 @@ TEST(log_store)
               "Usage: log list\n"
               "       log set_level <log-object> <mask>\n"
               "       log store\n"
+              "       log print <message>\n"
+              "       log print <level> <message>\n"
               "ERROR(-2: No such file or directory)\n"
               "$ exit\n");
 }

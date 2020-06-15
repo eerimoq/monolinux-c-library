@@ -1199,7 +1199,9 @@ static int command_log(int argc, const char *argv[], FILE *fout_p)
         fprintf(fout_p,
                 "Usage: log list\n"
                 "       log set_level <log-object> <mask>\n"
-                "       log store\n");
+                "       log store\n"
+                "       log print <message>\n"
+                "       log print <level> <message>\n");
     }
 
     return (res);
