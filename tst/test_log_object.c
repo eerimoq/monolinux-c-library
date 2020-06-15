@@ -155,3 +155,24 @@ TEST(load)
 
     ml_log_object_load();
 }
+
+TEST(store)
+{
+    ml_log_object_module_init();
+
+    remove("log_object.txt");
+
+    ml_log_object_store();
+
+    ASSERT_FILE_EQ("log_object.txt", "files/log_object.txt");
+}
+
+TEST(store_open_error)
+{
+    ml_log_object_module_init();
+
+    fopen_mock_once("log_object.txt", "w", NULL);
+    fclose_mock_none();
+
+    ml_log_object_store();
+}
