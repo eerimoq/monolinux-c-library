@@ -786,7 +786,7 @@ static int command_mkdir(int argc, const char *argv[], FILE *fout_p)
     }
 
     if (res != 0) {
-        fprintf(fout_p, "Usage: mkdir <directory>\n");
+        fprintf(fout_p, "Usage: mkdir <dir>\n");
     }
 
     return (res);
@@ -849,6 +849,10 @@ static int command_umount(int argc, const char *argv[], FILE *fout_p)
 
     if (argc == 2) {
         res = umount(argv[1]);
+
+        if (res != 0) {
+            res = -errno;
+        }
     }
 
     if (res != 0) {

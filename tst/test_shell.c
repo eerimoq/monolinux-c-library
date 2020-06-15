@@ -832,12 +832,42 @@ TEST(command_mkdir)
 
     ASSERT_EQ(output,
               "mkdir\n"
-              "Usage: mkdir <directory>\n"
+              "Usage: mkdir <dir>\n"
               "ERROR(-22: Invalid argument)\n"
               "$ mkdir foo\n"
               "OK\n"
               "$ mkdir foo\n"
-              "Usage: mkdir <directory>\n"
+              "Usage: mkdir <dir>\n"
+              "ERROR(-17: File exists)\n"
+              "$ exit\n");
+}
+
+TEST(command_umount)
+{
+    int fd;
+
+    umount_mock_once("foo", 0);
+    umount_mock_once("bar", -1);
+    umount_mock_set_errno(EEXIST);
+
+    fd = init_and_start();
+
+    CAPTURE_OUTPUT(output, errput) {
+        input(fd, "umount\n");
+        input(fd, "umount foo\n");
+        input(fd, "umount bar\n");
+        input(fd, "exit\n");
+        ml_shell_join();
+    }
+
+    ASSERT_EQ(output,
+              "umount\n"
+              "Usage: umount <dir>\n"
+              "ERROR(-22: Invalid argument)\n"
+              "$ umount foo\n"
+              "OK\n"
+              "$ umount bar\n"
+              "Usage: umount <dir>\n"
               "ERROR(-17: File exists)\n"
               "$ exit\n");
 }
