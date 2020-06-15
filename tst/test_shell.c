@@ -779,6 +779,69 @@ TEST(command_insmod)
               "$ exit\n");
 }
 
+TEST(command_rmmod)
+{
+    int fd;
+
+    ml_remove_module_mock_once("foo", 0, 0);
+    ml_remove_module_mock_once("bar", 1, 0);
+    ml_remove_module_mock_once("fie", 0, -ENOENT);
+
+    fd = init_and_start();
+
+    CAPTURE_OUTPUT(output, errput) {
+        input(fd, "rmmod\n");
+        input(fd, "rmmod foo\n");
+        input(fd, "rmmod bar 1\n");
+        input(fd, "rmmod fie\n");
+        input(fd, "exit\n");
+        ml_shell_join();
+    }
+
+    ASSERT_EQ(output,
+              "rmmod\n"
+              "Usage: rmmod <module> [<flags>]\n"
+              "ERROR(-22: Invalid argument)\n"
+              "$ rmmod foo\n"
+              "OK\n"
+              "$ rmmod bar 1\n"
+              "OK\n"
+              "$ rmmod fie\n"
+              "Usage: rmmod <module> [<flags>]\n"
+              "ERROR(-2: No such file or directory)\n"
+              "$ exit\n");
+}
+
+TEST(command_mkdir)
+{
+    int fd;
+
+    mkdir_mock_once("foo", 0777, 0);
+    mkdir_mock_once("foo", 0777, -1);
+    mkdir_mock_set_errno(EEXIST);
+
+    fd = init_and_start();
+
+    CAPTURE_OUTPUT(output, errput) {
+        input(fd, "mkdir\n");
+        input(fd, "mkdir foo\n");
+        input(fd, "mkdir foo\n");
+        input(fd, "exit\n");
+        ml_shell_join();
+    }
+
+    ASSERT_EQ(output,
+              "mkdir\n"
+              "Usage: mkdir <directory>\n"
+              "ERROR(-22: Invalid argument)\n"
+              "$ mkdir foo\n"
+              "OK\n"
+              "$ mkdir foo\n"
+              "Usage: mkdir <directory>\n"
+              "ERROR(-17: File exists)\n"
+              "$ exit\n");
+}
+
 TEST(command_df_setmntent_failure)
 {
     int fd;
