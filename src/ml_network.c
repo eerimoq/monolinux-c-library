@@ -508,6 +508,7 @@ static int command_ethtool_print(const char *name_p, FILE *fout_p)
     struct ifreq ifreq;
     int res;
     int netfd;
+    uint32_t speed;
 
     netfd = net_open(name_p, &ifreq);
 
@@ -526,9 +527,14 @@ static int command_ethtool_print(const char *name_p, FILE *fout_p)
         goto out;
     }
 
-    fprintf(fout_p,
-            "Speed:           %u Mbps\n",
-            (unsigned)ethtool_cmd_speed(&settings));
+    speed = ethtool_cmd_speed(&settings);
+
+    if (speed == (uint32_t)SPEED_UNKNOWN) {
+        fprintf(fout_p, "Speed:           - Mbps\n");
+    } else {
+        fprintf(fout_p, "Speed:           %u Mbps\n", speed);
+    }
+
     fprintf(fout_p, "Duplex:          %s\n", duplex_string(settings.duplex));
     fprintf(fout_p, "Autonegotiation: %s\n", autoneg_string(settings.autoneg));
 

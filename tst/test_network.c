@@ -106,9 +106,12 @@ static void sset_in_assert(const void *actual_p,
 static void mock_prepare_network_interface_link(struct ethtool_cmd *settings_gin_p,
                                                 struct ethtool_cmd *settings_gout_p,
                                                 struct ethtool_cmd *settings_sin_p,
-                                                int speed,
-                                                int duplex,
-                                                int autoneg)
+                                                int sspeed,
+                                                int sduplex,
+                                                int sautoneg,
+                                                int gspeed,
+                                                int gduplex,
+                                                int gautoneg)
 {
     int fd;
     struct ifreq ifreq;
@@ -128,9 +131,10 @@ static void mock_prepare_network_interface_link(struct ethtool_cmd *settings_gin
 
     ifreq.ifr_data = (char *)settings_gout_p;
     settings_gout_p->cmd = ETHTOOL_GSET;
-    settings_gout_p->speed = 1000;
-    settings_gout_p->duplex = DUPLEX_HALF;
-    settings_gout_p->autoneg = AUTONEG_ENABLE;
+    settings_gout_p->speed = gspeed;
+    settings_gout_p->speed_hi = (gspeed >> 16);
+    settings_gout_p->duplex = gduplex;
+    settings_gout_p->autoneg = gautoneg;
     ioctl_mock_set_va_arg_out_at(0, &ifreq, sizeof(ifreq));
     ioctl_mock_set_va_arg_out_copy_at(0, gset_out_copy);
 
@@ -138,9 +142,9 @@ static void mock_prepare_network_interface_link(struct ethtool_cmd *settings_gin
     if (settings_sin_p != NULL) {
         ifreq.ifr_data = (char *)settings_sin_p;
         settings_sin_p->cmd = ETHTOOL_SSET;
-        settings_sin_p->speed = speed;
-        settings_sin_p->duplex = duplex;
-        settings_sin_p->autoneg = autoneg;
+        settings_sin_p->speed = sspeed;
+        settings_sin_p->duplex = sduplex;
+        settings_sin_p->autoneg = sautoneg;
         ioctl_mock_once(fd, SIOCETHTOOL, 0, "%p");
         ioctl_mock_set_va_arg_in_at(0, &ifreq, sizeof(ifreq));
         ioctl_mock_set_va_arg_in_assert_at(0, sset_in_assert);
@@ -582,6 +586,9 @@ TEST(command_ethtool_configure_no_changes)
                                         &settings_sin,
                                         1000,
                                         DUPLEX_HALF,
+                                        AUTONEG_ENABLE,
+                                        1000,
+                                        DUPLEX_HALF,
                                         AUTONEG_ENABLE);
 
     CAPTURE_OUTPUT(output, errput) {
@@ -609,7 +616,10 @@ TEST(command_ethtool_print)
                                         NULL,
                                         0,
                                         0,
-                                        0);
+                                        0,
+                                        1000,
+                                        DUPLEX_HALF,
+                                        AUTONEG_ENABLE);
 
     CAPTURE_OUTPUT(output, errput) {
         params_p = ml_shell_register_command_mock_get_params_in(ethtool_handle);
@@ -619,6 +629,39 @@ TEST(command_ethtool_print)
     ASSERT_EQ(output,
               "Speed:           1000 Mbps\n"
               "Duplex:          half\n"
+              "Autonegotiation: on\n");
+}
+
+TEST(command_ethtool_print_link_down)
+{
+    struct nala_ml_shell_register_command_params_t *params_p;
+    const char *argv[] = { "ethtool", "eth1" };
+    struct ethtool_cmd settings_gin;
+    struct ethtool_cmd settings_gout;
+
+    ml_shell_init();
+
+    mock_push_ml_network_init();
+    ml_network_init();
+
+    mock_prepare_network_interface_link(&settings_gin,
+                                        &settings_gout,
+                                        NULL,
+                                        0,
+                                        0,
+                                        0,
+                                        SPEED_UNKNOWN,
+                                        DUPLEX_UNKNOWN,
+                                        AUTONEG_ENABLE);
+
+    CAPTURE_OUTPUT(output, errput) {
+        params_p = ml_shell_register_command_mock_get_params_in(ethtool_handle);
+        ASSERT_EQ(params_p->callback(membersof(argv), argv, stdout), 0);
+    }
+
+    ASSERT_EQ(output,
+              "Speed:           - Mbps\n"
+              "Duplex:          unknown\n"
               "Autonegotiation: on\n");
 }
 
@@ -1174,7 +1217,10 @@ TEST(network_interface_link_configure)
                                         &settings_sin,
                                         100,
                                         DUPLEX_FULL,
-                                        AUTONEG_DISABLE);
+                                        AUTONEG_DISABLE,
+                                        1000,
+                                        DUPLEX_HALF,
+                                        AUTONEG_ENABLE);
 
     ASSERT_EQ(ml_network_interface_link_configure("eth1",
                                                   100,
