@@ -494,6 +494,68 @@ static int command_suicide(int argc, const char *argv[], FILE *fout_p)
     return (res);
 }
 
+static void print_kernel_message(char *message_p, FILE *fout_p)
+{
+    unsigned long long secs;
+    unsigned long long usecs;
+    int text_pos;
+    char *text_p;
+    char *match_p;
+
+    if (sscanf(message_p, "%*u,%*u,%llu,%*[^;]; %n", &usecs, &text_pos) != 1) {
+        return;
+    }
+
+    text_p = &message_p[text_pos];
+    match_p = strchr(text_p, '\n');
+
+    if (match_p != NULL) {
+        *match_p = '\0';
+    }
+
+    secs = (usecs / 1000000);
+    usecs %= 1000000;
+
+    fprintf(fout_p, "[%5lld.%06lld] %s\n", secs, usecs, text_p);
+}
+
+static int command_dmesg(int argc, const char *argv[], FILE *fout_p)
+{
+    (void)argc;
+    (void)argv;
+
+    char message[1024];
+    ssize_t size;
+    int fd;
+
+    if (argc != 1) {
+        fprintf(fout_p, "Usage: dmesg\n");
+
+        return (-EINVAL);
+    }
+
+    fd = open("/dev/kmsg", O_RDONLY | O_NONBLOCK);
+
+    if (fd == -1) {
+        return (-errno);
+    }
+
+    for (;;) {
+        size = read(fd, &message[0], sizeof(message) - 1);
+
+        if (size <= 0) {
+            break;
+        }
+
+        message[size] = '\0';
+        print_kernel_message(&message[0], fout_p);
+    }
+
+    close(fd);
+
+    return (0);
+}
+
 static int command_ls(int argc, const char *argv[], FILE *fout_p)
 {
     int res;
@@ -1177,6 +1239,15 @@ static int command_log_print(int argc, const char *argv[])
     return (0);
 }
 
+static int command_log_show(int argc, const char *argv[], FILE *fout_p)
+{
+    if (argc != 2) {
+        return (-EINVAL);
+    }
+
+    return (command_dmesg(1, argv, fout_p));
+}
+
 static int command_log(int argc, const char *argv[], FILE *fout_p)
 {
     int res;
@@ -1192,12 +1263,15 @@ static int command_log(int argc, const char *argv[], FILE *fout_p)
             res = command_log_store(argc, argv);
         } else if (strcmp(argv[1], "print") == 0) {
             res = command_log_print(argc, argv);
+        } else if (strcmp(argv[1], "show") == 0) {
+            res = command_log_show(argc, argv, fout_p);
         }
     }
 
     if (res != 0) {
         fprintf(fout_p,
-                "Usage: log list\n"
+                "Usage: log show\n"
+                "       log list\n"
                 "       log set_level <log-object> <mask>\n"
                 "       log store\n"
                 "       log print <message>\n"
@@ -1233,62 +1307,6 @@ static int command_dd(int argc, const char *argv[], FILE *fout_p)
 
     gettimeofday(&end_time, NULL);
     command_dd_summary(total_size, &start_time, &end_time, fout_p);
-
-    return (0);
-}
-
-static void print_kernel_message(char *message_p, FILE *fout_p)
-{
-    unsigned long long secs;
-    unsigned long long usecs;
-    int text_pos;
-    char *text_p;
-    char *match_p;
-
-    if (sscanf(message_p, "%*u,%*u,%llu,%*[^;]; %n", &usecs, &text_pos) != 1) {
-        return;
-    }
-
-    text_p = &message_p[text_pos];
-    match_p = strchr(text_p, '\n');
-
-    if (match_p != NULL) {
-        *match_p = '\0';
-    }
-
-    secs = (usecs / 1000000);
-    usecs %= 1000000;
-
-    fprintf(fout_p, "[%5lld.%06lld] %s\n", secs, usecs, text_p);
-}
-
-static int command_dmesg(int argc, const char *argv[], FILE *fout_p)
-{
-    (void)argc;
-    (void)argv;
-
-    char message[1024];
-    ssize_t size;
-    int fd;
-
-    fd = open("/dev/kmsg", O_RDONLY | O_NONBLOCK);
-
-    if (fd == -1) {
-        return (-errno);
-    }
-
-    for (;;) {
-        size = read(fd, &message[0], sizeof(message) - 1);
-
-        if (size <= 0) {
-            break;
-        }
-
-        message[size] = '\0';
-        print_kernel_message(&message[0], fout_p);
-    }
-
-    close(fd);
 
     return (0);
 }
