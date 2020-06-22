@@ -310,6 +310,12 @@ void ml_message_free(void *message_p);
 void ml_queue_init(struct ml_queue_t *self_p, int length);
 
 /**
+ * Destroy given queue. The queue may not be used after this function
+ * has been called.
+ */
+void ml_queue_destroy(struct ml_queue_t *self_p);
+
+/**
  * Set the on put callback function, called when a message is put on
  * given queue. This function must be called before the queue is used.
  */

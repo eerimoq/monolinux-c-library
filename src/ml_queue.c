@@ -72,6 +72,11 @@ void ml_queue_init(struct ml_queue_t *self_p, int length)
     pthread_cond_init(&self_p->empty_cond, NULL);
 }
 
+void ml_queue_destroy(struct ml_queue_t *self_p)
+{
+    free(self_p->messages_p);
+}
+
 void ml_queue_set_on_put(struct ml_queue_t *self_p,
                          ml_queue_put_t func,
                          void *arg_p)

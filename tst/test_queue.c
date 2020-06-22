@@ -77,6 +77,9 @@ TEST(multiple_put_get)
     ASSERT_EQ(uid_p, &m1);
     ASSERT_EQ(message_p, message_1_p);
     ml_message_free(message_p);
+
+    /* Destory the queue. */
+    ml_queue_destroy(&queue);
 }
 
 static struct ml_queue_t queue_1;
@@ -141,6 +144,9 @@ TEST(queue_empty_and_full)
     }
 
     pthread_join(pthread, NULL);
+
+    ml_queue_destroy(&queue_1);
+    ml_queue_destroy(&queue_2);
 }
 
 static void *queue_on_put_callback_arg_p = NULL;
@@ -164,4 +170,6 @@ TEST(queue_on_put)
     ASSERT_NE(message_p, NULL);
     ml_queue_put(&queue_1, message_p);
     ASSERT_EQ(queue_on_put_callback_arg_p, &arg);
+
+    ml_queue_destroy(&queue_1);
 }
