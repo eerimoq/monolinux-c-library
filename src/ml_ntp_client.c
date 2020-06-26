@@ -51,7 +51,7 @@ static int send_request(int sock)
     res = write(sock, &buf[0], sizeof(buf));
 
     if (res != sizeof(buf)) {
-        return (-1);
+        return (-errno);
     }
 
     return (0);
@@ -187,7 +187,7 @@ int ml_ntp_client_sync(const char *address_p)
     res = getaddrinfo(address_p, "123", &hints, &infolist_p);
 
     if (res != 0) {
-        return (-EGENERAL);
+        return (-res);
     }
 
     res = -1;

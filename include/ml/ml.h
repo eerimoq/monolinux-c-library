@@ -758,6 +758,13 @@ int ml_dd(const char *infile_p,
 
 const char *ml_strerror(int errnum);
 
+/**
+ * Read a core dump from standard input and saves it to disk. Also
+ * saves all logs to disk, and possibly more information. This
+ * functions calls exit() (and does never return).
+ */
+void ml_finalize_coredump(void);
+
 /* Exits on failure. Use with care. */
 
 void *xmalloc(size_t size);

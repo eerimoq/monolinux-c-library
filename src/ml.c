@@ -713,3 +713,73 @@ const char *ml_strerror(int errnum)
         return strerror(errnum);
     }
 }
+
+static void write_log_to_disk(void)
+{
+    FILE *fout_p;
+    int fd;
+    char message[1024];
+    ssize_t size;
+
+    fout_p = fopen("/disk/log", "wb");
+
+    if (fout_p == NULL) {
+        return;
+    }
+
+    fd = open("/dev/kmsg", O_RDONLY | O_NONBLOCK);
+
+    if (fd == -1) {
+        goto out;
+    }
+
+    while (true) {
+        size = read(fd, &message[0], sizeof(message) - 1);
+
+        if (size <= 0) {
+            if ((size < 0) && (errno != EAGAIN)) {
+                fprintf(fout_p,
+                        "*** Failed to read all message with error %s. ***\n",
+                        strerror(errno));
+            }
+
+            break;
+        }
+
+        if (fwrite(&message[0], 1, size, fout_p) != size) {
+            fprintf(fout_p,
+                    "*** Failed to write all message with error %s. ***\n",
+                    strerror(errno));
+            break;
+        }
+    }
+
+    close(fd);
+
+out:
+    fclose(fout_p);
+}
+
+static void write_core_dump_to_disk(void)
+{
+    char buf[1024];
+    FILE *fout_p;
+    size_t size;
+
+    fout_p = fopen("/disk/core", "wb");
+
+    if (fout_p != NULL) {
+        while ((size = read(STDIN_FILENO, &buf[0], sizeof(buf))) > 0) {
+            fwrite(&buf[0], 1, size, fout_p);
+        }
+
+        fclose(fout_p);
+    }
+}
+
+void ml_finalize_coredump(void)
+{
+    write_log_to_disk();
+    write_core_dump_to_disk();
+    exit(0);
+}
