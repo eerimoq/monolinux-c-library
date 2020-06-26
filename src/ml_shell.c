@@ -981,6 +981,8 @@ static int command_date(int argc, const char *argv[], FILE *fout_p)
     int res;
     time_t now;
     struct timespec ts;
+    char buf[32];
+    struct tm tmnow;
 
     res = -EINVAL;
 
@@ -988,7 +990,7 @@ static int command_date(int argc, const char *argv[], FILE *fout_p)
         now = time(NULL);
 
         if (now != (time_t)(-1)) {
-            fprintf(fout_p, "%s", asctime(gmtime(&now)));
+            fprintf(fout_p, "%s", asctime_r(gmtime_r(&now, &tmnow), &buf[0]));
             res = 0;
         }
     } else if (argc == 2) {

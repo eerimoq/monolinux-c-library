@@ -239,10 +239,11 @@ TEST(send_error)
     socket_mock_once(AF_INET, SOCK_DGRAM, IPPROTO_UDP, fd);
     connect_mock_once(fd, sizeof(addr), 0);
     write_mock_once(fd, sizeof(request), -1);
+    write_mock_set_errno(EIO);
     close_mock_once(fd, 0);
     mock_prepare_freeaddrinfo(info_p);
 
-    ASSERT_EQ(ml_ntp_client_sync("foo"), -1);
+    ASSERT_EQ(ml_ntp_client_sync("foo"), -EIO);
 }
 
 TEST(receive_error)

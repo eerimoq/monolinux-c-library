@@ -44,6 +44,7 @@ TEST(strip)
     char string2[] = " 1 ";
     char string3[] = "  1";
     char string4[] = "   ";
+    char string5[] = "";
     char *begin_p;
 
     init();
@@ -67,6 +68,9 @@ TEST(strip)
     begin_p = ml_strip(string4, NULL);
     ASSERT_EQ(begin_p, "");
     ASSERT_EQ(begin_p, &string4[3]);
+
+    begin_p = ml_strip(string5, NULL);
+    ASSERT_EQ(begin_p, "");
 }
 
 TEST(lstrip)

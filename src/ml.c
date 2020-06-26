@@ -237,7 +237,11 @@ char *ml_lstrip(char *str_p, const char *strip_p)
     }
 
     /* String leading characters. */
-    while ((*str_p != '\0') && char_in_string(*str_p, strip_p)) {
+    while (*str_p != '\0') {
+        if (!char_in_string(*str_p, strip_p)) {
+            break;
+        }
+
         str_p++;
     }
 
@@ -260,7 +264,11 @@ void ml_rstrip(char *str_p, const char *strip_p)
     length = strlen(str_p);
     str_p += (length - 1);
 
-    while ((str_p >= begin_p) && char_in_string(*str_p, strip_p)) {
+    while (str_p >= begin_p) {
+        if (!char_in_string(*str_p, strip_p)) {
+            break;
+        }
+
         *str_p = '\0';
         str_p--;
     }
@@ -313,15 +321,17 @@ void ml_print_file(const char *name_p, FILE *fout_p)
 
     fin_p = fopen(name_p, "rb");
 
-    if (fin_p != NULL) {
-        while ((size = fread(&buf[0], 1, membersof(buf), fin_p)) > 0) {
-            if (fwrite(&buf[0], 1, size, fout_p) != size) {
-                break;
-            }
-        }
-
-        fclose(fin_p);
+    if (fin_p == NULL) {
+        return;
     }
+    
+    while ((size = fread(&buf[0], 1, membersof(buf), fin_p)) > 0) {
+        if (fwrite(&buf[0], 1, size, fout_p) != size) {
+            break;
+        }
+    }
+
+    fclose(fin_p);
 }
 
 void ml_print_uptime(void)
@@ -746,7 +756,7 @@ static void write_log_to_disk(void)
             break;
         }
 
-        if (fwrite(&message[0], 1, size, fout_p) != size) {
+        if (fwrite(&message[0], 1, size, fout_p) != (size_t)size) {
             fprintf(fout_p,
                     "*** Failed to write all message with error %s. ***\n",
                     strerror(errno));
