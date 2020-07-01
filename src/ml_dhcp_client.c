@@ -27,6 +27,7 @@
  */
 
 #include <stdlib.h>
+#include <errno.h>
 #include <string.h>
 #include <stdint.h>
 #include <time.h>
@@ -637,6 +638,7 @@ static int setup_packet_socket(struct ml_dhcp_client_t *self_p)
     res = bind(sock, (struct sockaddr *)&addr, sizeof(addr));
 
     if (res != 0) {
+        ML_INFO("bind %d", errno);
         goto err2;
     }
 
@@ -645,6 +647,7 @@ static int setup_packet_socket(struct ml_dhcp_client_t *self_p)
     res = setsockopt(sock, SOL_SOCKET, SO_BROADCAST, &yes, sizeof(yes));
 
     if (res != 0) {
+        ML_INFO("setsockopt %d", errno);
         goto err2;
     }
 
@@ -876,6 +879,10 @@ static bool send_packet(struct ml_dhcp_client_t *self_p,
         if (res != -1) {
             ok = true;
         }
+    } else if (res == -1) {
+        ML_WARNING("Send failed with %s.", strerror(errno));
+    } else {
+        ML_WARNING("Send of only %d bytes.", (int)res);
     }
 
     return (ok);
@@ -913,6 +920,10 @@ static bool broadcast_packet(struct ml_dhcp_client_t *self_p,
         if (res != -1) {
             ok = true;
         }
+    } else if (res == -1) {
+        ML_WARNING("Broadcast failed with %s.", strerror(errno));
+    } else {
+        ML_WARNING("Broadcast of only %d bytes.", (int)res);
     }
 
     return (ok);

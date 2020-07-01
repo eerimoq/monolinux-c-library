@@ -484,39 +484,18 @@ static int command_suicide(int argc, const char *argv[], FILE *fout_p)
             exit(1);
         } else if (strcmp(argv[1], "segfault") == 0) {
             *null_p = 0;
+
+            while (true);
+        } else if (strcmp(argv[1], "abort") == 0) {
+            abort();
         }
     }
 
     if (res != 0) {
-        fprintf(fout_p, "Usage: suicide {exit,segfault}\n");
+        fprintf(fout_p, "Usage: suicide {exit,segfault,abort}\n");
     }
 
     return (res);
-}
-
-static void print_kernel_message(char *message_p, FILE *fout_p)
-{
-    unsigned long long secs;
-    unsigned long long usecs;
-    int text_pos;
-    char *text_p;
-    char *match_p;
-
-    if (sscanf(message_p, "%*u,%*u,%llu,%*[^;]; %n", &usecs, &text_pos) != 1) {
-        return;
-    }
-
-    text_p = &message_p[text_pos];
-    match_p = strchr(text_p, '\n');
-
-    if (match_p != NULL) {
-        *match_p = '\0';
-    }
-
-    secs = (usecs / 1000000);
-    usecs %= 1000000;
-
-    fprintf(fout_p, "[%5lld.%06lld] %s\n", secs, usecs, text_p);
 }
 
 static int command_dmesg(int argc, const char *argv[], FILE *fout_p)
@@ -548,7 +527,7 @@ static int command_dmesg(int argc, const char *argv[], FILE *fout_p)
         }
 
         message[size] = '\0';
-        print_kernel_message(&message[0], fout_p);
+        ml_print_kernel_message(&message[0], fout_p);
     }
 
     close(fd);
@@ -981,21 +960,26 @@ static int command_date(int argc, const char *argv[], FILE *fout_p)
     int res;
     time_t now;
     struct timespec ts;
-    char buf[32];
+    char buf[26];
     struct tm tmnow;
 
     res = -EINVAL;
 
     if (argc == 1) {
         now = time(NULL);
-
-        if (now != (time_t)(-1)) {
-            fprintf(fout_p, "%s", asctime_r(gmtime_r(&now, &tmnow), &buf[0]));
-            res = 0;
+        
+        if (now != (time_t)-1) {
+            if (gmtime_r(&now, &tmnow) != NULL) {
+                fprintf(fout_p, "%s", asctime_r(&tmnow, &buf[0]));
+                res = 0;
+            } else {
+                res = -EGENERAL;
+            }
         }
     } else if (argc == 2) {
         ts.tv_sec = atoi(argv[1]);
         ts.tv_nsec = 0;
+
         res = clock_settime(CLOCK_REALTIME, &ts);
 
         if (res == -1) {

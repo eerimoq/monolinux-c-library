@@ -37,6 +37,7 @@
 #include <fcntl.h>
 #include <sys/statvfs.h>
 #include <sys/mount.h>
+#include <sys/stat.h>
 #include "ml/ml.h"
 #include "internal.h"
 
@@ -194,12 +195,12 @@ static unsigned calc_cpu_load(unsigned long long old,
 void ml_init(void)
 {
     ml_log_object_module_init();
+    ml_log_object_init(&module.log_object, "default", ML_LOG_INFO);
+    ml_log_object_register(&module.log_object);
     ml_message_init();
     ml_bus_init(&module.bus);
     ml_worker_pool_init(&module.worker_pool, 4, 32);
     ml_timer_handler_init(&module.timer_handler);
-    ml_log_object_init(&module.log_object, "default", ML_LOG_INFO);
-    ml_log_object_register(&module.log_object);
 }
 
 const char *ml_uid_str(struct ml_uid_t *uid_p)
@@ -324,7 +325,7 @@ void ml_print_file(const char *name_p, FILE *fout_p)
     if (fin_p == NULL) {
         return;
     }
-    
+
     while ((size = fread(&buf[0], 1, membersof(buf), fin_p)) > 0) {
         if (fwrite(&buf[0], 1, size, fout_p) != size) {
             break;
@@ -724,14 +725,66 @@ const char *ml_strerror(int errnum)
     }
 }
 
-static void write_log_to_disk(void)
+void ml_print_kernel_message(char *message_p, FILE *fout_p)
+{
+    unsigned long long secs;
+    unsigned long long usecs;
+    int text_pos;
+    char *text_p;
+    char *match_p;
+
+    if (sscanf(message_p, "%*u,%*u,%llu,%*[^;]; %n", &usecs, &text_pos) != 1) {
+        return;
+    }
+
+    text_p = &message_p[text_pos];
+    match_p = strchr(text_p, '\n');
+
+    if (match_p != NULL) {
+        *match_p = '\0';
+    }
+
+    secs = (usecs / 1000000);
+    usecs %= 1000000;
+
+    fprintf(fout_p, "[%5lld.%06lld] %s\n", secs, usecs, text_p);
+}
+
+static void write_core_dump_to_disk(char *path_p)
+{
+    char buf[1024];
+    FILE *fout_p;
+    ssize_t size;
+    char path[32];
+
+    sprintf(&path[0], "%s/core", path_p);
+
+    fout_p = fopen(&path[0], "wb");
+
+    if (fout_p == NULL) {
+        return;
+    }
+
+    while ((size = read(STDIN_FILENO, &buf[0], sizeof(buf))) > 0) {
+        if (fwrite(&buf[0], 1, size, fout_p) != (size_t)size) {
+            break;
+        }
+    }
+
+    fclose(fout_p);
+}
+
+static void write_log_to_disk(char *path_p)
 {
     FILE *fout_p;
     int fd;
     char message[1024];
     ssize_t size;
+    char path[32];
 
-    fout_p = fopen("/disk/log", "wb");
+    sprintf(&path[0], "%s/log", path_p);
+
+    fout_p = fopen(&path[0], "wb");
 
     if (fout_p == NULL) {
         return;
@@ -740,6 +793,9 @@ static void write_log_to_disk(void)
     fd = open("/dev/kmsg", O_RDONLY | O_NONBLOCK);
 
     if (fd == -1) {
+        fprintf(fout_p,
+                "*** Failed to open /dev/kmsg with error '%s'. ***\n",
+                strerror(errno));
         goto out;
     }
 
@@ -749,19 +805,14 @@ static void write_log_to_disk(void)
         if (size <= 0) {
             if ((size < 0) && (errno != EAGAIN)) {
                 fprintf(fout_p,
-                        "*** Failed to read all message with error %s. ***\n",
+                        "*** Failed to read message with error %s. ***\n",
                         strerror(errno));
             }
 
             break;
         }
 
-        if (fwrite(&message[0], 1, size, fout_p) != (size_t)size) {
-            fprintf(fout_p,
-                    "*** Failed to write all message with error %s. ***\n",
-                    strerror(errno));
-            break;
-        }
+        ml_print_kernel_message(&message[0], fout_p);
     }
 
     close(fd);
@@ -770,26 +821,34 @@ out:
     fclose(fout_p);
 }
 
-static void write_core_dump_to_disk(void)
+static bool find_slot(char *path_p)
 {
-    char buf[1024];
-    FILE *fout_p;
-    size_t size;
+    struct stat statbuf;
+    int slot;
 
-    fout_p = fopen("/disk/core", "wb");
+    for (slot = 0; slot < 3; slot++) {
+        sprintf(path_p, "/disk/coredumps/%d", slot);
 
-    if (fout_p != NULL) {
-        while ((size = read(STDIN_FILENO, &buf[0], sizeof(buf))) > 0) {
-            fwrite(&buf[0], 1, size, fout_p);
+        if (lstat(path_p, &statbuf) != 0) {
+            return (true);
         }
-
-        fclose(fout_p);
     }
+
+    return (false);
 }
 
 void ml_finalize_coredump(void)
 {
-    write_log_to_disk();
-    write_core_dump_to_disk();
+    char path[32];
+
+    mkdir("/disk/coredumps", 0777);
+
+    if (find_slot(&path[0])) {
+        mkdir(&path[0], 0777);
+        write_core_dump_to_disk(&path[0]);
+        write_log_to_disk(&path[0]);
+        sync();
+    }
+
     exit(0);
 }

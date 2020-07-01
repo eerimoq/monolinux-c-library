@@ -75,7 +75,7 @@ static void mock_prepare_getaddrinfo(struct addrinfo **info_pp,
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_DGRAM;
-    hints.ai_flags = AI_PASSIVE;
+    hints.ai_flags = (AI_PASSIVE | AI_NUMERICSERV);
 
     if (info_p != NULL) {
         memset(addr_p, 0, sizeof(*addr_p));
@@ -125,7 +125,7 @@ TEST(getaddrinfo_empty)
     mock_prepare_getaddrinfo(&info_p, NULL, NULL);
     mock_prepare_freeaddrinfo(info_p);
 
-    ASSERT_EQ(ml_ntp_client_sync("foo"), -1);
+    ASSERT_EQ(ml_ntp_client_sync("foo"), -EGENERAL);
 }
 
 TEST(socket_error)

@@ -57,13 +57,12 @@ void ml_worker_pool_init(struct ml_worker_pool_t *self_p,
                          int number_of_workers,
                          int job_queue_length)
 {
-    pthread_t pthread;
     int i;
 
     ml_queue_init(&self_p->jobs, job_queue_length);
 
     for (i = 0; i < number_of_workers; i++) {
-        pthread_create(&pthread, NULL, worker_pool_main, self_p);
+        pthread_create(&self_p->pthread, NULL, worker_pool_main, self_p);
     }
 }
 

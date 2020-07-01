@@ -965,7 +965,7 @@ TEST(command_suicide_no_args)
 
     ASSERT_EQ(output,
               "suicide\n"
-              "Usage: suicide {exit,segfault}\n"
+              "Usage: suicide {exit,segfault,abort}\n"
               "ERROR(-22: Invalid argument)\n"
               "$ exit\n");
 }

@@ -99,8 +99,10 @@ static int receive_response(int sock, struct timespec *ts_p)
 
     res = poll(&pfd[0], 1, 5000);
 
-    if ((res == -1) || (res != 1)) {
+    if (res == -1) {
         return (-errno);
+    } else if (res != 1) {
+        return (-ETIMEDOUT);
     }
 
     size = read(sock, &buf[0], sizeof(buf));
@@ -179,10 +181,10 @@ int ml_ntp_client_sync(const char *address_p)
     struct addrinfo *infolist_p;
     struct addrinfo *info_p;
 
-    memset(&hints, 0, sizeof hints);
+    memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_DGRAM;
-    hints.ai_flags = AI_PASSIVE;
+    hints.ai_flags = (AI_PASSIVE | AI_NUMERICSERV);
 
     res = getaddrinfo(address_p, "123", &hints, &infolist_p);
 
@@ -190,7 +192,7 @@ int ml_ntp_client_sync(const char *address_p)
         return (-EGENERAL);
     }
 
-    res = -1;
+    res = -EGENERAL;
 
     for (info_p = infolist_p; info_p != NULL; info_p = info_p->ai_next) {
         res = try_sync_with_server(info_p);
@@ -198,6 +200,8 @@ int ml_ntp_client_sync(const char *address_p)
         if (res == 0) {
             break;
         }
+
+        ml_info("NTP sync with '%s' failed with %d.", address_p, res);
     }
 
     freeaddrinfo(infolist_p);

@@ -137,6 +137,7 @@ struct ml_bus_t {
 };
 
 struct ml_worker_pool_t {
+    pthread_t pthread;
     struct ml_queue_t jobs;
 };
 
@@ -759,9 +760,16 @@ int ml_dd(const char *infile_p,
 const char *ml_strerror(int errnum);
 
 /**
+ * Print a kernel message to given file.
+ */
+void ml_print_kernel_message(char *message_p, FILE *fout_p);
+
+/**
  * Read a core dump from standard input and saves it to disk. Also
  * saves all logs to disk, and possibly more information. This
  * functions calls exit() (and does never return).
+ *
+ * Writes up to 3 dumps to /disk/coredumps/<number>/{core,log}.
  */
 void ml_finalize_coredump(void);
 
