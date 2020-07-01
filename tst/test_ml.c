@@ -784,3 +784,61 @@ TEST(file_system_space_usage_statvfs_error)
     ASSERT_EQ(ml_file_system_space_usage("/mnt/foo", &total, &used, &free),
               -EACCES);
 }
+
+TEST(finalize_coredump)
+{
+    FILE fcore;
+    FILE flog;
+    int log_fd;
+    uint8_t coredump[] = { 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 };
+
+    log_fd = 20;
+
+    /* Find a slot. */
+    mkdir_mock_once("/disk/coredumps", 0777, 0);
+    lstat_mock_once("/disk/coredumps/0", -1);
+
+    /* Create output folder. */
+    mkdir_mock_once("/disk/coredumps/0", 0777, 0);
+
+    /* Write core dump. */
+    fopen_mock_once("/disk/coredumps/0/core", "wb", &fcore);
+    read_mock_once(STDIN_FILENO, 1024, sizeof(coredump));
+    read_mock_set_buf_out(&coredump[0], sizeof(coredump));
+    fwrite_mock_once(1, sizeof(coredump), sizeof(coredump));
+    fwrite_mock_set_ptr_in(&coredump[0], sizeof(coredump));
+    read_mock_once(STDIN_FILENO, 1024, -1);
+    fclose_mock_once(0);
+    fclose_mock_set_stream_in_pointer(&fcore);
+
+    /* Write log. */
+    fopen_mock_once("/disk/coredumps/0/log", "wb", &flog);
+    open_mock_once("/dev/kmsg", O_RDONLY | O_NONBLOCK, log_fd, "");
+    read_mock_once(log_fd, 1023, 5);
+    read_mock_set_buf_out("1,2 foo", 8);
+    ml_print_kernel_message_mock_once("1,2 foo");
+    read_mock_once(log_fd, 1023, -1);
+    read_mock_set_errno(EAGAIN);
+    close_mock_once(log_fd, 0);
+    fclose_mock_once(0);
+    fclose_mock_set_stream_in_pointer(&flog);
+
+    /* Sync and exit. */
+    sync_mock_once();
+    exit_mock_once(0);
+    exit_mock_set_callback(nala_exit);
+
+    ml_finalize_coredump();
+}
+
+TEST(finalize_coredump_no_slot_found)
+{
+    mkdir_mock_once("/disk/coredumps", 0777, 0);
+    lstat_mock_once("/disk/coredumps/0", 0);
+    lstat_mock_once("/disk/coredumps/1", 0);
+    lstat_mock_once("/disk/coredumps/2", 0);
+    exit_mock_once(0);
+    exit_mock_set_callback(nala_exit);
+
+    ml_finalize_coredump();
+}
