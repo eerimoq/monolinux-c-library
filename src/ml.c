@@ -821,13 +821,13 @@ out:
     fclose(fout_p);
 }
 
-static bool find_slot(char *path_p)
+static bool find_slot(char *path_p, int maximum_number_of_coredumps)
 {
     struct stat statbuf;
     int slot;
 
-    for (slot = 0; slot < 3; slot++) {
-        sprintf(path_p, "/disk/coredumps/%d", slot);
+    for (slot = 0; slot < maximum_number_of_coredumps; slot++) {
+        sprintf(path_p, "%d", slot);
 
         if (lstat(path_p, &statbuf) != 0) {
             return (true);
@@ -837,17 +837,19 @@ static bool find_slot(char *path_p)
     return (false);
 }
 
-void ml_finalize_coredump(void)
+void ml_finalize_coredump(const char *dir_p, int maximum_number_of_coredumps)
 {
     char path[32];
 
-    mkdir("/disk/coredumps", 0777);
+    mkdir(dir_p, 0777);
 
-    if (find_slot(&path[0])) {
-        mkdir(&path[0], 0777);
-        write_core_dump_to_disk(&path[0]);
-        write_log_to_disk(&path[0]);
-        sync();
+    if (chdir(dir_p) == 0) {
+        if (find_slot(&path[0], maximum_number_of_coredumps)) {
+            mkdir(&path[0], 0777);
+            write_core_dump_to_disk(&path[0]);
+            write_log_to_disk(&path[0]);
+            sync();
+        }
     }
 
     exit(0);

@@ -769,9 +769,10 @@ void ml_print_kernel_message(char *message_p, FILE *fout_p);
  * saves all logs to disk, and possibly more information. This
  * functions calls exit() (and does never return).
  *
- * Writes up to 3 dumps to /disk/coredumps/<number>/{core,log}.
+ * Writes a coredump to given directory `dir_p` unless there are
+ * `maximum_number_of_coredumps` already stored.
  */
-void ml_finalize_coredump(void);
+void ml_finalize_coredump(const char *dir_p, int maximum_number_of_coredumps);
 
 /* Exits on failure. Use with care. */
 

@@ -796,13 +796,14 @@ TEST(finalize_coredump)
 
     /* Find a slot. */
     mkdir_mock_once("/disk/coredumps", 0777, 0);
-    lstat_mock_once("/disk/coredumps/0", -1);
+    chdir_mock_once("/disk/coredumps", 0);
+    lstat_mock_once("0", -1);
 
     /* Create output folder. */
-    mkdir_mock_once("/disk/coredumps/0", 0777, 0);
+    mkdir_mock_once("0", 0777, 0);
 
     /* Write core dump. */
-    fopen_mock_once("/disk/coredumps/0/core", "wb", &fcore);
+    fopen_mock_once("0/core", "wb", &fcore);
     read_mock_once(STDIN_FILENO, 1024, sizeof(coredump));
     read_mock_set_buf_out(&coredump[0], sizeof(coredump));
     fwrite_mock_once(1, sizeof(coredump), sizeof(coredump));
@@ -812,7 +813,7 @@ TEST(finalize_coredump)
     fclose_mock_set_stream_in_pointer(&fcore);
 
     /* Write log. */
-    fopen_mock_once("/disk/coredumps/0/log", "wb", &flog);
+    fopen_mock_once("0/log", "wb", &flog);
     open_mock_once("/dev/kmsg", O_RDONLY | O_NONBLOCK, log_fd, "");
     read_mock_once(log_fd, 1023, 5);
     read_mock_set_buf_out("1,2 foo", 8);
@@ -828,33 +829,35 @@ TEST(finalize_coredump)
     exit_mock_once(0);
     exit_mock_set_callback(nala_exit);
 
-    ml_finalize_coredump();
+    ml_finalize_coredump("/disk/coredumps", 3);
 }
 
 TEST(finalize_coredump_no_slot_found)
 {
     mkdir_mock_once("/disk/coredumps", 0777, 0);
-    lstat_mock_once("/disk/coredumps/0", 0);
-    lstat_mock_once("/disk/coredumps/1", 0);
-    lstat_mock_once("/disk/coredumps/2", 0);
+    chdir_mock_once("/disk/coredumps", 0);
+    lstat_mock_once("0", 0);
+    lstat_mock_once("1", 0);
+    lstat_mock_once("2", 0);
     exit_mock_once(0);
     exit_mock_set_callback(nala_exit);
 
-    ml_finalize_coredump();
+    ml_finalize_coredump("/disk/coredumps", 3);
 }
 
 TEST(finalize_coredump_error_open_output_files)
 {
     /* Find a slot. */
     mkdir_mock_once("/disk/coredumps", 0777, 0);
-    lstat_mock_once("/disk/coredumps/0", -1);
+    chdir_mock_once("/disk/coredumps", 0);
+    lstat_mock_once("0", -1);
 
     /* Create output folder. */
-    mkdir_mock_once("/disk/coredumps/0", 0777, 0);
+    mkdir_mock_once("0", 0777, 0);
 
     /* Core and log open error. */
-    fopen_mock_once("/disk/coredumps/0/core", "wb", NULL);
-    fopen_mock_once("/disk/coredumps/0/log", "wb", NULL);
+    fopen_mock_once("0/core", "wb", NULL);
+    fopen_mock_once("0/log", "wb", NULL);
     fwrite_mock_none();
     fclose_mock_none();
 
@@ -863,7 +866,7 @@ TEST(finalize_coredump_error_open_output_files)
     exit_mock_once(0);
     exit_mock_set_callback(nala_exit);
 
-    ml_finalize_coredump();
+    ml_finalize_coredump("/disk/coredumps", 3);
 }
 
 TEST(finalize_coredump_error_open_dev_kmsg)
@@ -872,16 +875,17 @@ TEST(finalize_coredump_error_open_dev_kmsg)
 
     /* Find a slot. */
     mkdir_mock_once("/disk/coredumps", 0777, 0);
-    lstat_mock_once("/disk/coredumps/0", -1);
+    chdir_mock_once("/disk/coredumps", 0);
+    lstat_mock_once("0", -1);
 
     /* Create output folder. */
-    mkdir_mock_once("/disk/coredumps/0", 0777, 0);
+    mkdir_mock_once("0", 0777, 0);
 
     /* Skip coredump. */
-    fopen_mock_once("/disk/coredumps/0/core", "wb", NULL);
+    fopen_mock_once("0/core", "wb", NULL);
 
     /* /dev/kmsg open error. */
-    fopen_mock_once("/disk/coredumps/0/log", "wb", &flog);
+    fopen_mock_once("0/log", "wb", &flog);
     open_mock_once("/dev/kmsg", O_RDONLY | O_NONBLOCK, -1, "");
     open_mock_set_errno(ENODEV);
     read_mock_none();
@@ -898,5 +902,16 @@ TEST(finalize_coredump_error_open_dev_kmsg)
     exit_mock_once(0);
     exit_mock_set_callback(nala_exit);
 
-    ml_finalize_coredump();
+    ml_finalize_coredump("/disk/coredumps", 3);
+}
+
+TEST(finalize_coredump_error_chdir)
+{
+    mkdir_mock_once("/disk/coredumps", 0777, 0);
+    chdir_mock_once("/disk/coredumps", -1);
+    lstat_mock_none();
+    exit_mock_once(0);
+    exit_mock_set_callback(nala_exit);
+
+    ml_finalize_coredump("/disk/coredumps", 3);
 }
