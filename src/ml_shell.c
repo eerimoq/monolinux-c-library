@@ -480,19 +480,19 @@ static int command_suicide(int argc, const char *argv[], FILE *fout_p)
     null_p = NULL;
 
     if (argc == 2) {
-        if (strcmp(argv[1], "exit") == 0) {
-            exit(1);
+        if (strcmp(argv[1], "abort") == 0) {
+            ml_critical("Suiciding by calling abort().");
+            abort();
         } else if (strcmp(argv[1], "segfault") == 0) {
+            ml_critical("Suiciding by writing to *NULL.");
             *null_p = 0;
 
             while (true);
-        } else if (strcmp(argv[1], "abort") == 0) {
-            abort();
         }
     }
 
     if (res != 0) {
-        fprintf(fout_p, "Usage: suicide {exit,segfault,abort}\n");
+        fprintf(fout_p, "Usage: suicide {abort,segfault}\n");
     }
 
     return (res);
@@ -677,17 +677,23 @@ static int command_cat(int argc, const char *argv[], FILE *fout_p)
 static int command_rm(int argc, const char *argv[], FILE *fout_p)
 {
     int res;
+    int i;
 
-    if (argc != 2) {
-        fprintf(fout_p, "Usage: rm <file or directory>\n");
+    if (argc < 2) {
+        fprintf(fout_p,
+                "Usage: rm <file or directory> [<file or directory> ...]\n");
 
         return (-EINVAL);
     }
 
-    res = remove(argv[1]);
+    for (i = 1; i < argc; i++) {
+        res = remove(argv[i]);
 
-    if (res != 0) {
-        res = -errno;
+        if (res != 0) {
+            res = -errno;
+
+            break;
+        }
     }
 
     return (res);
@@ -967,7 +973,7 @@ static int command_date(int argc, const char *argv[], FILE *fout_p)
 
     if (argc == 1) {
         now = time(NULL);
-        
+
         if (now != (time_t)-1) {
             if (gmtime_r(&now, &tmnow) != NULL) {
                 fprintf(fout_p, "%s", asctime_r(&tmnow, &buf[0]));

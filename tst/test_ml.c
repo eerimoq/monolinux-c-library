@@ -785,10 +785,18 @@ TEST(file_system_space_usage_statvfs_error)
               -EACCES);
 }
 
+static void mock_prepare_write_info_file(const char *path_p)
+{
+    fprintf_mock_once("%s:\n\n", 0, "%s", path_p);
+    ml_print_file_mock_once(path_p);
+    fprintf_mock_once("%s\n", 0, "%s", "");
+}
+
 TEST(finalize_coredump)
 {
     FILE fcore;
     FILE flog;
+    FILE finfo;
     int log_fd;
     uint8_t coredump[] = { 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 };
 
@@ -801,9 +809,10 @@ TEST(finalize_coredump)
 
     /* Create output folder. */
     mkdir_mock_once("0", 0777, 0);
+    chdir_mock_once("0", 0);
 
     /* Write core dump. */
-    fopen_mock_once("0/core", "wb", &fcore);
+    fopen_mock_once("core", "wb", &fcore);
     read_mock_once(STDIN_FILENO, 1024, sizeof(coredump));
     read_mock_set_buf_out(&coredump[0], sizeof(coredump));
     fwrite_mock_once(1, sizeof(coredump), sizeof(coredump));
@@ -813,7 +822,7 @@ TEST(finalize_coredump)
     fclose_mock_set_stream_in_pointer(&fcore);
 
     /* Write log. */
-    fopen_mock_once("0/log", "wb", &flog);
+    fopen_mock_once("log.txt", "w", &flog);
     open_mock_once("/dev/kmsg", O_RDONLY | O_NONBLOCK, log_fd, "");
     read_mock_once(log_fd, 1023, 5);
     read_mock_set_buf_out("1,2 foo", 8);
@@ -823,6 +832,25 @@ TEST(finalize_coredump)
     close_mock_once(log_fd, 0);
     fclose_mock_once(0);
     fclose_mock_set_stream_in_pointer(&flog);
+
+    /* Write info. */
+    fopen_mock_once("info.txt", "w", &finfo);
+    mock_prepare_write_info_file("/proc/version");
+    mock_prepare_write_info_file("/proc/uptime");
+    mock_prepare_write_info_file("/proc/loadavg");
+    mock_prepare_write_info_file("/proc/meminfo");
+    mock_prepare_write_info_file("/proc/interrupts");
+    mock_prepare_write_info_file("/proc/diskstats");
+    mock_prepare_write_info_file("/proc/cpuinfo");
+    mock_prepare_write_info_file("/proc/stat");
+    mock_prepare_write_info_file("/proc/net/route");
+    mock_prepare_write_info_file("/proc/net/tcp");
+    mock_prepare_write_info_file("/proc/net/udp");
+    mock_prepare_write_info_file("/proc/net/netstat");
+    mock_prepare_write_info_file("/proc/net/sockstat");
+    mock_prepare_write_info_file("/proc/net/protocols");
+    fclose_mock_once(0);
+    fclose_mock_set_stream_in_pointer(&finfo);
 
     /* Sync and exit. */
     sync_mock_once();
@@ -854,10 +882,12 @@ TEST(finalize_coredump_error_open_output_files)
 
     /* Create output folder. */
     mkdir_mock_once("0", 0777, 0);
+    chdir_mock_once("0", 0);
 
     /* Core and log open error. */
-    fopen_mock_once("0/core", "wb", NULL);
-    fopen_mock_once("0/log", "wb", NULL);
+    fopen_mock_once("core", "wb", NULL);
+    fopen_mock_once("log.txt", "w", NULL);
+    fopen_mock_once("info.txt", "w", NULL);
     fwrite_mock_none();
     fclose_mock_none();
 
@@ -880,12 +910,13 @@ TEST(finalize_coredump_error_open_dev_kmsg)
 
     /* Create output folder. */
     mkdir_mock_once("0", 0777, 0);
+    chdir_mock_once("0", 0);
 
     /* Skip coredump. */
-    fopen_mock_once("0/core", "wb", NULL);
+    fopen_mock_once("core", "wb", NULL);
 
     /* /dev/kmsg open error. */
-    fopen_mock_once("0/log", "wb", &flog);
+    fopen_mock_once("log.txt", "w", &flog);
     open_mock_once("/dev/kmsg", O_RDONLY | O_NONBLOCK, -1, "");
     open_mock_set_errno(ENODEV);
     read_mock_none();
@@ -896,6 +927,9 @@ TEST(finalize_coredump_error_open_dev_kmsg)
     close_mock_none();
     fclose_mock_once(0);
     fclose_mock_set_stream_in_pointer(&flog);
+
+    /* info.txt open error. */
+    fopen_mock_once("info.txt", "w", NULL);
 
     /* Sync and exit. */
     sync_mock_once();

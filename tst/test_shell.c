@@ -244,7 +244,7 @@ TEST(command_rm)
     ASSERT_EQ(
         output,
         "rm\n"
-        "Usage: rm <file or directory>\n"
+        "Usage: rm <file or directory> [<file or directory> ...]\n"
         "ERROR(-22: Invalid argument)\n"
         "$ rm foobar\n"
         "OK\n"
@@ -965,7 +965,7 @@ TEST(command_suicide_no_args)
 
     ASSERT_EQ(output,
               "suicide\n"
-              "Usage: suicide {exit,segfault,abort}\n"
+              "Usage: suicide {abort,segfault}\n"
               "ERROR(-22: Invalid argument)\n"
               "$ exit\n");
 }

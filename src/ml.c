@@ -750,16 +750,13 @@ void ml_print_kernel_message(char *message_p, FILE *fout_p)
     fprintf(fout_p, "[%5lld.%06lld] %s\n", secs, usecs, text_p);
 }
 
-static void write_core_dump_to_disk(char *path_p)
+static void write_core(void)
 {
     char buf[1024];
     FILE *fout_p;
     ssize_t size;
-    char path[32];
 
-    sprintf(&path[0], "%s/core", path_p);
-
-    fout_p = fopen(&path[0], "wb");
+    fout_p = fopen("core", "wb");
 
     if (fout_p == NULL) {
         return;
@@ -774,17 +771,14 @@ static void write_core_dump_to_disk(char *path_p)
     fclose(fout_p);
 }
 
-static void write_log_to_disk(char *path_p)
+static void write_log(void)
 {
     FILE *fout_p;
     int fd;
     char message[1024];
     ssize_t size;
-    char path[32];
 
-    sprintf(&path[0], "%s/log", path_p);
-
-    fout_p = fopen(&path[0], "wb");
+    fout_p = fopen("log.txt", "w");
 
     if (fout_p == NULL) {
         return;
@@ -821,6 +815,41 @@ out:
     fclose(fout_p);
 }
 
+static void write_info_file(const char *path_p, FILE *fout_p)
+{
+    fprintf(fout_p, "%s:\n\n", path_p);
+    ml_print_file(path_p, fout_p);
+    fprintf(fout_p, "%s\n", "");
+}
+
+static void write_info(void)
+{
+    FILE *fout_p;
+
+    fout_p = fopen("info.txt", "w");
+
+    if (fout_p == NULL) {
+        return;
+    }
+
+    write_info_file("/proc/version", fout_p);
+    write_info_file("/proc/uptime", fout_p);
+    write_info_file("/proc/loadavg", fout_p);
+    write_info_file("/proc/meminfo", fout_p);
+    write_info_file("/proc/interrupts", fout_p);
+    write_info_file("/proc/diskstats", fout_p);
+    write_info_file("/proc/cpuinfo", fout_p);
+    write_info_file("/proc/stat", fout_p);
+    write_info_file("/proc/net/route", fout_p);
+    write_info_file("/proc/net/tcp", fout_p);
+    write_info_file("/proc/net/udp", fout_p);
+    write_info_file("/proc/net/netstat", fout_p);
+    write_info_file("/proc/net/sockstat", fout_p);
+    write_info_file("/proc/net/protocols", fout_p);
+
+    fclose(fout_p);
+}
+
 static bool find_slot(char *path_p, int maximum_number_of_coredumps)
 {
     struct stat statbuf;
@@ -846,9 +875,13 @@ void ml_finalize_coredump(const char *dir_p, int maximum_number_of_coredumps)
     if (chdir(dir_p) == 0) {
         if (find_slot(&path[0], maximum_number_of_coredumps)) {
             mkdir(&path[0], 0777);
-            write_core_dump_to_disk(&path[0]);
-            write_log_to_disk(&path[0]);
-            sync();
+
+            if (chdir(&path[0]) == 0) {
+                write_core();
+                write_log();
+                write_info();
+                sync();
+            }
         }
     }
 
