@@ -28,6 +28,7 @@ TESTS ?= main.c
 LSAN_OPTIONS = \
 	suppressions=$(ML_ROOT)/make/lsan-suppressions.txt \
 	print_suppressions=0
+IMPLEMENTATION += fprintf
 NO_IMPLEMENTATION += ioctl
 
 .PHONY: all run build coverage clean

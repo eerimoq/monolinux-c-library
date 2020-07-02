@@ -842,3 +842,61 @@ TEST(finalize_coredump_no_slot_found)
 
     ml_finalize_coredump();
 }
+
+TEST(finalize_coredump_error_open_output_files)
+{
+    /* Find a slot. */
+    mkdir_mock_once("/disk/coredumps", 0777, 0);
+    lstat_mock_once("/disk/coredumps/0", -1);
+
+    /* Create output folder. */
+    mkdir_mock_once("/disk/coredumps/0", 0777, 0);
+
+    /* Core and log open error. */
+    fopen_mock_once("/disk/coredumps/0/core", "wb", NULL);
+    fopen_mock_once("/disk/coredumps/0/log", "wb", NULL);
+    fwrite_mock_none();
+    fclose_mock_none();
+
+    /* Sync and exit. */
+    sync_mock_once();
+    exit_mock_once(0);
+    exit_mock_set_callback(nala_exit);
+
+    ml_finalize_coredump();
+}
+
+TEST(finalize_coredump_error_open_dev_kmsg)
+{
+    FILE flog;
+
+    /* Find a slot. */
+    mkdir_mock_once("/disk/coredumps", 0777, 0);
+    lstat_mock_once("/disk/coredumps/0", -1);
+
+    /* Create output folder. */
+    mkdir_mock_once("/disk/coredumps/0", 0777, 0);
+
+    /* Skip coredump. */
+    fopen_mock_once("/disk/coredumps/0/core", "wb", NULL);
+
+    /* /dev/kmsg open error. */
+    fopen_mock_once("/disk/coredumps/0/log", "wb", &flog);
+    open_mock_once("/dev/kmsg", O_RDONLY | O_NONBLOCK, -1, "");
+    open_mock_set_errno(ENODEV);
+    read_mock_none();
+    fprintf_mock_once("*** Failed to open /dev/kmsg with error '%s'. ***\n",
+                      0,
+                      "%s",
+                      "No such device");
+    close_mock_none();
+    fclose_mock_once(0);
+    fclose_mock_set_stream_in_pointer(&flog);
+
+    /* Sync and exit. */
+    sync_mock_once();
+    exit_mock_once(0);
+    exit_mock_set_callback(nala_exit);
+
+    ml_finalize_coredump();
+}
