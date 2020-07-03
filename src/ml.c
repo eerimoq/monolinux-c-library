@@ -347,7 +347,7 @@ int ml_insert_module(const char *path_p, const char *params_p)
     int res;
     int fd;
 
-    fd = open(path_p, O_RDONLY);
+    fd = open(path_p, O_RDONLY | O_CLOEXEC);
 
     if (fd == -1) {
         return (-errno);

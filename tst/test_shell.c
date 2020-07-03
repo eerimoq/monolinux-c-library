@@ -770,12 +770,12 @@ TEST(command_insmod)
     int fd;
 
     fd = 99;
-    open_mock_once("foo.ko", O_RDONLY, fd, "");
+    open_mock_once("foo.ko", O_RDONLY | O_CLOEXEC, fd, "");
     ml_finit_module_mock_once(fd, "", 0, 0);
     close_mock_once(fd, 0);
 
     fd = 98;
-    open_mock_once("bar.ko", O_RDONLY, fd, "");
+    open_mock_once("bar.ko", O_RDONLY | O_CLOEXEC, fd, "");
     ml_finit_module_mock_once(fd, "fie=fum", 0, 0);
     close_mock_once(fd, 0);
 

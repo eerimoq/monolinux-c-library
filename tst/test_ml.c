@@ -389,7 +389,7 @@ TEST(insmod)
     init();
 
     fd = 99;
-    open_mock_once("foo.ko", O_RDONLY, fd, "");
+    open_mock_once("foo.ko", O_RDONLY | O_CLOEXEC, fd, "");
     ml_finit_module_mock_once(fd, "", 0, 0);
     close_mock_once(fd, 0);
 
@@ -400,7 +400,7 @@ TEST(insmod_open_error)
 {
     init();
 
-    open_mock_once("foo.ko", O_RDONLY, -1, "");
+    open_mock_once("foo.ko", O_RDONLY | O_CLOEXEC, -1, "");
     open_mock_set_errno(ENOENT);
     close_mock_none();
 
@@ -414,7 +414,7 @@ TEST(insmod_finit_module_error)
     init();
 
     fd = 99;
-    open_mock_once("foo.ko", O_RDONLY, fd, "");
+    open_mock_once("foo.ko", O_RDONLY | O_CLOEXEC, fd, "");
     ml_finit_module_mock_once(fd, "", 0, -1);
     ml_finit_module_mock_set_errno(EEXIST);
     close_mock_once(fd, 0);
