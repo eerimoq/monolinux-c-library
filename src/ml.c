@@ -853,15 +853,15 @@ static void write_info(void)
     fclose(fout_p);
 }
 
-static bool find_slot(char *path_p, int maximum_number_of_coredumps)
+static bool find_slot(char *dir_p, int maximum_number_of_coredumps)
 {
     struct stat statbuf;
     int slot;
 
     for (slot = 0; slot < maximum_number_of_coredumps; slot++) {
-        sprintf(path_p, "%d", slot);
+        sprintf(dir_p, "%d", slot);
 
-        if (lstat(path_p, &statbuf) != 0) {
+        if (lstat(dir_p, &statbuf) != 0) {
             return (true);
         }
     }
@@ -871,15 +871,15 @@ static bool find_slot(char *path_p, int maximum_number_of_coredumps)
 
 void ml_finalize_coredump(const char *dir_p, int maximum_number_of_coredumps)
 {
-    char path[32];
+    char slot_dir[32];
 
     mkdir(dir_p, 0777);
 
     if (chdir(dir_p) == 0) {
-        if (find_slot(&path[0], maximum_number_of_coredumps)) {
-            mkdir(&path[0], 0777);
+        if (find_slot(&slot_dir[0], maximum_number_of_coredumps)) {
+            mkdir(&slot_dir[0], 0777);
 
-            if (chdir(&path[0]) == 0) {
+            if (chdir(&slot_dir[0]) == 0) {
                 write_core();
                 write_log();
                 write_info();
