@@ -29,6 +29,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
+#include <dirent.h>
 #include <ftw.h>
 #include <fcntl.h>
 #include <sys/sysmacros.h>
@@ -181,8 +182,24 @@ TEST(command_ls)
 TEST(command_ll)
 {
     int fd;
+    DIR *dir_p;
+    struct dirent dirent;
+    struct stat statbuf;
 
     fd = init_and_start();
+
+    dir_p = nala_alloc(1);
+    opendir_mock_once(".", dir_p);
+    memset(&dirent, 0, sizeof(dirent));
+    strcpy(&dirent.d_name[0], "foo");
+    readdir_mock_once(&dirent);
+    memset(&statbuf, 0, sizeof(statbuf));
+    statbuf.st_mtim.tv_sec = 1000000000;
+    statbuf.st_size = 104;
+    lstat_mock_once("./foo", 0);
+    lstat_mock_set_buf_out(&statbuf, sizeof(statbuf));
+    readdir_mock_once(NULL);
+    closedir_mock_once(0);
 
     CAPTURE_OUTPUT(output, errput) {
         input(fd, "ll\n");
@@ -190,7 +207,11 @@ TEST(command_ll)
         ml_shell_join();
     }
 
-    ASSERT_SUBSTRING(output, "OK\n$ ");
+    ASSERT_EQ(output,
+              "ll\n"
+              "- 2001-09-09 01:46:40      104 foo\n"
+              "OK\n"
+              "$ exit\n");
 }
 
 TEST(command_cat)

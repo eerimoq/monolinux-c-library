@@ -587,6 +587,7 @@ static int command_ll(int argc, const char *argv[], FILE *fout_p)
     const char *path_p;
     struct stat statbuf;
     char buf[512];
+    struct tm tm;
 
     res = -EINVAL;
 
@@ -625,6 +626,14 @@ static int command_ll(int argc, const char *argv[], FILE *fout_p)
                         major(statbuf.st_rdev),
                         minor(statbuf.st_rdev));
             }
+
+            /* Date. */
+            gmtime_r(&statbuf.st_mtim.tv_sec, &tm);
+            strftime(&buf[0], sizeof(buf), "%F %T ", &tm);
+            fprintf(fout_p, "%s", &buf[0]);
+
+            /* Size. */
+            fprintf(fout_p, "%8lu ", (unsigned long)statbuf.st_size);
 
             if (S_ISDIR(statbuf.st_mode)) {
                 fprintf(fout_p, "%s/\n", dirent_p->d_name);

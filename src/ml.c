@@ -833,11 +833,14 @@ static void write_info(void)
     }
 
     write_info_file("/proc/version", fout_p);
+    write_info_file("/proc/cmdline", fout_p);
     write_info_file("/proc/uptime", fout_p);
     write_info_file("/proc/loadavg", fout_p);
     write_info_file("/proc/meminfo", fout_p);
     write_info_file("/proc/interrupts", fout_p);
     write_info_file("/proc/diskstats", fout_p);
+    write_info_file("/proc/partitions", fout_p);
+    write_info_file("/proc/mounts", fout_p);
     write_info_file("/proc/cpuinfo", fout_p);
     write_info_file("/proc/stat", fout_p);
     write_info_file("/proc/net/route", fout_p);

@@ -836,11 +836,14 @@ TEST(finalize_coredump)
     /* Write info. */
     fopen_mock_once("info.txt", "w", &finfo);
     mock_prepare_write_info_file("/proc/version");
+    mock_prepare_write_info_file("/proc/cmdline");
     mock_prepare_write_info_file("/proc/uptime");
     mock_prepare_write_info_file("/proc/loadavg");
     mock_prepare_write_info_file("/proc/meminfo");
     mock_prepare_write_info_file("/proc/interrupts");
     mock_prepare_write_info_file("/proc/diskstats");
+    mock_prepare_write_info_file("/proc/partitions");
+    mock_prepare_write_info_file("/proc/mounts");
     mock_prepare_write_info_file("/proc/cpuinfo");
     mock_prepare_write_info_file("/proc/stat");
     mock_prepare_write_info_file("/proc/net/route");
