@@ -815,7 +815,7 @@ out:
     fclose(fout_p);
 }
 
-static void write_info_file(const char *path_p, FILE *fout_p)
+static void write_info_file(FILE *fout_p, const char *path_p)
 {
     fprintf(fout_p, "%s:\n\n", path_p);
     ml_print_file(path_p, fout_p);
@@ -832,23 +832,23 @@ static void write_info(void)
         return;
     }
 
-    write_info_file("/proc/version", fout_p);
-    write_info_file("/proc/cmdline", fout_p);
-    write_info_file("/proc/uptime", fout_p);
-    write_info_file("/proc/loadavg", fout_p);
-    write_info_file("/proc/meminfo", fout_p);
-    write_info_file("/proc/interrupts", fout_p);
-    write_info_file("/proc/diskstats", fout_p);
-    write_info_file("/proc/partitions", fout_p);
-    write_info_file("/proc/mounts", fout_p);
-    write_info_file("/proc/cpuinfo", fout_p);
-    write_info_file("/proc/stat", fout_p);
-    write_info_file("/proc/net/route", fout_p);
-    write_info_file("/proc/net/tcp", fout_p);
-    write_info_file("/proc/net/udp", fout_p);
-    write_info_file("/proc/net/netstat", fout_p);
-    write_info_file("/proc/net/sockstat", fout_p);
-    write_info_file("/proc/net/protocols", fout_p);
+    write_info_file(fout_p, "/proc/version");
+    write_info_file(fout_p, "/proc/cmdline");
+    write_info_file(fout_p, "/proc/uptime");
+    write_info_file(fout_p, "/proc/loadavg");
+    write_info_file(fout_p, "/proc/meminfo");
+    write_info_file(fout_p, "/proc/interrupts");
+    write_info_file(fout_p, "/proc/diskstats");
+    write_info_file(fout_p, "/proc/partitions");
+    write_info_file(fout_p, "/proc/mounts");
+    write_info_file(fout_p, "/proc/cpuinfo");
+    write_info_file(fout_p, "/proc/stat");
+    write_info_file(fout_p, "/proc/net/route");
+    write_info_file(fout_p, "/proc/net/tcp");
+    write_info_file(fout_p, "/proc/net/udp");
+    write_info_file(fout_p, "/proc/net/netstat");
+    write_info_file(fout_p, "/proc/net/sockstat");
+    write_info_file(fout_p, "/proc/net/protocols");
 
     fclose(fout_p);
 }
