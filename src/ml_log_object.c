@@ -35,6 +35,13 @@
 #include "ml/ml.h"
 #include "internal.h"
 
+/**
+ * Module state (log levels).
+ */
+#ifndef ML_LOG_OBJECT_TXT
+#    define ML_LOG_OBJECT_TXT            "/tmp/log_object.txt"
+#endif
+
 struct module_t {
     const char *log_object_path_p;
     int fd;
@@ -96,7 +103,7 @@ static const char *level_to_string_upper(int level)
 void ml_log_object_module_init(const char *log_object_path_p)
 {
     if (log_object_path_p == NULL) {
-        log_object_path_p = "";
+        log_object_path_p = ML_LOG_OBJECT_TXT;
     }
 
     module.log_object_path_p = log_object_path_p;
