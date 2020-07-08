@@ -23,6 +23,8 @@ Features:
 
 - Device-mapper verity target.
 
+- 1-wire (without sysfs).
+
 Requires POSIX and currently Linux.
 
 Used by the `Monolinux`_ project.
