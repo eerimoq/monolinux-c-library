@@ -374,3 +374,43 @@ void ml_log_object_print(struct ml_log_object_t *self_p,
     ml_log_object_vprint(self_p, level, fmt_p, vlist);
     va_end(vlist);
 }
+
+void ml_log_object_hexdump(struct ml_log_object_t *self_p,
+                           int level,
+                           const void *buf_p,
+                           size_t size)
+{
+    FILE *file_p;
+    char *formatted_p;
+    size_t formatted_size;
+    char line[128];
+
+    if (level > self_p->level) {
+        return;
+    }
+
+    file_p = open_memstream(&formatted_p, &formatted_size);
+
+    if (file_p == NULL) {
+        return;
+    }
+
+    ml_hexdump(buf_p, size, file_p);
+    fclose(file_p);
+
+    file_p = fmemopen(formatted_p, formatted_size, "r");
+
+    if (file_p == NULL) {
+        goto out;
+    }
+
+    while (fgets(&line[0], sizeof(line), file_p) != NULL) {
+        ml_rstrip(&line[0], NULL);
+        ml_log_object_print(self_p, level, "%s", &line[0]);
+    }
+
+    fclose(file_p);
+
+ out:
+    free(formatted_p);
+}

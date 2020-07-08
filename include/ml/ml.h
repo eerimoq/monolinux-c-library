@@ -470,6 +470,15 @@ void ml_log_object_print(struct ml_log_object_t *self_p,
                          ...);
 
 /**
+ * Check if given log level is set in the log object mask. If so,
+ * format a hexdump ofgiven buffer and print it.
+ */
+void ml_log_object_hexdump(struct ml_log_object_t *self_p,
+                           int level,
+                           const void *buf_p,
+                           size_t size);
+
+/**
  * Initialize the shell. Commands may be registered after this
  * function has been called.
  */
