@@ -35,14 +35,8 @@
 #include "ml/ml.h"
 #include "internal.h"
 
-/**
- * Module state (log levels).
- */
-#ifndef ML_LOG_OBJECT_TXT
-#    define ML_LOG_OBJECT_TXT            "/tmp/log_object.txt"
-#endif
-
 struct module_t {
+    const char *log_object_path_p;
     int fd;
     struct ml_log_object_t log_object;
     struct ml_log_object_t *head_p;
@@ -99,8 +93,14 @@ static const char *level_to_string_upper(int level)
     return (name_p);
 }
 
-void ml_log_object_module_init(void)
+void ml_log_object_module_init(const char *log_object_path_p)
 {
+    if (log_object_path_p == NULL) {
+        log_object_path_p = "";
+    }
+
+    module.log_object_path_p = log_object_path_p;
+
 #ifndef UNIT_TEST
     /* Assumes "printk_devkmsg" in "on" by default in the Linux
        kernel. If not, lots of log messages will be dropped due to
@@ -120,12 +120,13 @@ void ml_log_object_load(void)
     struct ml_log_object_t *log_object_p;
     int value;
 
-    file_p = fopen(ML_LOG_OBJECT_TXT, "r");
+    file_p = fopen(module.log_object_path_p, "r");
 
     if (file_p == NULL) {
         ml_log_object_print(&module.log_object,
                             ML_LOG_ERROR,
-                            "Failed to open " ML_LOG_OBJECT_TXT ".");
+                            "Failed to open %s.",
+                            module.log_object_path_p);
 
         return;
     }
@@ -160,12 +161,13 @@ int ml_log_object_store(void)
     FILE *file_p;
     struct ml_log_object_t *log_object_p;
 
-    file_p = fopen(ML_LOG_OBJECT_TXT, "w");
+    file_p = fopen(module.log_object_path_p, "w");
 
     if (file_p == NULL) {
         ml_log_object_print(&module.log_object,
                             ML_LOG_ERROR,
-                            "Failed to open " ML_LOG_OBJECT_TXT ".");
+                            "Failed to open %s.",
+                            module.log_object_path_p);
 
         return (-EGENERAL);
     }

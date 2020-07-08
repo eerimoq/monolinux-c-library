@@ -6,4 +6,4 @@ nala_mocks.h
 nala_mocks.ld
 report.json
 tests.pp.c
-tst/log_object.txt
+tst/log_object*.txt

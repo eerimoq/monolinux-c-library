@@ -1811,7 +1811,7 @@ TEST(log_list_and_set_mask)
     int fd;
     struct ml_log_object_t log_object;
 
-    ml_log_object_module_init();
+    ml_log_object_module_init(NULL);
     ml_log_object_init(&log_object, "test-object", ML_LOG_INFO);
     ml_log_object_register(&log_object);
     fd = init_and_start();

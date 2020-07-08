@@ -398,7 +398,7 @@ void ml_worker_pool_spawn(struct ml_worker_pool_t *self_p,
 /**
  * Initialize the log object module.
  */
-void ml_log_object_module_init(void);
+void ml_log_object_module_init(const char *log_object_path_p);
 
 /**
  * Load log object state from disk. Loads log levels.

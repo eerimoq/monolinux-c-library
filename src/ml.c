@@ -194,7 +194,7 @@ static unsigned calc_cpu_load(unsigned long long old,
 
 void ml_init(void)
 {
-    ml_log_object_module_init();
+    ml_log_object_module_init("log_object.txt");
     ml_log_object_init(&module.log_object, "default", ML_LOG_INFO);
     ml_log_object_register(&module.log_object);
     ml_message_init();

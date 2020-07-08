@@ -35,7 +35,7 @@ TEST(format)
 {
     struct ml_log_object_t log_object;
 
-    ml_log_object_module_init();
+    ml_log_object_module_init(NULL);
 
     ml_log_object_init(&log_object, "foo", ML_LOG_DEBUG);
 
@@ -100,7 +100,7 @@ TEST(enable_disable)
 {
     struct ml_log_object_t log_object;
 
-    ml_log_object_module_init();
+    ml_log_object_module_init(NULL);
 
     /* No debug, info and up. */
     ml_log_object_init(&log_object, "foo", ML_LOG_INFO);
@@ -121,9 +121,9 @@ TEST(load)
     FILE *file_p;
     struct ml_log_object_t log_object;
 
-    ml_log_object_module_init();
+    ml_log_object_module_init("log_object_load.txt");
 
-    file_p = fopen("log_object.txt", "w");
+    file_p = fopen("log_object_load.txt", "w");
     ASSERT_NE(file_p, NULL);
     fprintf(file_p, "foo info\n");
     fprintf(file_p,
@@ -158,20 +158,20 @@ TEST(load)
 
 TEST(store)
 {
-    ml_log_object_module_init();
+    ml_log_object_module_init("log_object_store.txt");
 
-    remove("log_object.txt");
+    remove("log_object_store.txt");
 
     ml_log_object_store();
 
-    ASSERT_FILE_EQ("log_object.txt", "files/log_object.txt");
+    ASSERT_FILE_EQ("log_object_store.txt", "files/log_object.txt");
 }
 
 TEST(store_open_error)
 {
-    ml_log_object_module_init();
+    ml_log_object_module_init("log_object_open_error.txt");
 
-    fopen_mock_once("log_object.txt", "w", NULL);
+    fopen_mock_once("log_object_open_error.txt", "w", NULL);
     fclose_mock_none();
 
     ml_log_object_store();
