@@ -237,7 +237,7 @@ static int send_nl_message(struct module_t *self_p,
                0);
 
     if (res == -1) {
-        ML_ERROR("Failed to send with %s(%d).\n", strerror(errno), errno);
+        ML_ERROR("Failed to send with '%s'.\n", strerror(errno));
         res = -errno;
     } else {
         res = cn_msg_p->seq;
