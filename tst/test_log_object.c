@@ -176,3 +176,28 @@ TEST(store_open_error)
 
     ml_log_object_store();
 }
+
+TEST(hexdump)
+{
+    struct ml_log_object_t log_object;
+
+    ml_log_object_module_init(NULL);
+
+    ml_log_object_init(&log_object, "foo", ML_LOG_DEBUG);
+
+    CAPTURE_OUTPUT(output, errput) {
+        ml_log_object_hexdump(&log_object,
+                              ML_LOG_DEBUG,
+                              "1234567890abcdef ",
+                              17);
+    }
+
+    ASSERT_SUBSTRING(
+        output,
+        "DEBUG foo 00000000: "
+        "31 32 33 34 35 36 37 38 39 30 61 62 63 64 65 66 '1234567890abcdef'\n");
+    ASSERT_SUBSTRING(
+        output,
+        "DEBUG foo 00000010: "
+        "20                                              ' '\n");
+}
