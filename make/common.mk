@@ -11,6 +11,7 @@ SRC += $(ML_ROOT)/src/ml_libc.c
 SRC += $(ML_ROOT)/src/ml_log_object.c
 SRC += $(ML_ROOT)/src/ml_message.c
 SRC += $(ML_ROOT)/src/ml_network.c
+SRC += $(ML_ROOT)/src/ml_one_wire.c
 SRC += $(ML_ROOT)/src/ml_queue.c
 SRC += $(ML_ROOT)/src/ml_rtc.c
 SRC += $(ML_ROOT)/src/ml_shell.c

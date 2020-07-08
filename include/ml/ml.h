@@ -221,6 +221,32 @@ struct ml_cpu_stats_t {
     unsigned idle;
 };
 
+/*
+ * Messages to read the temperature. It takes at least 750 ms for the
+ * operation to complete.
+ */
+struct ml_one_wire_read_temperature_req_t {
+    /* Slave to read from. 1 byte family, 6 bytes id and 1 byte
+       crc. */
+    uint64_t slave_id;
+
+    /* A response message is put on this queue when the operation is
+       complete. */
+    struct ml_queue_t *response_queue_p;
+};
+
+struct ml_one_wire_read_temperature_rsp_t {
+    /* Zero if successful, otherwise negative error code. */
+    int res;
+
+    /* The temperature in degrees Celsius. */
+    float temperature;
+};
+
+/* Read temperature message identifiers. */
+extern struct ml_uid_t ml_one_wire_read_temperature_req;
+extern struct ml_uid_t ml_one_wire_read_temperature_rsp;
+
 /**
  * Initialize the Monolinux module. This must be called before any
  * other function in this module.
@@ -737,6 +763,22 @@ int ml_device_mapper_verity_create(const char *mapping_name_p,
                                    size_t hash_offset,
                                    const char *root_hash_p,
                                    const char *salt_p);
+
+/**
+ * Initialize the module.
+ */
+void ml_one_wire_init(void);
+
+/**
+ * Start the module.
+ */
+void ml_one_wire_start(void);
+
+/**
+ * Read the temperature. Blocks for at least 750 ms. Returns zero(0)
+ * on success, otherwise negative error code.
+ */
+int ml_one_wire_read_temperature(uint64_t slave_id, float *temperature_p);
 
 /**
  * Write given string to given file. Creates the file if it does not

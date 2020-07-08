@@ -718,7 +718,7 @@ static void configure_interface(struct ml_dhcp_client_t *self_p)
     strcpy(&gateway[0], inet_ntoa(self_p->gateway));
     mtu = 1500;
 
-    ML_INFO(
+    ML_NOTICE(
         "Configuring interface '%s' with ip address %s, "
         "subnet mask %s, gateway %s and mtu %d.",
         self_p->interface.name_p,
@@ -1346,7 +1346,7 @@ int ml_dhcp_client_start(struct ml_dhcp_client_t *self_p)
 {
     int res;
 
-    ML_INFO("Starting on interface '%s'.", self_p->interface.name_p);
+    ML_NOTICE("Starting on interface '%s'.", self_p->interface.name_p);
 
     res = init(self_p);
 
