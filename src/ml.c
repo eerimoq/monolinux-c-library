@@ -842,6 +842,9 @@ static void write_info(void)
     write_info_file(fout_p, "/proc/partitions");
     write_info_file(fout_p, "/proc/mounts");
     write_info_file(fout_p, "/proc/cpuinfo");
+    write_info_file(fout_p, "/proc/modules");
+    write_info_file(fout_p, "/proc/ioports");
+    write_info_file(fout_p, "/proc/iomem");
     write_info_file(fout_p, "/proc/stat");
     write_info_file(fout_p, "/proc/net/route");
     write_info_file(fout_p, "/proc/net/tcp");

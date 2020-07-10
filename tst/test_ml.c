@@ -845,6 +845,9 @@ TEST(finalize_coredump)
     mock_prepare_write_info_file("/proc/partitions");
     mock_prepare_write_info_file("/proc/mounts");
     mock_prepare_write_info_file("/proc/cpuinfo");
+    mock_prepare_write_info_file("/proc/modules");
+    mock_prepare_write_info_file("/proc/ioports");
+    mock_prepare_write_info_file("/proc/iomem");
     mock_prepare_write_info_file("/proc/stat");
     mock_prepare_write_info_file("/proc/net/route");
     mock_prepare_write_info_file("/proc/net/tcp");
