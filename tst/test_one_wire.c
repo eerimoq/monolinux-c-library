@@ -129,3 +129,44 @@ TEST(read_temperature)
     ASSERT_EQ(res, 0);
     ASSERT_EQ(temperature, 21.562500);
 }
+
+TEST(command_read_temperature)
+{
+    int res;
+    pthread_t pthread;
+    char command[64];
+
+    ml_init();
+    ml_shell_init();
+    ml_one_wire_init();
+
+    /* The mocked netlink connector socket. */
+    ASSERT_EQ(socketpair(AF_UNIX, SOCK_DGRAM, 0, &netlink_fds[0]), 0);
+    socket_mock_once(AF_NETLINK, SOCK_DGRAM, NETLINK_CONNECTOR, netlink_fds[0]);
+    bind_mock_ignore_in_once(0);
+
+    ASSERT_EQ(pthread_create(&pthread, NULL, netlink_main, NULL), 0);
+
+    ml_shell_start();
+    ml_one_wire_start();
+
+    /* Read. */
+    strcpy(&command[0], "ds18b20 read 280000055d329533");
+
+    CAPTURE_OUTPUT(output1, errput1) {
+        res = ml_shell_execute_command(&command[0], stdout);
+    }
+
+    ASSERT_EQ(res, 0);
+    ASSERT_EQ(output1, "Temperature: 21.56 C\n");
+
+    /* Usage. */
+    strcpy(&command[0], "ds18b20");
+
+    CAPTURE_OUTPUT(output2, errput2) {
+        res = ml_shell_execute_command(&command[0], stdout);
+    }
+
+    ASSERT_EQ(res, -EINVAL);
+    ASSERT_EQ(output2, "Usage: ds18b20 read <sensor-id>\n");
+}
