@@ -13,6 +13,14 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.9
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install --upgrade nala gcovr
     - name: Test
       run: |
         source setup.sh
