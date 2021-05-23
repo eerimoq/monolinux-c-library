@@ -24,4 +24,4 @@ jobs:
     - name: Test
       run: |
         source setup.sh
-        make test
+        make test ARGS="-j 1"
