@@ -535,8 +535,6 @@ static int init(struct module_t *self_p)
     struct epoll_event event;
     int res;
 
-    pthread_setname_np(self_p->pthread, "ml_one_wire");
-
     self_p->fd = socket(AF_NETLINK, SOCK_DGRAM, NETLINK_CONNECTOR);
 
     if (self_p->fd == -1) {
@@ -551,13 +549,6 @@ static int init(struct module_t *self_p)
 
     if (bind(self_p->fd, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
         ML_ERROR("bind");
-        goto out;
-    }
-
-    self_p->epoll_fd = epoll_create1(0);
-
-    if (self_p->epoll_fd == -1) {
-        ML_ERROR("epoll_create1");
         goto out;
     }
 
@@ -596,11 +587,7 @@ static void *one_wire_main(struct module_t *self_p)
     void *message_p;
     struct ml_uid_t *uid_p;
 
-    res = init(self_p);
-
-    if (res != 0) {
-        return (NULL);
-    }
+    pthread_setname_np(self_p->pthread, "ml_one_wire");
 
     while (res == 0) {
         res = epoll_wait(self_p->epoll_fd, &event, 1, -1);
@@ -728,6 +715,7 @@ void ml_one_wire_init(void)
 
 void ml_one_wire_start(void)
 {
+    init(&module);
     pthread_create(&module.pthread,
                    NULL,
                    (void *(*)(void *))one_wire_main,
