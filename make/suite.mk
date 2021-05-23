@@ -31,7 +31,7 @@ LSAN_OPTIONS = \
 IMPLEMENTATION += fprintf
 NO_IMPLEMENTATION += ioctl
 
-ARGS ?= -j4
+ARGS ?= -j $(shell nproc)
 
 .PHONY: all run build coverage clean
 

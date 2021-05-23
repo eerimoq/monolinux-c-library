@@ -2,9 +2,7 @@ name: C
 
 on:
   push:
-    branches: [ master ]
   pull_request:
-    branches: [ master ]
 
 jobs:
   build:
@@ -24,4 +22,4 @@ jobs:
     - name: Test
       run: |
         source setup.sh
-        make test ARGS="-j 1"
+        make test
